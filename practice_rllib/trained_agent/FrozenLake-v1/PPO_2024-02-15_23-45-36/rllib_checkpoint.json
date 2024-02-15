@@ -1,0 +1,1 @@
+{"type": "Algorithm", "checkpoint_version": "1.1", "format": "cloudpickle", "state_file": "/Users/murakamitakaya/PycharmProjects/RL_APS/practice_rllib/trained_agent/FrozenLake-v1/PPO_2024-02-15_23-45-36/algorithm_state.pkl", "policy_ids": ["default_policy"], "ray_version": "2.9.0", "ray_commit": "9be5a16e3ccad0710bba08d0f75e9ff774ae6880"}
