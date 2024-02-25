@@ -155,7 +155,7 @@ class RandomLakeObs(RandomLake):
             It enables the agent to see the obstacle such as ice, hole and edge around the agent. 
             However, it doesn't include a player location.
             '''
-            self.observation_space = gym.spaces.MultiDiscrete([2, 2, 2, 2])
+            self.observation_space = gym.spaces.MultiDiscrete([3, 3, 3, 3])
             self.action_space = gym.spaces.Discrete(4)
 
     def observation(self):
@@ -167,7 +167,7 @@ class RandomLakeObs(RandomLake):
                2 if j == 3 else self.holes[i, j + 1], # right
                2 if i == 0 else self.holes[i - 1, j]] # up
 
-        obs = np.array(obs, dtype=int) # cast to numpy array (optional)
+        obs = np.array(obs, dtype=int) # cast to numpy array
 
         return obs
 
@@ -180,21 +180,21 @@ lake_default_config = (
     .evaluation(evaluation_num_workers=1)
 )
 
-fixed_algo = lake_default_config.build(env=FrozenPond)
+# fixed_algo = lake_default_config.build(env=FrozenPond)
 rando_algo = lake_default_config.build(env=RandomLake)
 randoobs_algo = lake_default_config.build(env=RandomLakeObs)
 
-fixed_rewards = []
+# fixed_rewards = []
 rando_rewards = []
 randoobs_rewards = []
 
 
 for i in range(8):
-    fixed_rewards.append(fixed_algo.train()['episode_reward_mean'])
+    # fixed_rewards.append(fixed_algo.train()['episode_reward_mean'])
     rando_rewards.append(rando_algo.train()['episode_reward_mean'])
     randoobs_rewards.append(randoobs_algo.train()['episode_reward_mean'])
 
 
-print(fixed_rewards)
+# print(fixed_rewards)
 print(rando_rewards)
 print(randoobs_rewards)
