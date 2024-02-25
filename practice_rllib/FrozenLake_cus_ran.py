@@ -5,8 +5,8 @@ to learn the code in Ray module
 https://applied-rl-course.netlify.app/en/module3
 
 modify the random start position and the goal
-
 '''
+
 
 import gymnasium as gym
 import numpy as np
@@ -81,24 +81,96 @@ class FrozenPond(gym.Env):
                     print("🧊", end="")
             print()
 
-class RandomLake(FrozenPond):
+
+class RandomLake(gym.Env):
+    def __init__(self, env_config=None):
+        self.observation_space = gym.spaces.Discrete(16)
+        self.action_space = gym.spaces.Discrete(4)
+
     def reset(self):
-        self.player = (0, 0) # the player starts at the top-left
-        self.goal = (3, 3) # goal is at the bottom-right
+        self.player = (0, 0)  # the player starts at the top-left
+        self.goal = (3, 3)  # goal is at the bottom-right
 
         self.holes = np.random.rand(4, 4) < 0.2
-        self.holes[self.player] = 0 # no holes at start location
-        self.holes[self.goal] = 0 # no hole at goal location
+        self.holes[self.player] = 0  # no hole at start location
+        self.holes[self.goal] = 0  # no hole at goal location
 
-        return 0 # the observation corresponding to (0, 0)
+        self.stepcount = 0
 
-lake = RandomLake()
-lake.reset()
-lake.render()
+        return self.observation()
 
-print("environment reset again")
-lake.reset()
-lake.render()
+    def observation(self):
+        return 4 * self.player[0] + self.player[1]
+
+    def reward(self):
+        return int(self.player == self.goal)
+
+    def done(self):
+        is_done = self.player == self.goal or self.holes[self.player] == 1 or self.stepcount >= 50
+        return is_done
+
+    def is_valid_loc(self, location):
+        return 0 <= location[0] <= 3 and 0 <= location[1] <= 3
+
+    def step(self, action):
+        # Compute the new player location
+        if action == 0:  # left
+            new_loc = (self.player[0], self.player[1] - 1)
+        elif action == 1:  # down
+            new_loc = (self.player[0] + 1, self.player[1])
+        elif action == 2:  # right
+            new_loc = (self.player[0], self.player[1] + 1)
+        elif action == 3:  # up
+            new_loc = (self.player[0] - 1, self.player[1])
+        else:
+            raise ValueError("Action must be in {0,1,2,3}")
+
+        # Update the player location only if you stayed in bounds
+        if self.is_valid_loc(new_loc):
+            self.player = new_loc
+
+        self.stepcount += 1
+
+        return self.observation(), self.reward(), self.done(), {}
+
+    def render(self):
+        for i in range(4):
+            for j in range(4):
+                if (i,j) == self.goal:
+                    print("⛳️", end="")
+                elif (i,j) == self.player:
+                    print("🧑", end="")
+                elif self.holes[i,j]:
+                    print("🕳", end="")
+                else:
+                    print("🧊", end="")
+            print()
+
+
+class RandomLakeObs(RandomLake):
+    def __init__(self, env_config=None):
+            super().__init__(env_config)
+            '''
+            MultiDiscrete[3, 3, 3, 3]: (left, down, right, up) 0: ice, 1: hole, 2: edge
+            It enables the agent to see the obstacle such as ice, hole and edge around the agent. 
+            However, it doesn't include a player location.
+            '''
+            self.observation_space = gym.spaces.MultiDiscrete([2, 2, 2, 2])
+            self.action_space = gym.spaces.Discrete(4)
+
+    def observation(self):
+        i, j = self.player
+
+        # check around the player location
+        obs = [2 if j == 0 else self.holes[i, j - 1], # left
+               2 if i == 3 else self.holes[i + 1, j], # down
+               2 if j == 3 else self.holes[i, j + 1], # right
+               2 if i == 0 else self.holes[i - 1, j]] # up
+
+        obs = np.array(obs, dtype=int) # cast to numpy array (optional)
+
+        return obs
+
 
 lake_default_config = (
     PPOConfig()
@@ -110,12 +182,19 @@ lake_default_config = (
 
 fixed_algo = lake_default_config.build(env=FrozenPond)
 rando_algo = lake_default_config.build(env=RandomLake)
+randoobs_algo = lake_default_config.build(env=RandomLakeObs)
+
 fixed_rewards = []
 rando_rewards = []
+randoobs_rewards = []
+
 
 for i in range(8):
     fixed_rewards.append(fixed_algo.train()['episode_reward_mean'])
     rando_rewards.append(rando_algo.train()['episode_reward_mean'])
+    randoobs_rewards.append(randoobs_algo.train()['episode_reward_mean'])
+
 
 print(fixed_rewards)
 print(rando_rewards)
+print(randoobs_rewards)
