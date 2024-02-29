@@ -15,7 +15,6 @@ Implement Ray RLlib algorithm
 # https://gymnasium.farama.org/tutorials/gymnasium_basics/environment_creation/#registering-envs
 - step function
 Consider a maximum/minimum steering angle and Vehicle speed
-Add kinematic bicycle model
 Consider a collision function, a function which can check if the parking is success or not
 
 - render function
@@ -64,9 +63,55 @@ wheel location
 
 '''
 
+
 # temporal value
-CAR_LOC = [300, 100, 50, 30]
-PARKINGLOT_LOC = [300, 10, 50, 30]
+CAR_L = 80
+CAR_W = 40
+WHEEL_Length = 15
+WHEEL_W = 7
+WHEEL_POS = np.array([[25, 15], [25, -15], [-25, 15], [-25, -15]])
+CAR_LOC = [300, 100, CAR_L, CAR_W]
+PARKINGLOT_LOC = [300, 10, 90, 50]
+DT = 1
+
+MAX_STEPS = 200
+
+
+def kinematic_act(action, state, DT):
+    """
+    action: [0]:v, [1]:delta
+    state: [x,y,v,psi]
+
+    Kinematic bicycle model
+    x_dot = v * np.cos(psi)
+    y_dot = v * np.sin(psi)
+    v_dot = v
+    psi_dot = v * np.tan(delta) / CAR_L
+    or
+    x_dot = v * cos(psi + beta)
+    y_dot = v * sin(psi + beta)
+    psi_dot = v * cos(beta) * tan(delta)/car length
+    beta = tan^-1(Lr/Lf+Lr * tan(delta))
+    """
+
+    x_dot = action[0] * np.cos(state[3])
+    y_dot = action[0] * np.sin(state[3])
+    v_dot = state[2]
+    psi_dot = action[0] * np.tan(action[1]) / CAR_L
+    state_dot = np.array([x_dot, y_dot, v_dot, psi_dot]).T
+    state = update_state(state, state_dot, DT)
+
+    return state
+
+
+def update_state(state, state_dot, dt):
+    state[0] += dt * state_dot[0]
+    state[1] += dt * state_dot[1]
+    state[2] = state_dot[2]
+    state[3] += dt * state_dot[3]
+
+    return state
+
 
 
 class Parking(gym.Env):
@@ -130,7 +175,8 @@ class Parking(gym.Env):
         Let the car(agent) take an action in the parking environment.
 
         Parameters:
-            action:
+            action(list): [𝑣, 𝜑], 𝑣 is velocity, 𝜑 is steering angle.
+            state(list): [x,y,v,psi]
 
         Returns:
         """
@@ -138,11 +184,20 @@ class Parking(gym.Env):
             if self.action_type == "discrete":
                 action = np.array([SPEED_LIMIT, LAT_ACTIONS[action]])
             if self.action_type == "continuous":
-                action = np.clip(action, -1, 1) * STEERING_LIMIT
-                #action = np.array([SPEED_LIMIT, action.item()])
+                # action = np.clip(action, -1, 1) * STEERING_LIMIT
+                action = np.clip(action, [-1, -1], [1, 1]) * [
+                    SPEED_LIMIT,
+                    STEERING_LIMIT,
+                ]
 
-            # add kinematic bicycle model later
+                # calculate by Kinematic model
+                self.state = kinematic_act(action, self.state, DT)
+
+            # update observation
+            # the current vehicle info, goal info
             self.obs = 1  # temporary
+
+            # self.obs[] = state
 
             reward = self._reward()
 
@@ -213,7 +268,7 @@ class Parking(gym.Env):
             self.surf_car.fill((0, 0, 0, 0))
 
             # add Kinematic bicycle model function to update the car location later
-            pygame.draw.rect(self.surf_car, GREEN, CAR_LOC)
+            pygame.draw.rect(self.surf_car, GREEN, [self.state[0], self.state[1], CAR_L, CAR_W])
 
             # draw_rectangle(self.surf_car, to_pixel(self.movable_vertices), GREEN)
             # draw_direction_pattern(self.surf_car, self.movable[0])
@@ -283,6 +338,8 @@ class Parking(gym.Env):
         #    self.render()
         # return self.step(None)[0], {}
 
+        self.state = [10, 40, 4, 1]
+
         self.window = None
         self.surf = None
         self.surf_car = None
@@ -291,10 +348,15 @@ class Parking(gym.Env):
 
         self.terminated = False
         self.truncated = False
+        self.run_steps = 0
         obs = 0
         return obs, {}
 
     def _reward(self):
+        self.run_steps += 1
+
+        if self.run_steps == MAX_STEPS:
+            self.truncated = True
 
         # add reward later
         reward = 0
