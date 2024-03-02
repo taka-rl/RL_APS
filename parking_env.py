@@ -16,11 +16,12 @@ Implement Ray RLlib algorithm
 - step function
 Consider a maximum/minimum steering angle and Vehicle speed
 Consider a collision function, a function which can check if the parking is success or not
+Consider obs information
 
 - render function
 Consider the parking environemnt and car size and so on
 Draw the car path
-Update the car location
+Draw the car wheel
 
 - reset function
 reset the parking environment
@@ -53,18 +54,7 @@ GRID_SIZE = 20
 GRID_COLOR = (200, 200, 200)
 WINDOW_W, WINDOW_H = 800, 600
 
-# parameters for the parking environment
-'''
-location: X, Y
-speed: ~ Max 10km/h
-steering angle: 
-car size
-wheel location
-
-'''
-
-
-# temporal value
+# parameters for cars in the parking environment
 CAR_L = 80
 CAR_W = 40
 WHEEL_Length = 15
@@ -111,7 +101,6 @@ def update_state(state, state_dot, dt):
     state[3] += dt * state_dot[3]
 
     return state
-
 
 
 class Parking(gym.Env):
@@ -179,12 +168,12 @@ class Parking(gym.Env):
             state(list): [x,y,v,psi]
 
         Returns:
+            obs (list):
         """
         if action is not None:
             if self.action_type == "discrete":
                 action = np.array([SPEED_LIMIT, LAT_ACTIONS[action]])
             if self.action_type == "continuous":
-                # action = np.clip(action, -1, 1) * STEERING_LIMIT
                 action = np.clip(action, [-1, -1], [1, 1]) * [
                     SPEED_LIMIT,
                     STEERING_LIMIT,
@@ -246,19 +235,10 @@ class Parking(gym.Env):
                 for x in range(0, WINDOW_W, GRID_SIZE):
                     pygame.draw.line(self.surf_parkinglot, GRID_COLOR, (x, 0), (x, WINDOW_H), 1)
                 for y in range(0, WINDOW_H, GRID_SIZE):
-                    pygame.draw.line(self.surf_parkinglot, GRID_COLOR, (y, 0), (WINDOW_W, y), 1)
+                    pygame.draw.line(self.surf_parkinglot, GRID_COLOR, (0, y), (WINDOW_W, y), 1)
 
                 # Draw the targeted parking space
                 pygame.draw.rect(self.surf_parkinglot, YELLOW, PARKINGLOT_LOC)  # [X, Y, Width, Height]
-
-                # for i in range(self.stationary.shape[0]):
-                # draw_rectangle(
-                #    self.surf_stationary,
-                #    to_pixel(self.stationary_vertices[i]),
-                #    obj_type=self.stationary[i, -1],
-                # )
-                # draw_direction_pattern(self.surf_stationary, self.stationary[i])
-                # draw_rectangle(self.surf_stationary, to_pixel(self.goal_vertices), BLUE)
 
             # for the car(agent)
             if self.surf_car is None:
@@ -269,9 +249,6 @@ class Parking(gym.Env):
 
             # add Kinematic bicycle model function to update the car location later
             pygame.draw.rect(self.surf_car, GREEN, [self.state[0], self.state[1], CAR_L, CAR_W])
-
-            # draw_rectangle(self.surf_car, to_pixel(self.movable_vertices), GREEN)
-            # draw_direction_pattern(self.surf_car, self.movable[0])
 
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
@@ -292,51 +269,6 @@ class Parking(gym.Env):
     ):
 
         super().reset(seed=seed)
-        # self.stationary = STATIONARY_STATE
-        # self.stationary_vertices = np.zeros((self.stationary.shape[0], 4, 2))
-        # for i in range(self.stationary.shape[0]):
-        #    self.stationary_vertices[i] = compute_vertices(self.stationary[i])
-
-        # self.movable = np.array([randomise_state(INIT_STATE)])
-        # self.movable_vertices = compute_vertices(self.movable[0])
-        # self.movable = np.array([randomise_state(INIT_STATE)])
-        # self.movable_vertices = compute_vertices(self.movable[0])
-        # while collision_check(
-        #       self.movable_vertices,
-        #        self.movable[0, 2],
-        #        self.stationary_vertices,
-        #        self.stationary[:, 2],
-        # ):
-        #    self.movable = np.array([randomise_state(INIT_STATE)])
-        #    self.movable_vertices = compute_vertices(self.movable[0])
-        # self.goal_vertices = compute_vertices(GOAL_STATE)
-
-        # if self.observation_type == "vector":
-        # self.obs = np.zeros(
-        # (self.movable.shape[0] + self.stationary.shape[0] + 1, 13),
-        # dtype=np.float32,
-        # )
-        # self.obs[1, :2] = GOAL_STATE[:2]
-        # self.obs[1, 2:5] = [
-        # np.cos(GOAL_STATE[2]),
-        # np.sin(GOAL_STATE[2]),
-        # GOAL_STATE[3],
-        # ]
-        # self.obs[1, 5:] = self.goal_vertices.reshape(1, 8)
-        # self.obs[2:, :2] = self.stationary[:, :2]
-        # self.obs[2:, 2] = np.cos(self.stationary[:, 2])
-        # self.obs[2:, 3] = np.sin(self.stationary[:, 2])
-        # self.obs[2:, 4] = self.stationary[:, 3]
-        # self.obs[2:, 5:] = self.stationary_vertices.reshape(-1, 8)
-        # self.obs /= STATE_SCALE
-
-        # self.terminated = False
-        # self.truncated = False
-        # self.run_steps = 0
-
-        # if self.render_mode == "human":
-        #    self.render()
-        # return self.step(None)[0], {}
 
         self.state = [10, 40, 4, 1]
 
