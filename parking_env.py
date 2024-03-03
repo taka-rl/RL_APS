@@ -21,7 +21,6 @@ Consider obs information
 - render function
 Consider the parking environemnt and car size and so on
 Draw the car path
-Draw the car wheel
 
 - reset function
 reset the parking environment
@@ -57,10 +56,9 @@ WINDOW_W, WINDOW_H = 800, 600
 # parameters for cars in the parking environment
 CAR_L = 80
 CAR_W = 40
-WHEEL_Length = 15
+WHEEL_L = 15
 WHEEL_W = 7
 WHEEL_POS = np.array([[25, 15], [25, -15], [-25, 15], [-25, -15]])
-CAR_LOC = [300, 100, CAR_L, CAR_W]
 PARKINGLOT_LOC = [300, 10, 90, 50]
 DT = 1
 
@@ -90,7 +88,6 @@ def kinematic_act(action, state, DT):
     psi_dot = action[0] * np.tan(action[1]) / CAR_L
     state_dot = np.array([x_dot, y_dot, v_dot, psi_dot]).T
     state = update_state(state, state_dot, DT)
-
     return state
 
 
@@ -99,8 +96,60 @@ def update_state(state, state_dot, dt):
     state[1] += dt * state_dot[1]
     state[2] = state_dot[2]
     state[3] += dt * state_dot[3]
-
     return state
+
+
+def draw_vehicle(screen, car_loc, psi):
+    # the car(agent)
+    # get the car(agent) vertexes from the center point
+    car_vertices = compute_vertices(car_loc, CAR_L, CAR_W)
+    # get the rotated car location
+    car_vertices = rotate_car(car_vertices, angle=psi)
+    # draw the car(agent)
+    pygame.draw.polygon(screen, GREEN, car_vertices)
+
+    # wheels
+    # get the center of each wheel point
+    wheel_points = compute_wheel_points(car_loc)
+    # draw each wheel
+    for i, wheel_point in enumerate(wheel_points):
+        wheel_vertices = compute_vertices(wheel_point, WHEEL_L, WHEEL_W)
+        if i < 2:
+            # add delta(steering angle) into the front wheels
+            wheel_vertices = rotate_car(wheel_vertices, angle=psi)
+        else:
+            wheel_vertices = rotate_car(wheel_vertices, angle=psi)
+        pygame.draw.polygon(screen, RED, wheel_vertices)
+
+
+def compute_vertices(loc, length, width):
+    vertices = np.array([
+        [loc[0] + length / 2, loc[1] + width / 2],
+        [loc[0] + length / 2, loc[1] - width / 2],
+        [loc[0] - length / 2, loc[1] - width / 2],
+        [loc[0] - length / 2, loc[1] + width / 2]
+    ])
+    return vertices
+
+
+def compute_wheel_points(car_loc):
+    wheel_points = np.array([
+        [car_loc[0] + WHEEL_POS[0, 0], car_loc[1] + WHEEL_POS[0, 1]],
+        [car_loc[0] + WHEEL_POS[1, 0], car_loc[1] + WHEEL_POS[1, 1]],
+        [car_loc[0] + WHEEL_POS[2, 0], car_loc[1] + WHEEL_POS[2, 1]],
+        [car_loc[0] + WHEEL_POS[3, 0], car_loc[1] + WHEEL_POS[3, 1]]
+    ])
+    return wheel_points
+
+
+def rotate_car(pos, angle=0):
+    R = np.array([
+        [np.cos(angle), -np.sin(angle)],
+        [np.sin(angle), np.cos(angle)],
+    ])
+    rotated_pos = (R @ pos.T).T
+
+    return rotated_pos
 
 
 class Parking(gym.Env):
@@ -247,8 +296,8 @@ class Parking(gym.Env):
                 )
             self.surf_car.fill((0, 0, 0, 0))
 
-            # add Kinematic bicycle model function to update the car location later
-            pygame.draw.rect(self.surf_car, GREEN, [self.state[0], self.state[1], CAR_L, CAR_W])
+            # draw the car(agent) movement
+            draw_vehicle(self.surf_car, self.state[0:2], self.state[3])
 
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
@@ -267,11 +316,9 @@ class Parking(gym.Env):
             seed: Optional[int] = None,
             options: Optional[dict] = None,
     ):
-
         super().reset(seed=seed)
 
-        self.state = [10, 40, 4, 1]
-
+        self.state = [300, 150, 4, 0]
         self.window = None
         self.surf = None
         self.surf_car = None
