@@ -29,7 +29,6 @@ reset car location, reward and so on
 - reward function
 Consider reward functions
 Implement them
-
 '''
 
 # parameters for actions
@@ -56,37 +55,41 @@ WINDOW_W, WINDOW_H = 800, 600
 # parameters for cars in the parking environment
 CAR_L = 80
 CAR_W = 40
+CAR_STRUCT = np.array([[+CAR_L / 2, +CAR_W / 2],
+                       [+CAR_L / 2, -CAR_W / 2],
+                       [-CAR_L / 2, -CAR_W / 2],
+                       [-CAR_L / 2, +CAR_W / 2]],
+                      np.int32)
 WHEEL_L = 15
 WHEEL_W = 7
+WHEEL_STRUCT = np.array([[+WHEEL_L / 2, +WHEEL_W / 2],
+                         [+WHEEL_L / 2, -WHEEL_W / 2],
+                         [-WHEEL_L / 2, -WHEEL_W / 2],
+                         [-WHEEL_L / 2, +WHEEL_W / 2]],
+                        np.int32)
 WHEEL_POS = np.array([[25, 15], [25, -15], [-25, 15], [-25, -15]])
 PARKINGLOT_LOC = [300, 10, 90, 50]
 DT = 1
 
-MAX_STEPS = 200
+MAX_STEPS = 300
 
 
 def kinematic_act(action, state, DT):
     """
-    action: [0]:v, [1]:delta
-    state: [x,y,v,psi]
+    Parameters:
+        action(list): [𝑣, δ]: 𝑣 is velocity, δ(delta) is steering angle.
+        state(list): [x,y,ψ(psi)] : ψ(psi) is the heading angle of the car
+        DT: time step
 
-    Kinematic bicycle model
+    Kinematic bicycle model:
     x_dot = v * np.cos(psi)
     y_dot = v * np.sin(psi)
-    v_dot = v
     psi_dot = v * np.tan(delta) / CAR_L
-    or
-    x_dot = v * cos(psi + beta)
-    y_dot = v * sin(psi + beta)
-    psi_dot = v * cos(beta) * tan(delta)/car length
-    beta = tan^-1(Lr/Lf+Lr * tan(delta))
     """
-
-    x_dot = action[0] * np.cos(state[3])
-    y_dot = action[0] * np.sin(state[3])
-    v_dot = state[2]
+    x_dot = action[0] * np.cos(state[2])
+    y_dot = action[0] * np.sin(state[2])
     psi_dot = action[0] * np.tan(action[1]) / CAR_L
-    state_dot = np.array([x_dot, y_dot, v_dot, psi_dot]).T
+    state_dot = np.array([x_dot, y_dot, psi_dot]).T
     state = update_state(state, state_dot, DT)
     return state
 
@@ -94,52 +97,37 @@ def kinematic_act(action, state, DT):
 def update_state(state, state_dot, dt):
     state[0] += dt * state_dot[0]
     state[1] += dt * state_dot[1]
-    state[2] = state_dot[2]
-    state[3] += dt * state_dot[3]
+    state[2] += dt * state_dot[2]
     return state
 
 
-def draw_vehicle(screen, car_loc, psi):
+def draw_car(screen, car_loc, psi, delta):
+    """
+    Parameters:
+        screen: pygame.Surface
+        car_loc: the center of the car (x,y) location
+        psi: the heading angle of the car
+        delta: the steering angle
+    """
     # the car(agent)
-    # get the car(agent) vertexes from the center point
-    car_vertices = compute_vertices(car_loc, CAR_L, CAR_W)
-    # get the rotated car location
-    car_vertices = rotate_car(car_vertices, angle=psi)
+    # calculate the rotation of the car itself
+    car_vertices = rotate_car(CAR_STRUCT, angle=psi)
+    # add the center of the car x,y location
+    car_vertices += car_loc
     # draw the car(agent)
     pygame.draw.polygon(screen, GREEN, car_vertices)
 
     # wheels
-    # get the center of each wheel point
-    wheel_points = compute_wheel_points(car_loc)
+    # calculate the rotation of the wheels
+    wheel_points = rotate_car(WHEEL_POS, angle=psi)
     # draw each wheel
     for i, wheel_point in enumerate(wheel_points):
-        wheel_vertices = compute_vertices(wheel_point, WHEEL_L, WHEEL_W)
         if i < 2:
-            # add delta(steering angle) into the front wheels
-            wheel_vertices = rotate_car(wheel_vertices, angle=psi)
+            wheel_vertices = rotate_car(WHEEL_STRUCT, angle=psi + delta)
         else:
-            wheel_vertices = rotate_car(wheel_vertices, angle=psi)
+            wheel_vertices = rotate_car(WHEEL_STRUCT, angle=psi)
+        wheel_vertices += wheel_point + car_loc
         pygame.draw.polygon(screen, RED, wheel_vertices)
-
-
-def compute_vertices(loc, length, width):
-    vertices = np.array([
-        [loc[0] + length / 2, loc[1] + width / 2],
-        [loc[0] + length / 2, loc[1] - width / 2],
-        [loc[0] - length / 2, loc[1] - width / 2],
-        [loc[0] - length / 2, loc[1] + width / 2]
-    ])
-    return vertices
-
-
-def compute_wheel_points(car_loc):
-    wheel_points = np.array([
-        [car_loc[0] + WHEEL_POS[0, 0], car_loc[1] + WHEEL_POS[0, 1]],
-        [car_loc[0] + WHEEL_POS[1, 0], car_loc[1] + WHEEL_POS[1, 1]],
-        [car_loc[0] + WHEEL_POS[2, 0], car_loc[1] + WHEEL_POS[2, 1]],
-        [car_loc[0] + WHEEL_POS[3, 0], car_loc[1] + WHEEL_POS[3, 1]]
-    ])
-    return wheel_points
 
 
 def rotate_car(pos, angle=0):
@@ -148,7 +136,6 @@ def rotate_car(pos, angle=0):
         [np.sin(angle), np.cos(angle)],
     ])
     rotated_pos = (R @ pos.T).T
-
     return rotated_pos
 
 
@@ -213,11 +200,14 @@ class Parking(gym.Env):
         Let the car(agent) take an action in the parking environment.
 
         Parameters:
-            action(list): [𝑣, 𝜑], 𝑣 is velocity, 𝜑 is steering angle.
-            state(list): [x,y,v,psi]
+            action(list): [𝑣, δ]: 𝑣 is velocity, δ(delta) is steering angle.
+            state(list): [x,y,psi]
 
         Returns:
             obs (list):
+            reward:
+            terminated:
+            truncated:
         """
         if action is not None:
             if self.action_type == "discrete":
@@ -227,13 +217,14 @@ class Parking(gym.Env):
                     SPEED_LIMIT,
                     STEERING_LIMIT,
                 ]
-
+                self.loc_old = self.state[0:2]
                 # calculate by Kinematic model
                 self.state = kinematic_act(action, self.state, DT)
+                self.loc_new = self.state[0:2]
+                self.delta = action[1]
 
             # update observation
             # the current vehicle info, goal info
-            self.obs = 1  # temporary
 
             # self.obs[] = state
 
@@ -297,7 +288,10 @@ class Parking(gym.Env):
             self.surf_car.fill((0, 0, 0, 0))
 
             # draw the car(agent) movement
-            draw_vehicle(self.surf_car, self.state[0:2], self.state[3])
+            draw_car(self.surf_car, self.state[0:2], self.state[2], self.delta)
+
+            # draw the car path
+            pygame.draw.line(self.surf_parkinglot, BLACK, self.loc_old, self.loc_new)
 
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
@@ -318,18 +312,23 @@ class Parking(gym.Env):
     ):
         super().reset(seed=seed)
 
-        self.state = [300, 150, 4, 0]
+        self.state = [500, 150, 0]
+        self.terminated = False
+        self.truncated = False
+        self.run_steps = 0
+
+        self.obs = [500, 150]
+        self.loc_old = self.state[0:2]
+        self.loc_new = self.state[0:2]
+        self.delta = 0
+
         self.window = None
         self.surf = None
         self.surf_car = None
         self.surf_parkinglot = None
         self.clock = None
 
-        self.terminated = False
-        self.truncated = False
-        self.run_steps = 0
-        obs = 0
-        return obs, {}
+        return self.obs, {}
 
     def _reward(self):
         self.run_steps += 1
@@ -369,9 +368,11 @@ if __name__ == "__main__":
     env.render()
     while not terminated and not truncated:
         # action = algo.compute_single_action(obs)  # Algorithm.compute_single_action() is to programmatically compute actions from a trained agent.
-        action = env.action_space.sample()  # env.action_space.sample() is to sample random actions.
+        # action = env.action_space.sample()  # env.action_space.sample() is to sample random actions.
+        action = [1, np.pi/6]
         obs, reward, terminated, truncated, info = env.step(action)
         env.render()
         time.sleep(0.1)
         episode_reward += reward
         print("Episode reward:", episode_reward)
+
