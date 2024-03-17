@@ -33,11 +33,8 @@ Implement them
 
 # parameters for actions
 PI = np.pi
+ACCELERATION_LIMIT = 1.0
 STEERING_LIMIT = PI / 4
-SPEED_LIMIT = 4.0
-N_SAMPLES_LAT_ACTION = 5
-LON_ACTIONS = np.array([-SPEED_LIMIT, SPEED_LIMIT])
-LAT_ACTIONS = np.linspace(-STEERING_LIMIT, STEERING_LIMIT, N_SAMPLES_LAT_ACTION)
 
 # parameters for rendering the simulation environment
 FPS = 30
@@ -77,19 +74,21 @@ MAX_STEPS = 300
 def kinematic_act(action, state, DT):
     """
     Parameters:
-        action(list): [𝑣, δ]: 𝑣 is velocity, δ(delta) is steering angle.
-        state(list): [x,y,ψ(psi)] : ψ(psi) is the heading angle of the car
+        action(list): [a, δ]: a is acceleration, δ(delta) is steering angle.
+        state(list): [x,y,v,ψ(psi)] : v is velocity, ψ(psi) is the heading angle of the car
         DT: time step
 
     Kinematic bicycle model:
     x_dot = v * np.cos(psi)
     y_dot = v * np.sin(psi)
+    v_dot = a
     psi_dot = v * np.tan(delta) / CAR_L
     """
-    x_dot = action[0] * np.cos(state[2])
-    y_dot = action[0] * np.sin(state[2])
-    psi_dot = action[0] * np.tan(action[1]) / CAR_L
-    state_dot = np.array([x_dot, y_dot, psi_dot]).T
+    x_dot = state[2] * np.cos(state[3])
+    y_dot = state[2] * np.sin(state[3])
+    v_dot = action[0]
+    psi_dot = state[2] * np.tan(action[1]) / CAR_L
+    state_dot = np.array([x_dot, y_dot, v_dot, psi_dot]).T
     state = update_state(state, state_dot, DT)
     return state
 
@@ -98,6 +97,11 @@ def update_state(state, state_dot, dt):
     state[0] += dt * state_dot[0]
     state[1] += dt * state_dot[1]
     state[2] += dt * state_dot[2]
+    state[3] += dt * state_dot[3]
+
+    # clip for velocity within 5km/h
+    if state[2] > 5:
+        state[2] = 5
     return state
 
 
@@ -137,6 +141,21 @@ def rotate_car(pos, angle=0):
     ])
     rotated_pos = (R @ pos.T).T
     return rotated_pos
+
+
+def is_valid_loc(loc, width, height):
+    if loc[0] < 0 or loc[0] > width or loc[1] < 0 or loc[1] > height:
+        return True
+    else:
+        return False
+
+
+def is_parking_success(loc, parking_loc):
+    if (parking_loc[0] <= loc[0] <= parking_loc[0] + parking_loc[2]
+            and parking_loc[1] <= loc[1] <= parking_loc[1] + parking_loc[3]):
+        return True
+    else:
+        return False
 
 
 class Parking(gym.Env):
@@ -179,13 +198,10 @@ class Parking(gym.Env):
         self.action_type = action_type
         self.observation_space = gym.spaces.Box(-1, 1, dtype=np.float32)
 
-        if action_type == "discrete":
-            self.action_space = gym.spaces.Discrete(N_SAMPLES_LAT_ACTION)
-
         if action_type == "continuous":
             self.action_space = gym.spaces.Box(
-                np.array([-SPEED_LIMIT, -STEERING_LIMIT]),
-                np.array([SPEED_LIMIT, STEERING_LIMIT]),
+                np.array([-ACCELERATION_LIMIT, -STEERING_LIMIT]),
+                np.array([ACCELERATION_LIMIT, STEERING_LIMIT]),
                 dtype=np.float32,
             )
 
@@ -200,8 +216,8 @@ class Parking(gym.Env):
         Let the car(agent) take an action in the parking environment.
 
         Parameters:
-            action(list): [𝑣, δ]: 𝑣 is velocity, δ(delta) is steering angle.
-            state(list): [x,y,psi]
+            action(list): [a, δ]: a is velocity, δ(delta) is steering angle.
+            state(list): [x,y,v,psi]
 
         Returns:
             obs (list):
@@ -210,11 +226,9 @@ class Parking(gym.Env):
             truncated:
         """
         if action is not None:
-            if self.action_type == "discrete":
-                action = np.array([SPEED_LIMIT, LAT_ACTIONS[action]])
             if self.action_type == "continuous":
                 action = np.clip(action, [-1, -1], [1, 1]) * [
-                    SPEED_LIMIT,
+                    ACCELERATION_LIMIT,
                     STEERING_LIMIT,
                 ]
                 self.loc_old = self.state[0:2]
@@ -225,8 +239,6 @@ class Parking(gym.Env):
 
             # update observation
             # the current vehicle info, goal info
-
-            # self.obs[] = state
 
             reward = self._reward()
 
@@ -288,7 +300,7 @@ class Parking(gym.Env):
             self.surf_car.fill((0, 0, 0, 0))
 
             # draw the car(agent) movement
-            draw_car(self.surf_car, self.state[0:2], self.state[2], self.delta)
+            draw_car(self.surf_car, self.state[0:2], self.state[3], self.delta)
 
             # draw the car path
             pygame.draw.line(self.surf_parkinglot, BLACK, self.loc_old, self.loc_new)
@@ -312,10 +324,11 @@ class Parking(gym.Env):
     ):
         super().reset(seed=seed)
 
-        self.state = [500, 150, 0]
+        self.state = [500, 150, 0, 0]
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
+        self.reward = 0
 
         self.obs = [500, 150]
         self.loc_old = self.state[0:2]
@@ -336,9 +349,19 @@ class Parking(gym.Env):
         if self.run_steps == MAX_STEPS:
             self.truncated = True
 
-        # add reward later
-        reward = 0
-        return reward
+        # check the location
+        if is_valid_loc(self.state[0:2], WINDOW_W, WINDOW_H):
+            self.reward -= 1
+            self.terminated = True
+            print("The car is not a valid location")
+
+        # check the parking
+        if is_parking_success(self.state[0:2], PARKINGLOT_LOC):
+            self.reward += 1
+            self.truncated = True
+            print("successful parking")
+
+        return self.reward
 
     def close(self):
         if self.window is not None:
@@ -368,8 +391,7 @@ if __name__ == "__main__":
     env.render()
     while not terminated and not truncated:
         # action = algo.compute_single_action(obs)  # Algorithm.compute_single_action() is to programmatically compute actions from a trained agent.
-        # action = env.action_space.sample()  # env.action_space.sample() is to sample random actions.
-        action = [1, np.pi/6]
+        action = env.action_space.sample()  # env.action_space.sample() is to sample random actions.
         obs, reward, terminated, truncated, info = env.step(action)
         env.render()
         time.sleep(0.1)
