@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import pygame
 import time
 import gymnasium as gym
@@ -35,6 +36,7 @@ Implement them
 PI = np.pi
 ACCELERATION_LIMIT = 1.0
 STEERING_LIMIT = PI / 4
+VELOCITY_LIMIT = 10.0
 
 # parameters for rendering the simulation environment
 FPS = 30
@@ -65,17 +67,18 @@ WHEEL_STRUCT = np.array([[+WHEEL_L / 2, +WHEEL_W / 2],
                          [-WHEEL_L / 2, +WHEEL_W / 2]],
                         np.int32)
 WHEEL_POS = np.array([[25, 15], [25, -15], [-25, 15], [-25, -15]])
-PARKINGLOT_LOC = [300, 10, 90, 50]
 DT = 1
 
 MAX_STEPS = 300
 
 
-def kinematic_act(action, state, DT):
+def kinematic_act(action, loc, v, psi, DT):
     """
     Parameters:
         action(list): [a, δ]: a is acceleration, δ(delta) is steering angle.
-        state(list): [x,y,v,ψ(psi)] : v is velocity, ψ(psi) is the heading angle of the car
+        loc: the center of the car (x,y) location
+        v : velocity
+        ψ(psi): the heading angle of the car
         DT: time step
 
     Kinematic bicycle model:
@@ -84,24 +87,22 @@ def kinematic_act(action, state, DT):
     v_dot = a
     psi_dot = v * np.tan(delta) / CAR_L
     """
-    x_dot = state[2] * np.cos(state[3])
-    y_dot = state[2] * np.sin(state[3])
+
+    state = np.array([loc[0], loc[1], v, psi], np.float32)
+    x_dot = v * np.cos(psi)
+    y_dot = v * np.sin(psi)
     v_dot = action[0]
-    psi_dot = state[2] * np.tan(action[1]) / CAR_L
-    state_dot = np.array([x_dot, y_dot, v_dot, psi_dot]).T
+    psi_dot = v * np.tan(action[1]) / CAR_L
+    state_dot = np.array([x_dot, y_dot, v_dot, psi_dot], np.float32).T
     state = update_state(state, state_dot, DT)
-    return state
+    return state[:2], state[2], state[3]
 
 
 def update_state(state, state_dot, dt):
-    state[0] += dt * state_dot[0]
-    state[1] += dt * state_dot[1]
-    state[2] += dt * state_dot[2]
-    state[3] += dt * state_dot[3]
+    state += dt * state_dot
 
-    # clip for velocity within 5km/h
-    if state[2] > 5:
-        state[2] = 5
+    state += dt * state_dot
+    state[2] = np.clip(state[2], -VELOCITY_LIMIT, VELOCITY_LIMIT)
     return state
 
 
@@ -150,9 +151,10 @@ def is_valid_loc(loc, width, height):
         return False
 
 
-def is_parking_success(loc, parking_loc):
-    if (parking_loc[0] <= loc[0] <= parking_loc[0] + parking_loc[2]
-            and parking_loc[1] <= loc[1] <= parking_loc[1] + parking_loc[3]):
+# modify if parking check conditions
+def is_parking_successful(loc, parking_loc):
+    if (parking_loc[0] < loc[0] < parking_loc[0] + parking_loc[2]
+            and parking_loc[1] < loc[1] < parking_loc[1] + parking_loc[3]):
         return True
     else:
         return False
@@ -216,11 +218,10 @@ class Parking(gym.Env):
         Let the car(agent) take an action in the parking environment.
 
         Parameters:
-            action(list): [a, δ]: a is velocity, δ(delta) is steering angle.
-            state(list): [x,y,v,psi]
+            action(list): [a, δ]: a is acceleration, δ(delta) is steering angle.
 
         Returns:
-            obs (list):
+            state (list): velocity, the 4 corner points of the parking area
             reward:
             terminated:
             truncated:
@@ -231,21 +232,17 @@ class Parking(gym.Env):
                     ACCELERATION_LIMIT,
                     STEERING_LIMIT,
                 ]
-                self.loc_old = self.state[0:2]
-                # calculate by Kinematic model
-                self.state = kinematic_act(action, self.state, DT)
-                self.loc_new = self.state[0:2]
+                self.loc_old = self.loc
+                self.loc, self.velocity, self.psi = kinematic_act(action, self.loc, self.velocity, self.psi, DT)
                 self.delta = action[1]
 
-            # update observation
-            # the current vehicle info, goal info
-
             reward = self._reward()
+            self.state = [self.velocity, self.parking_lot - self.loc]
 
         if self.render_mode == "human":
             self.render()
 
-        return self.obs, reward, self.terminated, self.truncated, {}
+        return self.state, reward, self.terminated, self.truncated, {}
 
     def render(self):
         """
@@ -290,7 +287,7 @@ class Parking(gym.Env):
                     pygame.draw.line(self.surf_parkinglot, GRID_COLOR, (0, y), (WINDOW_W, y), 1)
 
                 # Draw the targeted parking space
-                pygame.draw.rect(self.surf_parkinglot, YELLOW, PARKINGLOT_LOC)  # [X, Y, Width, Height]
+                pygame.draw.polygon(self.surf_parkinglot, YELLOW, self.parking_lot)
 
             # for the car(agent)
             if self.surf_car is None:
@@ -300,10 +297,10 @@ class Parking(gym.Env):
             self.surf_car.fill((0, 0, 0, 0))
 
             # draw the car(agent) movement
-            draw_car(self.surf_car, self.state[0:2], self.state[3], self.delta)
+            draw_car(self.surf_car, self.loc, self.psi, self.delta)
 
             # draw the car path
-            pygame.draw.line(self.surf_parkinglot, BLACK, self.loc_old, self.loc_new)
+            # pygame.draw.line(self.surf_parkinglot, BLACK, self.loc_old, self.loc)
 
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
@@ -324,16 +321,22 @@ class Parking(gym.Env):
     ):
         super().reset(seed=seed)
 
-        self.state = [500, 150, 0, 0]
+        self.loc = [500.0, 150.0]
+        self.velocity = 0.0
+        self.psi = 0.0
+        self.loc_old = self.loc
+        self.delta = 0.0
+        self.parking_lot = [100, 30] + np.array([[+CAR_L / 2, +CAR_W / 2],
+                                                        [+CAR_L / 2, -CAR_W / 2],
+                                                        [-CAR_L / 2, -CAR_W / 2],
+                                                        [-CAR_L / 2, +CAR_W / 2]],
+                                                       np.float32)
+
+        self.state = [self.velocity, self.parking_lot - self.loc]
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
         self.reward = 0
-
-        self.obs = [500, 150]
-        self.loc_old = self.state[0:2]
-        self.loc_new = self.state[0:2]
-        self.delta = 0
 
         self.window = None
         self.surf = None
@@ -341,7 +344,7 @@ class Parking(gym.Env):
         self.surf_parkinglot = None
         self.clock = None
 
-        return self.obs, {}
+        return self.state, {}
 
     def _reward(self):
         self.run_steps += 1
@@ -350,16 +353,16 @@ class Parking(gym.Env):
             self.truncated = True
 
         # check the location
-        if is_valid_loc(self.state[0:2], WINDOW_W, WINDOW_H):
+        if is_valid_loc(self.loc, WINDOW_W, WINDOW_H):
             self.reward -= 1
             self.terminated = True
             print("The car is not a valid location")
 
         # check the parking
-        if is_parking_success(self.state[0:2], PARKINGLOT_LOC):
-            self.reward += 1
-            self.truncated = True
-            print("successful parking")
+        #if is_parking_successful(self.loc, self.parking_lot):
+        #    self.reward += 1
+        ##    self.truncated = True
+        #   print("successful parking")
 
         return self.reward
 
@@ -375,7 +378,7 @@ if __name__ == "__main__":
 
     env = Parking(render_mode="human", action_type="continuous")
 
-    # algo = (
+    #algo = (
     #    PPOConfig()
     #    .environment(env=env)
     #    .rollouts(num_rollout_workers=2)
@@ -383,7 +386,7 @@ if __name__ == "__main__":
     #    .framework("torch")
     #    .evaluation(evaluation_num_workers=1)
     #    .build()
-    # )
+    #)
 
     episode_reward = 0
     terminated = truncated = False
