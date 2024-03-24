@@ -7,10 +7,9 @@ from typing import Optional
 
 '''
 ## todo
-recheck:add a collision check function
-done:add a prallel/perpendicular environment
-avoid calculating car_vertices in reward function
-kinda done:consider OOP or structure of this code
+recheck check_collision function
+recheck the size of the prallel/perpendicular parking
+ongoing: consider OOP or structure of this code
 consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): and def is_valid_loc(self, width, height): 
 as they have same logic
 '''
@@ -383,7 +382,7 @@ class Parking(gym.Env):
             self.truncated = True
 
         # check the location
-        if self.is_valid_loc(WINDOW_W, WINDOW_H):
+        if self.is_valid_loc():
             self.reward -= 1
             self.terminated = True
             print("The car is not a valid location")
@@ -402,10 +401,10 @@ class Parking(gym.Env):
 
         return self.reward
 
-    def is_valid_loc(self, width, height):
+    def is_valid_loc(self):
         for car_vertex in self.car.car_vertices:
-            if (car_vertex[0] < 0 or car_vertex[0] > width or
-                    car_vertex[1] < 0 or car_vertex[1] > height):
+            if (car_vertex[0] < 0 or car_vertex[0] > WINDOW_W or
+                    car_vertex[1] < 0 or car_vertex[1] > WINDOW_H):
                 return True
             else:
                 return False
@@ -430,17 +429,15 @@ class Parking(gym.Env):
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
             if (xy4[0] <= self.car.car_loc[0] <= xy1[0] and
-            xy2[2] <= self.car.car_loc[1] <= xy1[1]):
-                return False
-            else:
+            xy2[1] <= self.car.car_loc[1] <= xy1[1]):
                 return True
-
-
+            else:
+                return False
 
     @staticmethod
     def set_random_loc():
-        x = random.uniform(10, WINDOW_W - 100)
-        y = random.uniform(10, WINDOW_H - 100)
+        x = random.uniform(100, WINDOW_W - 100)
+        y = random.uniform(100, WINDOW_H - 100)
         loc = [x, y]
         return loc
 
