@@ -315,8 +315,8 @@ class Parking(gym.Env):
         if self.parking_type == "parallel":
             # calculate the obstacle cars center location
             static_cars_loc = np.array([
-                [self.parking_lot[0] + 0, self.parking_lot[1] + 50],
-                [self.parking_lot[0] + 0, self.parking_lot[1] - 50],
+                [self.parking_lot[0] + 0, self.parking_lot[1] + 90],
+                [self.parking_lot[0] + 0, self.parking_lot[1] - 90],
             ])
             car_struct = np.array([
                 [+CAR_W / 2, +CAR_L / 2],
@@ -329,7 +329,7 @@ class Parking(gym.Env):
             # calculate the obstacle cars center location
             static_cars_loc = np.array([
                 [self.parking_lot[0] + 0, self.parking_lot[1] + 50],
-                [self.parking_lot[0] + 0, self.parking_lot[1] - 30],
+                [self.parking_lot[0] + 0, self.parking_lot[1] - 50],
             ])
             car_struct = CAR_STRUCT
         # calculate the obstacle cars vertices
@@ -428,11 +428,12 @@ class Parking(gym.Env):
     def check_collision(self):
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
-            if (xy4[0] <= self.car.car_loc[0] <= xy1[0] and
-            xy2[1] <= self.car.car_loc[1] <= xy1[1]):
-                return True
-            else:
-                return False
+            for car_vertex in self.car.car_vertices:
+                if (xy4[0] <= car_vertex[0] <= xy1[0] and
+                xy2[1] <= car_vertex[1] <= xy1[1]):
+                    return True
+                else:
+                    return False
 
     @staticmethod
     def set_random_loc():
@@ -446,4 +447,3 @@ class Parking(gym.Env):
             pygame.display.quit()
             pygame.quit()
             self.window = None
-
