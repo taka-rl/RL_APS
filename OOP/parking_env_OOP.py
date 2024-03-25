@@ -7,8 +7,6 @@ from typing import Optional
 
 '''
 ## todo
-recheck check_collision function
-recheck the size of the prallel/perpendicular parking
 ongoing: consider OOP or structure of this code
 consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): and def is_valid_loc(self, width, height): 
 as they have same logic
@@ -309,7 +307,7 @@ class Parking(gym.Env):
         for car_vertex in self.static_cars_vertices:
             pygame.draw.polygon(self.surf_parkinglot, COLORS["GREY"], car_vertex)
 
-    def generate_static_obstacles(self, type):
+    def generate_static_obstacles(self, parking_type):
         static_cars_vertices = []
         static_parking_vertices = []
         if self.parking_type == "parallel":
@@ -335,7 +333,7 @@ class Parking(gym.Env):
         # calculate the obstacle cars vertices
         for loc in static_cars_loc:
             car_vertices = car_struct + loc
-            parking_vertices = type + loc
+            parking_vertices = parking_type + loc
             static_cars_vertices.append(car_vertices)
             static_parking_vertices.append(parking_vertices)
         return static_cars_vertices, static_parking_vertices
@@ -429,11 +427,9 @@ class Parking(gym.Env):
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
             for car_vertex in self.car.car_vertices:
-                if (xy4[0] <= car_vertex[0] <= xy1[0] and
-                xy2[1] <= car_vertex[1] <= xy1[1]):
+                if xy4[0] <= car_vertex[0] <= xy1[0] and xy2[1] <= car_vertex[1] <= xy1[1]:
                     return True
-                else:
-                    return False
+        return False
 
     @staticmethod
     def set_random_loc():
