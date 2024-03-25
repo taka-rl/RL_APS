@@ -404,8 +404,7 @@ class Parking(gym.Env):
             if (car_vertex[0] < 0 or car_vertex[0] > WINDOW_W or
                     car_vertex[1] < 0 or car_vertex[1] > WINDOW_H):
                 return True
-            else:
-                return False
+        return False
 
     def is_parking_successful(self):
         pa_top_right, pa_bottom_right, pa_bottom_left, pa_top_left = self.parking_lot_vertices
