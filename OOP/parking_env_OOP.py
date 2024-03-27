@@ -7,9 +7,11 @@ from typing import Optional
 
 '''
 ## todo
-ongoing: consider OOP or structure of this code
+ongoing: consider OOP or structure of this code -> Parking/Car/Render class?
 consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): and def is_valid_loc(self, width, height): 
 as they have same logic
+normalize self.state values between -1 and 1.
+convert pixel to meters
 '''
 
 
@@ -49,16 +51,16 @@ WHEEL_STRUCT = np.array([[+WHEEL_L / 2, +WHEEL_W / 2],
                         np.int32)
 WHEEL_POS = np.array([[25, 15], [25, -15], [-25, 15], [-25, -15]])
 PARALLEL = np.array([
-                [+CAR_W / 2 + 5, +CAR_L / 2 + 5],
-                [+CAR_W / 2 + 5, -CAR_L / 2 - 5],
-                [-CAR_W / 2 - 5, -CAR_L / 2 - 5],
-                [-CAR_W / 2 - 5, +CAR_L / 2 + 5]],
+                [+CAR_W / 2 + 5, +CAR_L / 2 + 10],
+                [+CAR_W / 2 + 5, -CAR_L / 2 - 10],
+                [-CAR_W / 2 - 5, -CAR_L / 2 - 10],
+                [-CAR_W / 2 - 5, +CAR_L / 2 + 10]],
                 np.int32)
 PERPENDICULAR = np.array([
-                [+CAR_L / 2 + 5, +CAR_W / 2 + 5],
-                [+CAR_L / 2 + 5, -CAR_W / 2 - 5],
-                [-CAR_L / 2 - 5, -CAR_W / 2 - 5],
-                [-CAR_L / 2 - 5, +CAR_W / 2 + 5]],
+                [+CAR_L / 2 + 5, +CAR_W / 2 + 10],
+                [+CAR_L / 2 + 5, -CAR_W / 2 - 10],
+                [-CAR_L / 2 - 5, -CAR_W / 2 - 10],
+                [-CAR_L / 2 - 5, +CAR_W / 2 + 10]],
                 np.int32)
 DT = 1
 
@@ -261,7 +263,7 @@ class Parking(gym.Env):
                 self._draw_static_obstacles()
 
                 # Draw the targeted parking space
-                self._draw_parking_space(self.parking_lot_vertices)
+                self._draw_parking_space("RED", self.parking_lot_vertices)
 
             # for the car(agent)
             if self.surf_car is None:
@@ -298,14 +300,17 @@ class Parking(gym.Env):
             pygame.draw.line(surf_parkinglot, COLORS["GRID_COLOR"], (0, y), (WINDOW_W, y))
         return surf_parkinglot
 
-    def _draw_parking_space(self, parking_lot_vertex):
-        pygame.draw.polygon(self.surf_parkinglot, COLORS["YELLOW"], parking_lot_vertex)
+    def _draw_parking_space(self, color, parking_lot_vertex):
+        pygame.draw.polygon(self.surf_parkinglot, COLORS[color], parking_lot_vertex)
+
+    def _draw_static_cars(self, color, car_vertex):
+        pygame.draw.polygon(self.surf_parkinglot, COLORS[color], car_vertex)
 
     def _draw_static_obstacles(self):
         for parking_lot_vertex in self.static_parking_lot_vertices:
-            self._draw_parking_space(parking_lot_vertex)
+            self._draw_parking_space("YELLOW", parking_lot_vertex)
         for car_vertex in self.static_cars_vertices:
-            pygame.draw.polygon(self.surf_parkinglot, COLORS["GREY"], car_vertex)
+            self._draw_parking_space("GREY", car_vertex)
 
     def generate_static_obstacles(self, parking_type):
         static_cars_vertices = []
@@ -313,8 +318,8 @@ class Parking(gym.Env):
         if self.parking_type == "parallel":
             # calculate the obstacle cars center location
             static_cars_loc = np.array([
-                [self.parking_lot[0] + 0, self.parking_lot[1] + 90],
-                [self.parking_lot[0] + 0, self.parking_lot[1] - 90],
+                [self.parking_lot[0] + 0, self.parking_lot[1] + 100],
+                [self.parking_lot[0] + 0, self.parking_lot[1] - 100],
             ])
             car_struct = np.array([
                 [+CAR_W / 2, +CAR_L / 2],
@@ -326,8 +331,8 @@ class Parking(gym.Env):
         if self.parking_type == "perpendicular":
             # calculate the obstacle cars center location
             static_cars_loc = np.array([
-                [self.parking_lot[0] + 0, self.parking_lot[1] + 50],
-                [self.parking_lot[0] + 0, self.parking_lot[1] - 50],
+                [self.parking_lot[0] + 0, self.parking_lot[1] + 60],
+                [self.parking_lot[0] + 0, self.parking_lot[1] - 60],
             ])
             car_struct = CAR_STRUCT
         # calculate the obstacle cars vertices
@@ -434,8 +439,7 @@ class Parking(gym.Env):
     def set_random_loc():
         x = random.uniform(100, WINDOW_W - 100)
         y = random.uniform(100, WINDOW_H - 100)
-        loc = [x, y]
-        return loc
+        return np.array([x, y])
 
     def close(self):
         if self.window is not None:
