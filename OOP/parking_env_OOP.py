@@ -5,9 +5,8 @@ import gymnasium as gym
 from typing import Optional
 
 '''
-## todo
-ongoing: consider OOP or structure of this code -> Parking/Car/Render class?
-consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): and def is_valid_loc(self, width, height): 
+TODO: consider OOP or structure of this code -> Parking/Car/Render class?
+TODO: consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): and def is_valid_loc(self, width, height): 
 as they have same logic
 '''
 
@@ -67,6 +66,10 @@ PERPENDICULAR = np.array([
     [-CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE],
     [-CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE]],
     dtype=np.float32)  # Adjusted for meters
+
+OFFSET_PARALLEL = 100 * PIXEL_TO_METER_SCALE
+OFFSET_PERPENDICULAR = 60 * PIXEL_TO_METER_SCALE
+
 DT = 0.1
 
 MAX_STEPS = 300
@@ -78,7 +81,7 @@ def meters_to_pixels(meters):
     Convert meters to pixels based on the defined scale.
 
     Parameters:
-        meters (float): The value in meters to convert.
+        meters: The value in meters to convert.
 
     Returns:
         float: The equivalent value in pixels.
@@ -87,7 +90,7 @@ def meters_to_pixels(meters):
 
 
 class Car:
-    def __init__(self, car_loc, psi=0, v=0):
+    def __init__(self, car_loc, psi=0.0, v=0.0):
         self.car_loc = car_loc
         self.psi = psi
         self.v = v
@@ -124,7 +127,7 @@ class Car:
         self.psi += dt * psi_dot
 
     @staticmethod
-    def rotate_car(car_loc, angle=0):
+    def rotate_car(car_loc, angle=0.0):
         r = np.array([
             [np.cos(angle), -np.sin(angle)],
             [np.sin(angle), np.cos(angle)],
@@ -142,15 +145,14 @@ class Car:
 
         Parameters:
             screen: pygame.Surface
-
         """
-        # the car(agent)
+        # update the car(agent) vertices
         self.get_car_vertices()
-
-        # convert to pixels
+        # convert meters to pixels
         car_vertices = meters_to_pixels(self.car_vertices)
         # draw the car(agent)
         pygame.draw.polygon(screen, COLORS["GREEN"], car_vertices)
+
         # wheels
         # calculate the rotation of the wheels
         wheel_points = self.rotate_car(WHEEL_POS, angle=self.psi)
@@ -186,13 +188,7 @@ class Parking(gym.Env):
         "parking_type": ["parallel", "perpendicular"]
     }
 
-    def __init__(
-            self,
-            render_mode: Optional[str] = None,
-            action_type: Optional[str] = None,
-            parking_type: Optional[str] = None
-
-    ) -> None:
+    def __init__(self, env_config) -> None:
         """
         Initializes a parking instance.
 
@@ -201,15 +197,15 @@ class Parking(gym.Env):
             action_type: the type of action for the agent
         """
         super().__init__()
-        assert render_mode in self.metadata["render_mode"]
-        assert action_type in self.metadata["action_type"]
-        assert parking_type in self.metadata["parking_type"]
-        self.render_mode = render_mode
-        self.parking_type = parking_type
-        self.action_type = action_type
+        #assert render_mode in self.metadata["render_mode"]
+        #assert action_type in self.metadata["action_type"]
+        #assert parking_type in self.metadata["parking_type"]
+        self.render_mode = env_config["render_mode"]
+        self.parking_type = env_config["parking_type"]
+        self.action_type = env_config["action_type"]
         self.observation_space = gym.spaces.Box(-1, 1, dtype=np.float32)
 
-        if action_type == "continuous":
+        if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(
                 np.array([-ACCELERATION_LIMIT, -STEERING_LIMIT]),
                 np.array([ACCELERATION_LIMIT, STEERING_LIMIT]),
@@ -346,36 +342,51 @@ class Parking(gym.Env):
         for car_vertex in self.static_cars_vertices:
             self._draw_static_cars("GREY", car_vertex)
 
-    def generate_static_obstacles(self, parking_type):
+    def generate_static_obstacles(self):
         static_cars_vertices = []
         static_parking_vertices = []
-        if self.parking_type == "parallel":
-            # calculate the obstacle cars center location
-            static_cars_loc = np.array([
-                [self.parking_lot[0], self.parking_lot[1] + 100 * PIXEL_TO_METER_SCALE],
-                [self.parking_lot[0], self.parking_lot[1] - 100 * PIXEL_TO_METER_SCALE],
-            ])
-            car_struct = np.array([
-                [+CAR_W / 2, +CAR_L / 2],
-                [+CAR_W / 2, -CAR_L / 2],
-                [-CAR_W / 2, -CAR_L / 2],
-                [-CAR_W / 2, +CAR_L / 2]],
-                np.float32)
 
-        if self.parking_type == "perpendicular":
-            # calculate the obstacle cars center location
-            static_cars_loc = np.array([
-                [self.parking_lot[0], self.parking_lot[1] + 60 * PIXEL_TO_METER_SCALE],
-                [self.parking_lot[0], self.parking_lot[1] - 60 * PIXEL_TO_METER_SCALE],
-            ])
-            car_struct = CAR_STRUCT
-        # calculate the obstacle cars vertices
+        offset = OFFSET_PARALLEL if self.parking_type == "parallel" else OFFSET_PERPENDICULAR
+        car_struct = self.get_car_struct_for_parallel() if self.parking_type == "parallel" else CAR_STRUCT
+
+        # Center locations for the static cars
+        static_cars_loc = np.array([[self.parking_lot[0], self.parking_lot[1] + offset],
+                                    [self.parking_lot[0], self.parking_lot[1] - offset]])
+
+        # calculate the obstacle cars vertices and parking lots vertices
+        parking_type = self.get_parking_struct(self.parking_type)
         for loc in static_cars_loc:
-            car_vertices = car_struct + loc
-            parking_vertices = parking_type + loc
-            static_cars_vertices.append(car_vertices)
-            static_parking_vertices.append(parking_vertices)
+            static_cars_vertices.append(car_struct + loc)
+            static_parking_vertices.append(parking_type + loc)
         return static_cars_vertices, static_parking_vertices
+
+    @staticmethod
+    def get_car_struct_for_parallel():
+        """
+        Get the car structure for parallel parking.
+
+        Returns:
+            np.ndarray: The car structure vertices adjusted for parallel parking.
+        """
+        return np.array([
+            [+CAR_W / 2, +CAR_L / 2],
+            [+CAR_W / 2, -CAR_L / 2],
+            [-CAR_W / 2, -CAR_L / 2],
+            [-CAR_W / 2, +CAR_L / 2]],
+            dtype=np.float32)
+
+    @staticmethod
+    def get_parking_struct(parking_type: str):
+        """
+        Get the parking structure based on the parking type.
+
+        Parameters:
+            parking_type (str): The type of parking arrangement.
+
+        Returns:
+            np.ndarray: The vertices for parking space structure.
+        """
+        return PARALLEL if parking_type == "parallel" else PERPENDICULAR
 
     def reset(
             self,
@@ -392,10 +403,10 @@ class Parking(gym.Env):
         self.parking_lot = self.set_random_loc()
         if self.parking_type == "parallel":
             self.parking_lot_vertices = self.parking_lot + PARALLEL
-            self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles(PARALLEL)
+            self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
         if self.parking_type == "perpendicular":
             self.parking_lot_vertices = self.parking_lot + PERPENDICULAR
-            self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles(PERPENDICULAR)
+            self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
 
         self.state = [self.car.v / VELOCITY_LIMIT, (self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE]
         self.terminated = False
@@ -473,7 +484,7 @@ class Parking(gym.Env):
         Give random values for the center x,y location from 100 to maximum value - 100
 
         Return:
-             x, y location values as np.array
+             np.array: x, y location values
         """
         x = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
         y = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
