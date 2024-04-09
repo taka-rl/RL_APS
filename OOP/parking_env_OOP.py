@@ -193,17 +193,13 @@ class Parking(gym.Env):
         Initializes a parking instance.
 
         Parameters:
-            render_mode: the drawing mode for visualization
-            action_type: the type of action for the agent
+            env_config: contains the action type, render mode and parking type
         """
         super().__init__()
-        #assert render_mode in self.metadata["render_mode"]
-        #assert action_type in self.metadata["action_type"]
-        #assert parking_type in self.metadata["parking_type"]
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(-1, 1, dtype=np.float32)
+        self.observation_space = gym.spaces.Box(-1, 1, shape=[9], dtype=np.float32)
 
         if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(
@@ -244,7 +240,9 @@ class Parking(gym.Env):
 
             self._reward()
 
-            self.state = [self.car.v / VELOCITY_LIMIT, (self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE]
+            # flatten the state for the return value
+            distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
+            self.state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
 
         if self.render_mode == "human":
             self.render()
@@ -410,7 +408,9 @@ class Parking(gym.Env):
 
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
 
-        self.state = np.array([self.car.v / VELOCITY_LIMIT, (self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE])
+        # flatten the state for the return value
+        distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
+        self.state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
