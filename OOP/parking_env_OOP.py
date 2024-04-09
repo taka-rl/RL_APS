@@ -94,7 +94,7 @@ class Car:
         self.car_loc = car_loc
         self.psi = psi
         self.v = v
-        self.delta = 0
+        self.delta = 0.0
         self.car_vertices = np.array([[0, 0], [0, 0], [0, 0], [0, 0]], dtype=np.float32)
 
     def kinematic_act(self, action):
@@ -403,12 +403,14 @@ class Parking(gym.Env):
         self.parking_lot = self.set_random_loc()
         if self.parking_type == "parallel":
             self.parking_lot_vertices = self.parking_lot + PARALLEL
-            self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
-        if self.parking_type == "perpendicular":
+        elif self.parking_type == "perpendicular":
             self.parking_lot_vertices = self.parking_lot + PERPENDICULAR
-            self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
+        else:
+            raise ValueError(f"Unsupported parking type: {self.parking_type}")
 
-        self.state = [self.car.v / VELOCITY_LIMIT, (self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE]
+        self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
+
+        self.state = np.array([self.car.v / VELOCITY_LIMIT, (self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE])
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
@@ -427,7 +429,10 @@ class Parking(gym.Env):
 
         # check the number of the step
         if self.run_steps == MAX_STEPS:
+            self.reward -= 1
             self.truncated = True
+            self.terminated = True
+            print("The maximum step reaches")
 
         # check the location
         if self.is_valid_loc():
