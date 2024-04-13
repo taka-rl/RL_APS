@@ -6,9 +6,11 @@ from typing import Optional
 
 '''
 TODO: consider OOP or structure of this code -> Parking/Car/Render class?
-TODO: consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): and def is_valid_loc(self, width, height): 
+TODO: consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): 
+and def is_valid_loc(self, width, height): 
 as they have same logic
 TODO: modify PARALLEL/PERPENDICULAR constant value
+TODO: make a function for flatting the state value
 '''
 
 # parameters for actions
@@ -519,14 +521,25 @@ class Parking(gym.Env):
             self.truncated = True
             print("successful parking")
 
-    def is_valid_loc(self):
-        for car_vertex in self.car.car_vertices:
-            if (car_vertex[0] < 0 or car_vertex[0] > WINDOW_W * PIXEL_TO_METER_SCALE or
-                    car_vertex[1] < 0 or car_vertex[1] > WINDOW_H * PIXEL_TO_METER_SCALE):
-                return True
+    def is_valid_loc(self) -> bool:
+        """
+        check the following conditions:
+            1: if the distance between the car and the parking lot is within 25 meters
+            2: if the car doesn't cross the horizontal/vertical parking border
+        """
+        # 1
+        # calculate the Euclidean distance between the car's location and the parking lot center
+        distance = np.linalg.norm(self.parking_lot - self.car.car_loc)
+        if distance > MAX_DISTANCE:
+            return True
+
+        # for car_vertex in self.car.car_vertices:
+        #    if (car_vertex[0] < 0 or car_vertex[0] > WINDOW_W * PIXEL_TO_METER_SCALE or
+        #            car_vertex[1] < 0 or car_vertex[1] > WINDOW_H * PIXEL_TO_METER_SCALE):
+        #        return True
         return False
 
-    def is_parking_successful(self):
+    def is_parking_successful(self) -> bool:
         pa_top_right, pa_bottom_right, pa_bottom_left, pa_top_left = self.parking_lot_vertices
 
         # Define the edges of the parking area
@@ -542,7 +555,7 @@ class Parking(gym.Env):
                 return False
         return True
 
-    def check_collision(self):
+    def check_collision(self) -> bool:
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
             for car_vertex in self.car.car_vertices:
