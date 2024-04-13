@@ -250,9 +250,7 @@ class Parking(gym.Env):
 
             self._reward()
 
-            # flatten the state for the return value
-            distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
-            self.state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
+            self.state = self.get_normalized_state()
 
         if self.render_mode == "human":
             self.render()
@@ -396,10 +394,8 @@ class Parking(gym.Env):
 
         self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type)
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
+        self.state = self.get_normalized_state()
 
-        # flatten the state for the return value
-        distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
-        self.state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
@@ -412,6 +408,28 @@ class Parking(gym.Env):
         self.clock = None
 
         return self.state, {}
+
+    def get_normalized_state(self):
+        """
+        Prepare and normalize the state vector for the environment by flattening and combining
+        the car's velocity with the distances from parking lot vertices to the car's current location.
+
+        This function calculates the normalized distances between the car and each vertex of the
+        parking lot, then concatenates these distances with the car's normalized velocity to form
+        a comprehensive state vector suitable for use in reinforcement learning algorithms.
+
+        Returns:
+            np.ndarray: The normalized and flattened state vector consisting of the car's velocity
+                        and the distances to each parking lot vertex.
+        """
+
+        # normalize distances between car's current location and parking lot vertices
+        distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
+
+        # combine normalized velocity with normalized distances to form the state vector
+        state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
+
+        return state
 
     def set_initial_loc(self):
         """
