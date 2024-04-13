@@ -57,10 +57,10 @@ WHEEL_POS = np.array([[25 * PIXEL_TO_METER_SCALE, 15 * PIXEL_TO_METER_SCALE],
                      dtype=np.float32)  # Position adjusted for meters
 
 PARALLEL = np.array([
-    [+CAR_L / 2 + 10 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 5 * PIXEL_TO_METER_SCALE],
-    [+CAR_L / 2 + 10 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 5 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 10 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 5 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 10 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 5 * PIXEL_TO_METER_SCALE]],
+    [+CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 5 * PIXEL_TO_METER_SCALE],
+    [+CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 5 * PIXEL_TO_METER_SCALE],
+    [-CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 5 * PIXEL_TO_METER_SCALE],
+    [-CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 5 * PIXEL_TO_METER_SCALE]],
     dtype=np.float32)  # Adjusted for meters
 
 PERPENDICULAR = np.array([
@@ -70,7 +70,7 @@ PERPENDICULAR = np.array([
     [-CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE]],
     dtype=np.float32)  # Adjusted for meters
 
-OFFSET_PARALLEL = 100 * PIXEL_TO_METER_SCALE
+OFFSET_PARALLEL = 120 * PIXEL_TO_METER_SCALE
 OFFSET_PERPENDICULAR = 60 * PIXEL_TO_METER_SCALE
 
 DT = 0.1
