@@ -9,7 +9,6 @@ TODO: consider OOP or structure of this code -> Parking/Car/Render class?
 TODO: consider making a function which can be used in def is_parking_successful(self): and def check_collision(self): 
 and def is_valid_loc(self, width, height): 
 as they have same logic
-TODO: display the x,y location and velocity in the display
 '''
 
 # parameters for actions
@@ -244,6 +243,7 @@ class Parking(gym.Env):
         self.surf = None
         self.surf_car = None
         self.surf_parkinglot = None
+        self.surf_text = None
         self.clock = None
         self.car = Car()
 
@@ -306,6 +306,13 @@ class Parking(gym.Env):
                 if self.clock is None:
                     self.clock = pygame.time.Clock()
 
+                # Initialize the text display
+                if self.surf_text is None:
+                    pygame.font.init()
+                    self.surf_text = pygame.Surface((WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA)
+            font = pygame.font.SysFont('Times New Roman', 15)
+            self.surf_text.fill((0, 0, 0, 0))
+
             # Initialize the parking lot surface
             if self.surf_parkinglot is None:
                 self.surf_parkinglot = self._create_parking_surface()
@@ -327,18 +334,38 @@ class Parking(gym.Env):
             car_loc = meters_to_pixels(self.car.car_loc)
             pygame.draw.line(self.surf_parkinglot, COLORS["BLACK"], car_loc_old, car_loc)
 
+            # display Multi-line text
+            text_str = f"Car location: {self.car.car_loc}\nVelocity: {self.car.v}"
+            text_rect = pygame.Rect(400, 500, 100, 100)  # Define the rectangle area for text
+            self.draw_multiline_text(self.surf_text, text_str, COLORS["BLACK"], text_rect, font)
+
             # Compose the final surface
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
             surf = pygame.transform.flip(surf, False, True)
+            surf.blit(self.surf_text, (0, 0))
 
             # Update the display
             pygame.event.pump()
             self.clock.tick(self.metadata["render_fps"])
-            assert self.window is not None
+            # assert self.window is not None
             self.window.fill(COLORS["BLACK"])
             self.window.blit(surf, (0, 0))
             pygame.display.flip()
+
+    @staticmethod
+    def draw_multiline_text(screen, text, color, rect, font, aa=False, bkg=None):
+        lines = text.splitlines()
+        rendered_lines = []
+        for line in lines:
+            line_surface = font.render(line, aa, color, bkg)
+            rendered_lines.append(line_surface)
+
+        y = rect.top
+        for line_surface in rendered_lines:
+            line_height = line_surface.get_height()
+            screen.blit(line_surface, (rect.left, y))
+            y += line_height  # Move y down to start the next line
 
     @staticmethod
     def _create_parking_surface():
@@ -457,6 +484,7 @@ class Parking(gym.Env):
         self.surf = None
         self.surf_car = None
         self.surf_parkinglot = None
+        self.surf_text = None
         self.clock = None
 
         return self.state, {}
