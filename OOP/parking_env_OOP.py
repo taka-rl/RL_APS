@@ -10,6 +10,7 @@ TODO: consider making a function which can be used in def is_parking_successful(
 and def is_valid_loc(self, width, height): 
 as they have same logic
 TODO: display the x,y location and velocity in the display
+TODO: add error handling such as parking type, setting
 '''
 
 # parameters for actions
@@ -370,7 +371,7 @@ class Parking(gym.Env):
         # center locations for the static cars
         if self.side in [1, 2]:
             static_cars_loc = np.array([[self.parking_lot[0] + offset, self.parking_lot[1]],
-                                            [self.parking_lot[0] - offset, self.parking_lot[1]]])
+                                        [self.parking_lot[0] - offset, self.parking_lot[1]]])
 
         else:
             static_cars_loc = np.array([[self.parking_lot[0], self.parking_lot[1] + offset],
@@ -397,16 +398,10 @@ class Parking(gym.Env):
             np.ndarray: The vertices for parking space structure.
         """
         if parking_type == "parallel":
-            if side in [1, 2]:
-                return PARALLEL_HORIZONTAL
-            else:
-                return PARALLEL_VERTICAL
+            return PARALLEL_HORIZONTAL if side in [1, 2] else PARALLEL_VERTICAL
 
         else:  # perpendicular
-            if side in [1, 2]:
-                return PERPENDICULAR_HORIZONTAL
-            else:
-                return PERPENDICULAR_VERTICAL
+            return PERPENDICULAR_HORIZONTAL if side in [1, 2] else PERPENDICULAR_VERTICAL
 
     @staticmethod
     def get_car_struct(parking_type: str, side: int):
@@ -421,23 +416,17 @@ class Parking(gym.Env):
             np.ndarray: The vertices for parking space structure.
         """
         if parking_type == "parallel":
-            if side in [1, 2]:
-                return CAR_STRUCT
-            else:
-                return np.array([[+CAR_W / 2, +CAR_L / 2],
-                                 [+CAR_W / 2, -CAR_L / 2],
-                                 [-CAR_W / 2, -CAR_L / 2],
-                                 [-CAR_W / 2, +CAR_L / 2]],
-                                dtype=np.float32)  # Coordinates adjusted for meters
+            return CAR_STRUCT if side in [1, 2] else np.array([[+CAR_W / 2, +CAR_L / 2],
+                                                               [+CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, +CAR_L / 2]],
+                                                              dtype=np.float32)  # Coordinates adjusted for meters
         else:  # perpendicular
-            if side in [1, 2]:
-                return np.array([[+CAR_W / 2, +CAR_L / 2],
-                                 [+CAR_W / 2, -CAR_L / 2],
-                                 [-CAR_W / 2, -CAR_L / 2],
-                                 [-CAR_W / 2, +CAR_L / 2]],
-                                dtype=np.float32)  # Coordinates adjusted for meters
-            else:
-                return CAR_STRUCT
+            return CAR_STRUCT if side in [3, 4] else np.array([[+CAR_W / 2, +CAR_L / 2],
+                                                               [+CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, +CAR_L / 2]],
+                                                              dtype=np.float32)  # Coordinates adjusted for meters
 
     def reset(
             self,
@@ -613,34 +602,62 @@ class Parking(gym.Env):
         check the following conditions:
             1: if the distance between the car and the parking lot is within 25 meters
             2: if the car doesn't cross the horizontal/vertical parking border
+
+            side:
+                - 1: Bottom boundary.
+                - 2: Top boundary.
+                - 3: Left boundary.
+                - 4: Right boundary.
+
         """
-        # 1
         # calculate the Euclidean distance between the car's location and the parking lot center
         distance = np.linalg.norm(self.parking_lot - self.car.car_loc)
         if distance > MAX_DISTANCE:
             return True
 
-
-
-        # for car_vertex in self.car.car_vertices:
-        #    if (car_vertex[0] < 0 or car_vertex[0] > WINDOW_W * PIXEL_TO_METER_SCALE or
-        #            car_vertex[1] < 0 or car_vertex[1] > WINDOW_H * PIXEL_TO_METER_SCALE):
-        #        return True
-        return False
-
-    def is_parking_successful(self) -> bool:
+        # get each parking lot and car vertices
         pa_top_right, pa_bottom_right, pa_bottom_left, pa_top_left = self.parking_lot_vertices
+        ca_top_right, ca_bottom_right, ca_bottom_left, ca_top_left = self.car.car_vertices
 
-        # Define the edges of the parking area
+        # Define the edges of the parking lot and car
         pa_left_edge = pa_top_left[0]
         pa_right_edge = pa_top_right[0]
         pa_top_edge = pa_top_left[1]
         pa_bottom_edge = pa_bottom_left[1]
 
+        ca_left_edge = ca_top_left[0]
+        ca_right_edge = ca_top_right[0]
+        ca_top_edge = ca_top_left[1]
+        ca_bottom_edge = ca_bottom_left[1]
+
+        if self.side == 1:
+            if pa_bottom_edge > ca_bottom_edge:
+                return True
+        elif self.side == 2:
+            if pa_top_edge < ca_top_edge:
+                return True
+        elif self.side == 3:
+            if pa_left_edge > ca_left_edge:
+                return True
+        else:
+            if pa_right_edge < ca_right_edge:
+                return True
+
+        return False
+
+    def is_parking_successful(self) -> bool:
+        top_right, bottom_right, bottom_left, top_left = self.parking_lot_vertices
+
+        # Define the edges of the parking area
+        left_edge = top_left[0]
+        right_edge = top_right[0]
+        top_edge = top_left[1]
+        bottom_edge = bottom_left[1]
+
         # Check if all car corners are within the parking area
         for corner in self.car.car_vertices:
-            if not (pa_left_edge <= corner[0] <= pa_right_edge and
-                    pa_bottom_edge <= corner[1] <= pa_top_edge):
+            if not (left_edge <= corner[0] <= right_edge and
+                    bottom_edge <= corner[1] <= top_edge):
                 return False
         return True
 
