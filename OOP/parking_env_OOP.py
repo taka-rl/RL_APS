@@ -10,7 +10,6 @@ TODO: consider making a function which can be used in def is_parking_successful(
 and def is_valid_loc(self, width, height): 
 as they have same logic
 TODO: display the x,y location and velocity in the display
-TODO: add error handling such as parking type, setting
 '''
 
 # parameters for actions
@@ -206,10 +205,10 @@ class Parking(gym.Env):
     """
 
     metadata = {
-        "render_mode": ["human", "no_render"],
+        "render_modes": ["human", "no_render"],
         "render_fps": FPS,
         "action_type": ["continuous"],
-        "parking_type": ["parallel", "perpendicular"]
+        "parking_types": ["parallel", "perpendicular"]
     }
 
     def __init__(self, env_config) -> None:
@@ -220,6 +219,15 @@ class Parking(gym.Env):
             env_config: contains the action type, render mode and parking type
         """
         super().__init__()
+        if env_config["render_mode"] not in self.metadata["render_modes"]:
+            raise ValueError(
+                f"Invalid render mode: {env_config['render_mode']}. Valid options are {self.metadata['render_modes']}")
+
+        if env_config["parking_type"] not in self.metadata["parking_types"]:
+            raise ValueError(
+                f"Invalid parking type: {env_config['parking_type']}. "
+                f"Valid options are {self.metadata['parking_types']}")
+
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
