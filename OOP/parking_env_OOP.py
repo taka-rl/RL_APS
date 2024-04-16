@@ -296,47 +296,43 @@ class Parking(gym.Env):
             return self._render(self.render_mode, WINDOW_W, WINDOW_H)
 
     def _render(self, mode: str, window_w, window_h):
-        if mode == "human" and self.window is None:
-            # Initialize the parking environment window
-            pygame.init()
-            pygame.display.init()
-            self.window = pygame.display.set_mode((window_w, window_h))
-            pygame.display.set_caption("Parking Environment")
-            if self.clock is None:
-                self.clock = pygame.time.Clock()
-
-        # for the parking lot
         if mode == "human":
+            if self.window is None:
+                # Initialize the parking environment window
+                pygame.init()
+                pygame.display.init()
+                self.window = pygame.display.set_mode((window_w, window_h))
+                pygame.display.set_caption("Parking Environment")
+                if self.clock is None:
+                    self.clock = pygame.time.Clock()
+
+            # Initialize the parking lot surface
             if self.surf_parkinglot is None:
                 self.surf_parkinglot = self._create_parking_surface()
                 # draw the static obstacles
                 self._draw_static_obstacles()
-
                 # Draw the targeted parking space
                 self._draw_parking_space("RED", self.parking_lot_vertices)
 
-            # for the car(agent)
+            # Initialize the car(agent)
             if self.surf_car is None:
-                self.surf_car = pygame.Surface(
-                    (WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA
-                )
+                self.surf_car = pygame.Surface((WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA)
             self.surf_car.fill((0, 0, 0, 0))
 
             # draw the car(agent) movement
             self.car.draw_car(self.surf_car)
 
-            # convert to pixels
+            # draw the car path
             car_loc_old = meters_to_pixels(self.car.loc_old)
             car_loc = meters_to_pixels(self.car.car_loc)
-
-            # draw the car path
             pygame.draw.line(self.surf_parkinglot, COLORS["BLACK"], car_loc_old, car_loc)
 
+            # Compose the final surface
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
             surf = pygame.transform.flip(surf, False, True)
 
-        if mode == "human":
+            # Update the display
             pygame.event.pump()
             self.clock.tick(self.metadata["render_fps"])
             assert self.window is not None
