@@ -270,12 +270,10 @@ class Parking(gym.Env):
                 self.car.kinematic_act(action)
                 self.car.get_car_vertices()
 
+            if self.render_mode == "human":
+                self.render()
             self._reward()
-
             self.state = self.get_normalized_state()
-
-        if self.render_mode == "human":
-            self.render()
 
         return self.state, self.reward, self.terminated, self.truncated, {}
 
@@ -612,10 +610,15 @@ class Parking(gym.Env):
             print("The maximum step reaches")
 
         # check the location
-        if self.is_valid_loc():
+        if self.check_cross_border():
             self.reward -= 1
             self.terminated = True
-            print("The car is not a valid location")
+            print("The car crossed the parking lot vertically/horizontally.")
+
+        if self.check_max_distance():
+            self.reward -= 1
+            self.terminated = True
+            print("The distance between the car and the parking is more than 25 meters")
 
         # check a collision
         if self.check_collision():
@@ -629,27 +632,14 @@ class Parking(gym.Env):
             self.terminated = True
             print("successful parking")
 
-    def is_valid_loc(self) -> bool:
+    def check_cross_border(self) -> bool:
         """
-        check the following conditions:
-            1: if the distance between the car and the parking lot is within 25 meters
-            2: if the car doesn't cross the horizontal/vertical parking border
+        check if the car doesn't cross the horizontal/vertical parking border
 
-            side:
-                - 1: Bottom boundary.
-                - 2: Top boundary.
-                - 3: Left boundary.
-                - 4: Right boundary.
-
+        Return True if the car cross the horizontal/vertical parking border
         """
-        # calculate the Euclidean distance between the car's location and the parking lot center
-        distance = np.linalg.norm(self.parking_lot - self.car.car_loc)
-        if distance > MAX_DISTANCE:
-            return True
-
         # get each parking lot and car vertices
         pa_top_right, pa_bottom_right, pa_bottom_left, pa_top_left = self.parking_lot_vertices
-        ca_top_right, ca_bottom_right, ca_bottom_left, ca_top_left = self.car.car_vertices
 
         # Define the edges of the parking lot and car
         pa_left_edge = pa_top_left[0]
@@ -657,25 +647,14 @@ class Parking(gym.Env):
         pa_top_edge = pa_top_left[1]
         pa_bottom_edge = pa_bottom_left[1]
 
-        ca_left_edge = ca_top_left[0]
-        ca_right_edge = ca_top_right[0]
-        ca_top_edge = ca_top_left[1]
-        ca_bottom_edge = ca_bottom_left[1]
-
         if self.side == 1:
-            if pa_bottom_edge > ca_bottom_edge:
-                return True
+            return np.any(self.car.car_vertices[:, 1] < pa_bottom_edge)
         elif self.side == 2:
-            if pa_top_edge < ca_top_edge:
-                return True
+            return np.any(self.car.car_vertices[:, 1] > pa_top_edge)
         elif self.side == 3:
-            if pa_left_edge > ca_left_edge:
-                return True
+            return np.any(self.car.car_vertices[:, 0] < pa_left_edge)
         else:
-            if pa_right_edge < ca_right_edge:
-                return True
-
-        return False
+            return np.any(self.car.car_vertices[:, 0] > pa_right_edge)
 
     def is_parking_successful(self) -> bool:
         top_right, bottom_right, bottom_left, top_left = self.parking_lot_vertices
@@ -699,6 +678,17 @@ class Parking(gym.Env):
             for car_vertex in self.car.car_vertices:
                 if xy4[0] <= car_vertex[0] <= xy1[0] and xy2[1] <= car_vertex[1] <= xy1[1]:
                     return True
+        return False
+
+    def check_max_distance(self):
+        """
+        check the distance between the car and the parking lot
+        Return: True if it is more than 25 meters
+        """
+        # calculate the Euclidean distance between the car's location and the parking lot center
+        distance = np.linalg.norm(self.parking_lot - self.car.car_loc)
+        if distance > MAX_DISTANCE:
+            return True
         return False
 
     def close(self):
