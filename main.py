@@ -1,8 +1,8 @@
 import time
-from parking_env_OOP import Parking
+from parking_env import Parking
 
 # ray.init()
-env_config = dict(render_mode="human", action_type="continuous", parking_type="parallel")
+env_config = dict(render_mode="human", action_type="continuous", parking_type="perpendicular")
 env = Parking(env_config)
 
 #algo = (

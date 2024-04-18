@@ -1,7 +1,7 @@
 import os
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
-from parking_env_OOP import Parking
+from parking_env import Parking
 
 
 ray.init()

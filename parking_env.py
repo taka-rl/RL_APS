@@ -1,160 +1,11 @@
 import numpy as np
 import random
 import pygame
-import time
 import gymnasium as gym
-import ray
-from ray.rllib.algorithms.ppo import PPOConfig
 from typing import Optional
-
-
-# parameters for actions
-PI = np.pi
-ACCELERATION_LIMIT = 1.0
-STEERING_LIMIT = PI / 4
-VELOCITY_LIMIT = 10.0
-
-# parameters for rendering the simulation environment
-FPS = 30
-COLORS = {
-    "RED": (255, 100, 100),
-    "GREEN": (0, 255, 0),
-    "BLUE": (100, 200, 255),
-    "YELLOW": (200, 200, 0),
-    "BLACK": (0, 0, 0),
-    "GREY": (100, 100, 100),
-    "WHITE": (255, 255, 255),
-    "GRID_COLOR": (200, 200, 200)
-}
-GRID_SIZE = 20
-WINDOW_W, WINDOW_H = 800, 600
-
-# parameters for cars in the parking environment
-CAR_L = 80
-CAR_W = 40
-CAR_STRUCT = np.array([[+CAR_L / 2, +CAR_W / 2],
-                       [+CAR_L / 2, -CAR_W / 2],
-                       [-CAR_L / 2, -CAR_W / 2],
-                       [-CAR_L / 2, +CAR_W / 2]],
-                      np.int32)
-WHEEL_L = 15
-WHEEL_W = 7
-WHEEL_STRUCT = np.array([[+WHEEL_L / 2, +WHEEL_W / 2],
-                         [+WHEEL_L / 2, -WHEEL_W / 2],
-                         [-WHEEL_L / 2, -WHEEL_W / 2],
-                         [-WHEEL_L / 2, +WHEEL_W / 2]],
-                        np.int32)
-WHEEL_POS = np.array([[25, 15], [25, -15], [-25, 15], [-25, -15]])
-DT = 1
-
-MAX_STEPS = 300
-
-
-def kinematic_act(action, loc, v, psi, DT):
-    """
-    Parameters:
-        action(list): [a, δ]: a is acceleration, δ(delta) is steering angle.
-        loc: the center of the car (x,y) location
-        v : velocity
-        ψ(psi): the heading angle of the car
-        DT: time step
-
-    Kinematic bicycle model:
-    x_dot = v * np.cos(psi)
-    y_dot = v * np.sin(psi)
-    v_dot = a
-    psi_dot = v * np.tan(delta) / CAR_L
-    """
-
-    state = np.array([loc[0], loc[1], v, psi])
-    x_dot = v * np.cos(psi)
-    y_dot = v * np.sin(psi)
-    v_dot = action[0]
-    psi_dot = v * np.tan(action[1]) / CAR_L
-    state_dot = np.array([x_dot, y_dot, v_dot, psi_dot]).T
-    state = update_state(state, state_dot, DT)
-    return state[:2], state[2], state[3]
-
-
-def update_state(state, state_dot, dt):
-    state += dt * state_dot
-    state[2] = np.clip(state[2], -VELOCITY_LIMIT, VELOCITY_LIMIT)
-    return state
-
-
-def draw_car(screen, car_loc, psi, delta):
-    """
-    Parameters:
-        screen: pygame.Surface
-        car_loc: the center of the car (x,y) location
-        psi: the heading angle of the car
-        delta: the steering angle
-    """
-    # the car(agent)
-    # get the car vertices
-    car_vertices = get_car_vertices(car_loc, psi)
-    # draw the car(agent)
-    pygame.draw.polygon(screen, COLORS["GREEN"], car_vertices)
-
-    # wheels
-    # calculate the rotation of the wheels
-    wheel_points = rotate_car(WHEEL_POS, angle=psi)
-    # draw each wheel
-    for i, wheel_point in enumerate(wheel_points):
-        if i < 2:
-            wheel_vertices = rotate_car(WHEEL_STRUCT, angle=psi + delta)
-        else:
-            wheel_vertices = rotate_car(WHEEL_STRUCT, angle=psi)
-        wheel_vertices += wheel_point + car_loc
-        pygame.draw.polygon(screen, COLORS["RED"], wheel_vertices)
-
-
-def rotate_car(pos, angle=0):
-    R = np.array([
-        [np.cos(angle), -np.sin(angle)],
-        [np.sin(angle), np.cos(angle)],
-    ])
-    rotated_pos = (R @ pos.T).T
-    return rotated_pos
-
-def get_car_vertices(car_loc, psi):
-    # calculate the rotation of the car itself
-    car_vertices = rotate_car(CAR_STRUCT, angle=psi)
-    # add the center of the car x,y location
-    car_vertices += car_loc
-    return car_vertices
-
-
-def is_valid_loc(loc, width, height):
-    if loc[0] < 0 or loc[0] > width or loc[1] < 0 or loc[1] > height:
-        return True
-    else:
-        return False
-
-
-def is_parking_successful(loc, parking_loc, psi):
-    car_vertices = get_car_vertices(loc, psi)
-    pa_top_right, pa_bottom_right, pa_bottom_left, pa_top_left = parking_loc
-
-    # Define the edges of the parking area
-    pa_left_edge = pa_top_left[0]
-    pa_right_edge = pa_top_right[0]
-    pa_top_edge = pa_top_left[1]
-    pa_bottom_edge = pa_bottom_left[1]
-
-    # Check if all car corners are within the parking area
-    for corner in car_vertices:
-        if not (pa_left_edge <= corner[0] <= pa_right_edge and
-                pa_bottom_edge <= corner[1] <= pa_top_edge):
-            return False
-    return True
-
-
-def set_random_loc():
-    x = random.uniform(10, WINDOW_W-100)
-    y = random.uniform(10, WINDOW_H-100)
-    loc = [x,y]
-    return loc
+from car import Car
+from com_fcn import meters_to_pixels, draw_object
+from configuration import *
 
 
 class Parking(gym.Env):
@@ -162,8 +13,8 @@ class Parking(gym.Env):
     A Gymnasium environment for the parking simulation.
 
     Attributes:
-        render_modes (list): List of rendering modes including "human", "rgb_array", "no_render".
-        action_types (list): List of action types including "discrete", "continuous".
+        render_mode (list): List of rendering modes including "human", "no_render".
+        action_type (list): List of action types including "continuous".
         window: A reference to the Pygame window to render the environment.
         surf: A surface object used for rendering graphics.
         surf_car: A surface object representing the car(agent) in the environment.
@@ -172,32 +23,35 @@ class Parking(gym.Env):
     """
 
     metadata = {
-        "render_modes": ["human", "rgb_array", "no_render"],
+        "render_modes": ["human", "no_render"],
         "render_fps": FPS,
-        "action_types": ["discrete", "continuous"]
+        "action_type": ["continuous"],
+        "parking_types": ["parallel", "perpendicular"]
     }
 
-    def __init__(
-            self,
-            render_mode: Optional[str] = None,
-            action_type: Optional[str] = None,
-
-    ) -> None:
+    def __init__(self, env_config) -> None:
         """
         Initializes a parking instance.
 
         Parameters:
-            render_modes: the drawing mode for visualization
-            action_types: the type of action for the agent
+            env_config: contains the action type, render mode and parking type
         """
         super().__init__()
-        assert render_mode in self.metadata["render_modes"]
-        assert action_type in self.metadata["action_types"]
-        self.render_mode = render_mode
-        self.action_type = action_type
-        self.observation_space = gym.spaces.Box(-1, 1, dtype=np.float32)
+        if env_config["render_mode"] not in self.metadata["render_modes"]:
+            raise ValueError(
+                f"Invalid render mode: {env_config['render_mode']}. Valid options are {self.metadata['render_modes']}")
 
-        if action_type == "continuous":
+        if env_config["parking_type"] not in self.metadata["parking_types"]:
+            raise ValueError(
+                f"Invalid parking type: {env_config['parking_type']}. "
+                f"Valid options are {self.metadata['parking_types']}")
+
+        self.render_mode = env_config["render_mode"]
+        self.parking_type = env_config["parking_type"]
+        self.action_type = env_config["action_type"]
+        self.observation_space = gym.spaces.Box(-1, 1, shape=[9], dtype=np.float32)
+
+        if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(
                 np.array([-ACCELERATION_LIMIT, -STEERING_LIMIT]),
                 np.array([ACCELERATION_LIMIT, STEERING_LIMIT]),
@@ -208,7 +62,9 @@ class Parking(gym.Env):
         self.surf = None
         self.surf_car = None
         self.surf_parkinglot = None
+        self.surf_text = None
         self.clock = None
+        self.car = Car()
 
     def step(self, action):
         """
@@ -229,17 +85,16 @@ class Parking(gym.Env):
                     ACCELERATION_LIMIT,
                     STEERING_LIMIT,
                 ]
-                self.loc_old = self.loc
-                self.loc, self.velocity, self.psi = kinematic_act(action, self.loc, self.velocity, self.psi, DT)
-                self.delta = action[1]
+                self.car.loc_old = self.car.car_loc
+                self.car.kinematic_act(action)
+                self.car.get_car_vertices()
 
-            reward = self._reward()
-            self.state = [self.velocity, self.parking_lot - self.loc]
+            if self.render_mode == "human":
+                self.render()
+            self._reward()
+            self.state = self.get_normalized_state()
 
-        if self.render_mode == "human":
-            self.render()
-
-        return self.state, reward, self.terminated, self.truncated, {}
+        return self.state, self.reward, self.terminated, self.truncated, {}
 
     def render(self):
         """
@@ -257,59 +112,159 @@ class Parking(gym.Env):
         else:
             return self._render(self.render_mode, WINDOW_W, WINDOW_H)
 
-    def _render(self, mode: str, WINDOW_W, WINDOW_H):
-        if mode == "human" and self.window is None:
-            # Initialize the parking environment window
-            pygame.init()
-            pygame.display.init()
-            self.window = pygame.display.set_mode((WINDOW_W, WINDOW_H))
-            pygame.display.set_caption("Parking Environment")
-            if self.clock is None:
-                self.clock = pygame.time.Clock()
+    def _render(self, mode: str, window_w, window_h):
+        if mode == "human":
+            if self.window is None:
+                # Initialize the parking environment window
+                pygame.init()
+                pygame.display.init()
+                self.window = pygame.display.set_mode((window_w, window_h))
+                pygame.display.set_caption("Parking Environment")
+                if self.clock is None:
+                    self.clock = pygame.time.Clock()
 
-        # for the parking lot
-        if mode == "human" or mode == "rgb_array":
+                # Initialize the text display
+                if self.surf_text is None:
+                    pygame.font.init()
+                    self.surf_text = pygame.Surface((WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA)
+            font = pygame.font.SysFont('Times New Roman', 15)
+            self.surf_text.fill((0, 0, 0, 0))
+
+            # Initialize the parking lot surface
             if self.surf_parkinglot is None:
-                self.surf_parkinglot = pygame.Surface(
-                    (WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA
-                )
-
-                # Clear the screen
-                self.surf_parkinglot.fill(COLORS["WHITE"])
-
-                # Draw the grid lines
-                for x in range(0, WINDOW_W, GRID_SIZE):
-                    pygame.draw.line(self.surf_parkinglot, COLORS["GRID_COLOR"], (x, 0), (x, WINDOW_H), 1)
-                for y in range(0, WINDOW_H, GRID_SIZE):
-                    pygame.draw.line(self.surf_parkinglot, COLORS["GRID_COLOR"], (0, y), (WINDOW_W, y), 1)
-
+                self.surf_parkinglot = self._create_parking_surface()
+                # draw the static obstacles
+                self._draw_static_obstacles()
                 # Draw the targeted parking space
-                pygame.draw.polygon(self.surf_parkinglot, COLORS["YELLOW"], self.parking_lot)
+                draw_object(self.surf_parkinglot, "RED", self.parking_lot_vertices)
 
-            # for the car(agent)
+            # Initialize the car(agent)
             if self.surf_car is None:
-                self.surf_car = pygame.Surface(
-                    (WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA
-                )
+                self.surf_car = pygame.Surface((WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA)
             self.surf_car.fill((0, 0, 0, 0))
 
             # draw the car(agent) movement
-            draw_car(self.surf_car, self.loc, self.psi, self.delta)
+            self.car.draw_car(self.surf_car)
 
             # draw the car path
-            # pygame.draw.line(self.surf_parkinglot, BLACK, self.loc_old, self.loc)
+            car_loc_old = meters_to_pixels(self.car.loc_old)
+            car_loc = meters_to_pixels(self.car.car_loc)
+            pygame.draw.line(self.surf_parkinglot, COLORS["BLACK"], car_loc_old, car_loc)
 
+            # display Multi-line text
+            text_str = f"Car location: {self.car.car_loc}\nVelocity: {self.car.v}"
+            text_rect = pygame.Rect(400, 500, 100, 100)  # Define the rectangle area for text
+            self.draw_multiline_text(self.surf_text, text_str, COLORS["BLACK"], text_rect, font)
+
+            # Compose the final surface
             surf = self.surf_parkinglot.copy()
             surf.blit(self.surf_car, (0, 0))
             surf = pygame.transform.flip(surf, False, True)
+            surf.blit(self.surf_text, (0, 0))
 
-        if mode == "human":
+            # Update the display
             pygame.event.pump()
             self.clock.tick(self.metadata["render_fps"])
-            assert self.window is not None
+            # assert self.window is not None
             self.window.fill(COLORS["BLACK"])
             self.window.blit(surf, (0, 0))
             pygame.display.flip()
+
+    @staticmethod
+    def draw_multiline_text(screen, text, color, rect, font, aa=False, bkg=None):
+        lines = text.splitlines()
+        rendered_lines = []
+        for line in lines:
+            line_surface = font.render(line, aa, color, bkg)
+            rendered_lines.append(line_surface)
+
+        y = rect.top
+        for line_surface in rendered_lines:
+            line_height = line_surface.get_height()
+            screen.blit(line_surface, (rect.left, y))
+            y += line_height  # Move y down to start the next line
+
+    @staticmethod
+    def _create_parking_surface():
+        surf_parkinglot = pygame.Surface((WINDOW_W, WINDOW_H), flags=pygame.SRCALPHA)
+        surf_parkinglot.fill(COLORS["WHITE"])
+        for x in range(0, WINDOW_W, GRID_SIZE):
+            pygame.draw.line(surf_parkinglot, COLORS["GRID_COLOR"], (x, 0), (x, WINDOW_H))
+        for y in range(0, WINDOW_H, GRID_SIZE):
+            pygame.draw.line(surf_parkinglot, COLORS["GRID_COLOR"], (0, y), (WINDOW_W, y))
+        return surf_parkinglot
+
+    def _draw_static_obstacles(self):
+        for parking_lot_vertex in self.static_parking_lot_vertices:
+            draw_object(self.surf_parkinglot, "YELLOW", parking_lot_vertex)
+        for car_vertex in self.static_cars_vertices:
+            draw_object(self.surf_parkinglot, "GREY", car_vertex)
+
+    def generate_static_obstacles(self):
+        static_cars_vertices = []
+        static_parking_vertices = []
+
+        offset = OFFSET_PARALLEL if self.parking_type == "parallel" else OFFSET_PERPENDICULAR
+
+        # center locations for the static cars
+        if self.side in [1, 2]:
+            static_cars_loc = np.array([[self.parking_lot[0] + offset, self.parking_lot[1]],
+                                        [self.parking_lot[0] - offset, self.parking_lot[1]]])
+
+        else:
+            static_cars_loc = np.array([[self.parking_lot[0], self.parking_lot[1] + offset],
+                                        [self.parking_lot[0], self.parking_lot[1] - offset]])
+
+        # calculate the obstacle cars vertices and parking lots vertices
+        parking_struct = self.get_parking_struct(self.parking_type, self.side)
+        car_struct = self.get_car_struct(self.parking_type, self.side)
+        for loc in static_cars_loc:
+            static_cars_vertices.append(car_struct + loc)
+            static_parking_vertices.append(parking_struct + loc)
+        return static_cars_vertices, static_parking_vertices
+
+    @staticmethod
+    def get_parking_struct(parking_type: str, side: int):
+        """
+        Get the parking structure based on the parking type.
+
+        Parameters:
+            parking_type (str): The type of parking arrangement.
+            side (int): The side of the parking lot
+
+        Returns:
+            np.ndarray: The vertices for parking space structure.
+        """
+        if parking_type == "parallel":
+            return PARALLEL_HORIZONTAL if side in [1, 2] else PARALLEL_VERTICAL
+
+        else:  # perpendicular
+            return PERPENDICULAR_HORIZONTAL if side in [1, 2] else PERPENDICULAR_VERTICAL
+
+    @staticmethod
+    def get_car_struct(parking_type: str, side: int):
+        """
+        Get the car structure based on the parking type.
+
+        Parameters:
+            parking_type (str): The type of parking arrangement.
+            side (int): The side of the parking lot
+
+        Returns:
+            np.ndarray: The vertices for parking space structure.
+        """
+        if parking_type == "parallel":
+            return CAR_STRUCT if side in [1, 2] else np.array([[+CAR_W / 2, +CAR_L / 2],
+                                                               [+CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, +CAR_L / 2]],
+                                                              dtype=np.float32)  # Coordinates adjusted for meters
+        else:  # perpendicular
+            return CAR_STRUCT if side in [3, 4] else np.array([[+CAR_W / 2, +CAR_L / 2],
+                                                               [+CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, +CAR_L / 2]],
+                                                              dtype=np.float32)  # Coordinates adjusted for meters
 
     def reset(
             self,
@@ -317,19 +272,16 @@ class Parking(gym.Env):
             options: Optional[dict] = None,
     ):
         super().reset(seed=seed)
+        self.car = Car()
+        self.side = self.set_initial_loc()
+        self.parking_lot = self.set_initial_parking_loc(self.side)
+        self.car.car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
+        self.car.loc_old = self.car.car_loc
 
-        self.loc = set_random_loc()
-        self.velocity = 0
-        self.psi = 0
-        self.loc_old = self.loc
-        self.delta = 0
-        self.parking_lot = set_random_loc() + np.array([
-                                [+CAR_L / 2 + 10, +CAR_W / 2 + 10],
-                                [+CAR_L / 2 + 10, -CAR_W / 2],
-                                [-CAR_L / 2, -CAR_W / 2],
-                                [-CAR_L / 2, +CAR_W / 2 + 10]],
-                                np.int32)
-        self.state = [self.velocity, self.parking_lot - self.loc]
+        self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
+        self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
+        self.state = self.get_normalized_state()
+
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
@@ -339,61 +291,217 @@ class Parking(gym.Env):
         self.surf = None
         self.surf_car = None
         self.surf_parkinglot = None
+        self.surf_text = None
         self.clock = None
 
         return self.state, {}
 
+    def get_normalized_state(self):
+        """
+        Prepare and normalize the state vector for the environment by flattening and combining
+        the car's velocity with the distances from parking lot vertices to the car's current location.
+
+        This function calculates the normalized distances between the car and each vertex of the
+        parking lot, then concatenates these distances with the car's normalized velocity to form
+        a comprehensive state vector suitable for use in reinforcement learning algorithms.
+
+        Returns:
+            np.ndarray: The normalized and flattened state vector consisting of the car's velocity
+                        and the distances to each parking lot vertex.
+        """
+
+        # normalize distances between car's current location and parking lot vertices
+        distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
+
+        # combine normalized velocity with normalized distances to form the state vector
+        state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
+
+        return state
+
+    @staticmethod
+    def set_initial_loc():
+        """
+        Set the initial car and parking lot location
+
+        Return:
+            int value between 1 and 4
+        """
+        return random.randint(1, 4)
+
+    @staticmethod
+    def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
+        """
+        Set the initial car location
+
+        ini_dist (float): the initial distance between the car and the parking lot,
+                        randomly setting between 10 and 20 meters.
+
+        parking_loc (np.array): The [x, y] location of the parking lot in meters.
+
+        side (int): determines on which side of the map the parking lot will be placed
+                - 1: the car is placed on the bottom side of the parking area.
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is plus ini_dist from parking_loc[1].
+                - 2: the car is placed on the top side of the parking area.
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is minus ini_dist from parking_loc[1].
+                - 3: the car is placed on the left side of the parking area.
+                    x is plus ini_dist from parking_loc[0].
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+                - 4: the car is placed on the right side of the parking area.
+                    x is minus ini_dist from parking_loc[0].
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+        Return:
+            np.array: the initial center of the car location [x,y] in meters,
+                    adjusted for an appropriate distance from the parking lot.
+
+        """
+        init_dist = random.uniform(10, 20)
+
+        if side == 1:
+            x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            y_car = parking_loc[1] + init_dist
+        elif side == 2:
+            x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            y_car = parking_loc[1] - init_dist
+        elif side == 3:
+            x_car = parking_loc[0] + init_dist
+            y_car = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+        else:
+            x_car = parking_loc[0] - init_dist
+            y_car = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+
+        return np.array([x_car, y_car])
+
+    @staticmethod
+    def set_initial_parking_loc(side) -> np.array(['x', 'y']):
+        """
+        Set the initial parking lot location
+
+        side (int): determines on which side of the map the parking lot will be placed.
+                - 1: the parking lot is placed on the bottom side,
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is set to 50 pixels (before scaling).
+                - 2: the parking lot is placed on the top side,
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is set to 550 pixels (before scaling).
+                - 3: the parking lot is placed on the left side, x is set to 50 pixels (before scaling),
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+                - 4: the parking lot is placed on the right side, x is set to 750 pixels (before scaling),
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+
+        Return:
+            np.array:the center of the parking lot location [x,y]
+        """
+        if side == 1:
+            x_parking = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            y_parking = 50 * PIXEL_TO_METER_SCALE
+        elif side == 2:
+            x_parking = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            y_parking = 550 * PIXEL_TO_METER_SCALE
+        elif side == 3:
+            x_parking = 50 * PIXEL_TO_METER_SCALE
+            y_parking = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+        else:
+            x_parking = 750 * PIXEL_TO_METER_SCALE
+            y_parking = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+
+        return np.array([x_parking, y_parking])
+
     def _reward(self):
         self.run_steps += 1
 
+        # check the number of the step
         if self.run_steps == MAX_STEPS:
+            self.reward -= 1
             self.truncated = True
+            self.terminated = True
+            print("The maximum step reaches")
 
         # check the location
-        if is_valid_loc(self.loc, WINDOW_W, WINDOW_H):
+        if self.check_cross_border():
             self.reward -= 1
             self.terminated = True
-            print("The car is not a valid location")
+            print("The car crossed the parking lot vertically/horizontally.")
+
+        if self.check_max_distance():
+            self.reward -= 1
+            self.terminated = True
+            print("The distance between the car and the parking is more than 25 meters")
+
+        # check a collision
+        if self.check_collision():
+            self.reward -= 1
+            self.terminated = True
+            print("The car has a collision")
 
         # check the parking
-        if is_parking_successful(self.loc, self.parking_lot, self.psi):
+        if self.is_parking_successful():
             self.reward += 1
-            self.truncated = True
+            self.terminated = True
             print("successful parking")
 
-        return self.reward
+    def check_cross_border(self) -> bool:
+        """
+        check if the car doesn't cross the horizontal/vertical parking border
+
+        Return True if the car cross the horizontal/vertical parking border
+        """
+        # get each parking lot and car vertices
+        pa_top_right, pa_bottom_right, pa_bottom_left, pa_top_left = self.parking_lot_vertices
+
+        # Define the edges of the parking lot and car
+        pa_left_edge = pa_top_left[0]
+        pa_right_edge = pa_top_right[0]
+        pa_top_edge = pa_top_left[1]
+        pa_bottom_edge = pa_bottom_left[1]
+
+        if self.side == 1:
+            return np.any(self.car.car_vertices[:, 1] < pa_bottom_edge)
+        elif self.side == 2:
+            return np.any(self.car.car_vertices[:, 1] > pa_top_edge)
+        elif self.side == 3:
+            return np.any(self.car.car_vertices[:, 0] < pa_left_edge)
+        else:
+            return np.any(self.car.car_vertices[:, 0] > pa_right_edge)
+
+    def is_parking_successful(self) -> bool:
+        top_right, bottom_right, bottom_left, top_left = self.parking_lot_vertices
+
+        # Define the edges of the parking area
+        left_edge = top_left[0]
+        right_edge = top_right[0]
+        top_edge = top_left[1]
+        bottom_edge = bottom_left[1]
+
+        # Check if all car corners are within the parking area
+        for corner in self.car.car_vertices:
+            if not (left_edge <= corner[0] <= right_edge and
+                    bottom_edge <= corner[1] <= top_edge):
+                return False
+        return True
+
+    def check_collision(self) -> bool:
+        for static_car_vertex in self.static_cars_vertices:
+            xy1, xy2, xy3, xy4 = static_car_vertex
+            for car_vertex in self.car.car_vertices:
+                if xy4[0] <= car_vertex[0] <= xy1[0] and xy2[1] <= car_vertex[1] <= xy1[1]:
+                    return True
+        return False
+
+    def check_max_distance(self):
+        """
+        check the distance between the car and the parking lot
+        Return: True if it is more than 25 meters
+        """
+        # calculate the Euclidean distance between the car's location and the parking lot center
+        distance = np.linalg.norm(self.parking_lot - self.car.car_loc)
+        if distance > MAX_DISTANCE:
+            return True
+        return False
 
     def close(self):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
             self.window = None
-
-
-if __name__ == "__main__":
-    # ray.init()
-
-    env = Parking(render_mode="human", action_type="continuous")
-
-    #algo = (
-    #    PPOConfig()
-    #    .environment(env=env)
-    #    .rollouts(num_rollout_workers=2)
-    #    .resources(num_gpus=0)
-    #    .framework("torch")
-    #    .evaluation(evaluation_num_workers=1)
-    #    .build()
-    #)
-
-    episode_reward = 0
-    terminated = truncated = False
-    obs, info = env.reset()
-    env.render()
-    while not terminated and not truncated:
-        # action = algo.compute_single_action(obs)  # Algorithm.compute_single_action() is to programmatically compute actions from a trained agent.
-        action = env.action_space.sample()  # env.action_space.sample() is to sample random actions.
-        obs, reward, terminated, truncated, info = env.step(action)
-        env.render()
-        time.sleep(0.1)
-        episode_reward += reward
-        print("Episode reward:", episode_reward)
