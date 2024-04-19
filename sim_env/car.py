@@ -1,6 +1,6 @@
 import numpy as np
 from com_fcn import draw_object
-from configuration import CAR_L, VELOCITY_LIMIT, CAR_STRUCT, DT, WHEEL_STRUCT, WHEEL_POS
+from parameters import CAR_L, VELOCITY_LIMIT, CAR_STRUCT, DT, WHEEL_STRUCT, WHEEL_POS
 
 
 class Car:

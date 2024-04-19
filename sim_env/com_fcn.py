@@ -1,5 +1,5 @@
 import pygame
-from configuration import PIXEL_TO_METER_SCALE, COLORS
+from parameters import PIXEL_TO_METER_SCALE, COLORS
 
 
 def meters_to_pixels(meters):

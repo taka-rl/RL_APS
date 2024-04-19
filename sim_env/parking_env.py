@@ -5,7 +5,7 @@ import gymnasium as gym
 from typing import Optional
 from car import Car
 from com_fcn import meters_to_pixels, draw_object
-from configuration import *
+from parameters import *
 
 
 class Parking(gym.Env):
@@ -152,7 +152,8 @@ class Parking(gym.Env):
             pygame.draw.line(self.surf_parkinglot, COLORS["BLACK"], car_loc_old, car_loc)
 
             # display Multi-line text
-            text_str = f"Car location: {self.car.car_loc}\nVelocity: {self.car.v}"
+            text_str = (f"Car location: {self.car.car_loc}\nVelocity: {self.car.v}\n"
+                        f"Heading angle: {self.car.psi}\n")
             text_rect = pygame.Rect(400, 500, 100, 100)  # Define the rectangle area for text
             self.draw_multiline_text(self.surf_text, text_str, COLORS["BLACK"], text_rect, font)
 
