@@ -492,7 +492,7 @@ class Parking(gym.Env):
 
     def check_max_distance(self):
         """
-        check the distance between the car and the parking lot
+        check the Euclidean distance between the car and the parking lot
         Return: True if it is more than 25 meters
         """
         # calculate the Euclidean distance between the car's location and the parking lot center
