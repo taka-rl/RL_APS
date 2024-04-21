@@ -9,7 +9,7 @@ class Car:
         self.psi = self.set_initial_heading()
         self.v = 0.0
         self.delta = 0.0
-        self.car_vertices = np.array([[0, 0], [0, 0], [0, 0], [0, 0]], dtype=np.float32)
+        self.car_vertices = self.calc_car_vertices()
 
     def kinematic_act(self, action):
         """
@@ -33,25 +33,39 @@ class Car:
         car_loc = np.array([x_dot, y_dot])
         self.update_state(car_loc, v_dot, psi_dot, DT)
         self.delta = action[1]
+        self.car_vertices = self.calc_car_vertices()
 
     def update_state(self, car_loc, v_dot, psi_dot, dt):
         self.car_loc += dt * car_loc
-        self.v += v_dot
-        self.v = np.clip(self.v, -VELOCITY_LIMIT, VELOCITY_LIMIT)
+        self.v = np.clip(self.v + v_dot, -VELOCITY_LIMIT, VELOCITY_LIMIT)
         self.psi += dt * psi_dot
 
     @staticmethod
-    def rotate_car(car_loc, angle=0.0):
+    def rotate_car(car_loc, angle=0.0) -> np.array:
+        """
+        Rotate vertices by a given angle.
+
+        Parameters:
+            car_loc (np.array): The car's vertices to rotate.
+            angle (float): Rotation angle in radians.
+
+        Returns:
+            np.array: Rotated vertices.
+        """
         r = np.array([
             [np.cos(angle), -np.sin(angle)],
             [np.sin(angle), np.cos(angle)],
         ])
         return (r @ car_loc.T).T
 
-    def get_car_vertices(self):
-        # calculate the rotation of the car itself
-        # add the center of the car x,y location
-        self.car_vertices = self.rotate_car(CAR_STRUCT, angle=self.psi) + self.car_loc
+    def calc_car_vertices(self) -> np.array:
+        """
+        Calculate the car vertices
+
+        Return:
+            np.array: car vertices
+        """
+        return self.rotate_car(CAR_STRUCT, angle=self.psi) + self.car_loc
 
     @staticmethod
     def set_initial_heading() -> float:
@@ -62,13 +76,11 @@ class Car:
 
     def draw_car(self, screen):
         """
-        Draw the car(agent)
+        Draw the car(agent) and its wheel
 
         Parameters:
             screen: pygame.Surface
         """
-        # update the car(agent) vertices
-        self.get_car_vertices()
         # draw the car(agent)
         draw_object(screen, "GREEN", self.car_vertices)
 

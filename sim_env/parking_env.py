@@ -87,7 +87,6 @@ class Parking(gym.Env):
                 ]
                 self.car.loc_old = self.car.car_loc
                 self.car.kinematic_act(action)
-                self.car.get_car_vertices()
 
             if self.render_mode == "human":
                 self.render()
