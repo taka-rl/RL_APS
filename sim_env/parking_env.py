@@ -49,14 +49,10 @@ class Parking(gym.Env):
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(-1, 1, shape=[9], dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
 
         if self.action_type == "continuous":
-            self.action_space = gym.spaces.Box(
-                np.array([-ACCELERATION_LIMIT, -STEERING_LIMIT]),
-                np.array([ACCELERATION_LIMIT, STEERING_LIMIT]),
-                dtype=np.float32,
-            )
+            self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
 
         self.window = None
         self.surf = None
@@ -492,8 +488,8 @@ class Parking(gym.Env):
         Return: True if it is more than 25 meters
         """
         for parking_lot in self.parking_lot_vertices:
-            if (abs(parking_lot[0] - self.car.car_loc[0]) > MAX_DISTANCE or
-                    abs(parking_lot[1] - self.car.car_loc[1]) > MAX_DISTANCE):
+            if (abs(parking_lot[0] - self.car.car_loc[0]) >= MAX_DISTANCE or
+                    abs(parking_lot[1] - self.car.car_loc[1]) >= MAX_DISTANCE):
                 return True
         return False
 
