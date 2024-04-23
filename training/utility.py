@@ -14,7 +14,7 @@ def custom_log_creator(custom_str: str):
     Return:
 
     """
-    custom_path = get_current_path() + "/training/training_result/"
+    custom_path = get_current_path() + "/training_result/"
     timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
     logdir_prefix = "{}_{}".format(custom_str, timestr)
 
@@ -46,8 +46,8 @@ def custom_log_checkpoint(custom_str: str, algo):
     logdir_prefix = "{}_{}_{}".format(algo, custom_str, timestr)
 
     # check the folder existence
-    create_training_folder(get_current_path() + "/training/trained_agent/" + logdir_prefix)
-    return get_current_path() + "/training/trained_agent/" + logdir_prefix
+    create_training_folder(get_current_path() + "/trained_agent/" + logdir_prefix)
+    return get_current_path() + "/trained_agent/" + logdir_prefix
 
 
 def set_path(env_name: str) -> str:

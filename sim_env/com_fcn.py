@@ -1,5 +1,5 @@
 import pygame
-from parameters import PIXEL_TO_METER_SCALE, COLORS
+from sim_env.parameters import PIXEL_TO_METER_SCALE, COLORS
 
 
 def meters_to_pixels(meters):

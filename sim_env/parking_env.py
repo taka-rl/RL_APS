@@ -3,9 +3,9 @@ import random
 import pygame
 import gymnasium as gym
 from typing import Optional
-from car import Car
-from com_fcn import meters_to_pixels, draw_object
-from parameters import *
+from sim_env.car import Car
+from sim_env.com_fcn import meters_to_pixels, draw_object
+from sim_env.parameters import *
 
 
 class Parking(gym.Env):
