@@ -1,19 +1,14 @@
 import time
+from ray.rllib.algorithms.ppo import PPO
 from parking_env import Parking
+from training.utility import set_path
 
-# ray.init()
 env_config = dict(render_mode="human", action_type="continuous", parking_type="perpendicular")
 env = Parking(env_config)
 
-#algo = (
-#    PPOConfig()
-#    .environment(env=env)
-#    .rollouts(num_rollout_workers=2)
-#    .resources(num_gpus=0)
-#    .framework("torch")
-#    .evaluation(evaluation_num_workers=1)
-#    .build()
-#)
+observation, info = env.reset()
+checkpoint = set_path()
+algo = PPO.from_checkpoint(checkpoint + "PPO_parallel_2024-04-24_00-11-07")
 
 episode_reward = 0
 terminated = truncated = False

@@ -317,7 +317,7 @@ class Parking(gym.Env):
         state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
 
         # clip the state value
-        state = np.clip(state, min=-1, max=1)
+        state = np.clip(state, a_min=-1, a_max=1)
 
         return state
 

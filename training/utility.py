@@ -50,19 +50,19 @@ def custom_log_checkpoint(custom_str: str, algo):
     return get_current_path() + "/trained_agent/" + logdir_prefix
 
 
-def set_path(env_name: str) -> str:
+def set_path() -> str:
     """
-    Set the folder/file path depending on the development environment(Win/Mac)
+    Set the folder path for the agent depending on the development environment(Win/Mac)
 
     Return:
         str: the folder/file path
     """
     # get the current folder path and OS info
-    current_path = get_current_path()
+    current_path = get_current_path().replace("sim_env", "training")
     os_name = get_os_info()
 
     # depending on OS(Win/Mac)
-    tmp_path = "/trained_agent/" + env_name
+    tmp_path = "/trained_agent/"
 
     if os_name == "Windows":
         checkpoint_path = current_path + tmp_path
