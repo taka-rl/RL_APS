@@ -274,11 +274,15 @@ class Parking(gym.Env):
         super().reset(seed=seed)
         self.car = Car()
         self.side = self.set_initial_loc()
-        self.parking_lot = self.set_initial_parking_loc(self.side)
-        self.car.car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
-        self.car.loc_old = self.car.car_loc
+        # to make sure the initial distance between the car and the parking lot is within 25 meters
+        while True:
+            self.parking_lot = self.set_initial_parking_loc(self.side)
+            self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
+            self.car.car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
+            if not self.check_max_distance():
+                break
 
-        self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
+        self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
         self.state = self.get_normalized_state()
 
@@ -466,18 +470,10 @@ class Parking(gym.Env):
             return np.any(self.car.car_vertices[:, 0] > pa_right_edge)
 
     def is_parking_successful(self) -> bool:
-        top_right, bottom_right, bottom_left, top_left = self.parking_lot_vertices
-
-        # Define the edges of the parking area
-        left_edge = top_left[0]
-        right_edge = top_right[0]
-        top_edge = top_left[1]
-        bottom_edge = bottom_left[1]
-
+        xy1, xy2, xy3, xy4 = self.parking_lot_vertices
         # Check if all car corners are within the parking area
         for corner in self.car.car_vertices:
-            if not (left_edge <= corner[0] <= right_edge and
-                    bottom_edge <= corner[1] <= top_edge):
+            if not self.check_boundary(xy1, xy3, corner):
                 return False
         return True
 
@@ -485,18 +481,36 @@ class Parking(gym.Env):
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
             for car_vertex in self.car.car_vertices:
-                if xy4[0] <= car_vertex[0] <= xy1[0] and xy2[1] <= car_vertex[1] <= xy1[1]:
+                if self.check_boundary(xy1, xy3, car_vertex):
                     return True
         return False
 
-    def check_max_distance(self):
+    def check_max_distance(self) -> bool:
         """
-        check the Euclidean distance between the car and the parking lot
+        check the distance between the car and the parking lot
+
         Return: True if it is more than 25 meters
         """
-        # calculate the Euclidean distance between the car's location and the parking lot center
-        distance = np.linalg.norm(self.parking_lot - self.car.car_loc)
-        if distance > MAX_DISTANCE:
+        for parking_lot in self.parking_lot_vertices:
+            if (abs(parking_lot[0] - self.car.car_loc[0]) > MAX_DISTANCE or
+                    abs(parking_lot[1] - self.car.car_loc[1]) > MAX_DISTANCE):
+                return True
+        return False
+
+    @staticmethod
+    def check_boundary(xy1, xy2, obj) -> bool:
+        """
+        check if obj is in between xy1 and xy2
+
+        Parameter
+            xy1: top right (x,y) position
+            xy2: bottom left (x,y) position
+            obj: targeted object (x,y) position
+
+        Return:
+            bool
+        """
+        if xy2[0] <= obj[0] <= xy1[0] and xy2[1] <= obj[1] <= xy1[1]:
             return True
         return False
 

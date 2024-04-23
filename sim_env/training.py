@@ -17,6 +17,7 @@ algo = (
     .rollouts(num_rollout_workers=1)
     .resources(num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", "0")))
     .framework("torch")
+    .evaluation(evaluation_num_workers=1)
     .build(logger_creator=custom_log_creator(custom_str))
 )
 
