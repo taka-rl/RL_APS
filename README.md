@@ -3,10 +3,13 @@ This repository is a development environment for my thesis which is "Reinforceme
 
 # Folder structure
 - sim_env: contains the necessary scripts for the parking simulation
-  - parking_env.py:
-  - car.py:
-  - com_fcn.py:
-  - parameters.py:
+  - parking_env.py: environment class
+  - car.py: car class
+  - com_fcn.py: common functions
+  - parameters.py: parameters for the simulation environment
+- training: contains the script for the training
+  - training.py: for the training
+  - utility.py: useful functions for the training
 - practice_rllib: to learn how to use Ray RLlib for my thesis
 - practice_pygame: to learn how to draw the parking environment for my thesis
 
