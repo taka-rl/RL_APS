@@ -307,7 +307,7 @@ class Parking(gym.Env):
 
         Returns:
             np.ndarray: The normalized and flattened state vector consisting of the car's velocity
-                        and the distances to each parking lot vertex.
+                        and the distances to each parking lot vertex, clipped in between -1 and 1.
         """
 
         # normalize distances between car's current location and parking lot vertices
@@ -315,6 +315,9 @@ class Parking(gym.Env):
 
         # combine normalized velocity with normalized distances to form the state vector
         state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
+
+        # clip the state value
+        state = np.clip(state, min=-1, max=1)
 
         return state
 
