@@ -86,10 +86,10 @@ class Parking(gym.Env):
 
             if self.render_mode == "human":
                 self.render()
-            self._reward()
+            reward = self._reward()
             self.state = self.get_normalized_state()
 
-        return self.state, self.reward, self.terminated, self.truncated, {}
+        return self.state, reward, self.terminated, self.truncated, {}
 
     def render(self):
         """
@@ -285,7 +285,6 @@ class Parking(gym.Env):
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
-        self.reward = 0
 
         self.window = None
         self.surf = None
@@ -411,38 +410,45 @@ class Parking(gym.Env):
 
         return np.array([x_parking, y_parking])
 
-    def _reward(self):
+    def _reward(self) -> int:
         self.run_steps += 1
+        reward = 0
 
         # check the number of the step
         if self.run_steps == MAX_STEPS:
-            self.reward -= 1
+            reward -= 1
             self.truncated = True
             self.terminated = True
             print("The maximum step reaches")
+            return reward
 
         # check the location
         if self.check_cross_border():
-            self.reward -= 1
+            reward -= 1
             self.terminated = True
             print("The car crossed the parking lot vertically/horizontally.")
+            return reward
 
         if self.check_max_distance():
-            self.reward -= 1
+            reward -= 1
             self.terminated = True
             print("The distance between the car and the parking is more than 25 meters")
+            return reward
 
         # check a collision
         if self.check_collision():
-            self.reward -= 1
+            reward -= 1
             self.terminated = True
             print("The car has a collision")
+            return reward
 
         # check the parking
         if self.is_parking_successful():
-            self.reward += 1
+            reward += 1
             self.terminated = True
             print("successful parking")
+            return reward
+        return reward
 
     def check_cross_border(self) -> bool:
         """
