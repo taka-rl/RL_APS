@@ -5,6 +5,7 @@ PI = np.pi
 ACCELERATION_LIMIT = 1.0
 STEERING_LIMIT = PI / 4
 VELOCITY_LIMIT = 10.0
+DT = 0.1
 
 # parameters for rendering the simulation environment
 FPS = 30
@@ -22,7 +23,12 @@ GRID_SIZE = 20
 WINDOW_W, WINDOW_H = 800, 600
 PIXEL_TO_METER_SCALE = 0.05  # Define the scale as 1 pixel = 0.05 meters
 
-# parameters for cars in the parking environment
+# parameters for cars and parking lot in the parking environment
+'''
+Car: Length: 4m, Width: 2m
+Perpendicular parking: Length: 5m, Width: 3m
+Parallel parking: Length: 6m, Width: 2m
+'''
 CAR_L, CAR_W = 80 * PIXEL_TO_METER_SCALE, 40 * PIXEL_TO_METER_SCALE  # Car length and width in meters
 CAR_STRUCT = np.array([[+CAR_L / 2, +CAR_W / 2],
                        [+CAR_L / 2, -CAR_W / 2],
@@ -58,23 +64,21 @@ PARALLEL_VERTICAL = np.array([
     dtype=np.float32)  # Adjusted for meters
 
 PERPENDICULAR_HORIZONTAL = np.array([
-    [+CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 5 * PIXEL_TO_METER_SCALE],
-    [+CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 5 * PIXEL_TO_METER_SCALE]],
+    [+CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 10 * PIXEL_TO_METER_SCALE],
+    [+CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 10 * PIXEL_TO_METER_SCALE],
+    [-CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 10 * PIXEL_TO_METER_SCALE],
+    [-CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 10 * PIXEL_TO_METER_SCALE]],
     dtype=np.float32)  # Adjusted for meters
 
 PERPENDICULAR_VERTICAL = np.array([
-    [+CAR_L / 2 + 5 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE],
-    [+CAR_L / 2 + 5 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 5 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE]],
+    [+CAR_L / 2 + 10 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE],
+    [+CAR_L / 2 + 10 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE],
+    [-CAR_L / 2 - 10 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 10 * PIXEL_TO_METER_SCALE],
+    [-CAR_L / 2 - 10 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 10 * PIXEL_TO_METER_SCALE]],
     dtype=np.float32)  # Adjusted for meters
 
 OFFSET_PARALLEL = 120 * PIXEL_TO_METER_SCALE
 OFFSET_PERPENDICULAR = 60 * PIXEL_TO_METER_SCALE
 
-DT = 0.1
-
-MAX_STEPS = 300
-MAX_DISTANCE = 25.0
+MAX_DISTANCE = 25.0  # the maximum distance between the car and the parking lot
+MAX_STEPS = 300  # the maximum step
