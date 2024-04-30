@@ -5,7 +5,7 @@ from ray.tune.logger import UnifiedLogger
 from datetime import datetime
 
 
-def custom_log_creator(custom_str: str):
+def custom_log_creator(custom_str: str, env_config: dict):
     """
     Set a folder for the training
 
@@ -14,7 +14,8 @@ def custom_log_creator(custom_str: str):
     Return:
 
     """
-    custom_path = get_current_path() + "/training_result/"
+    tmp_path = "/" + env_config.get("parking_type") + "/" + env_config.get("action_type") + "/training_result/"
+    custom_path = get_current_path() + tmp_path
     timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
     logdir_prefix = "{}_{}".format(custom_str, timestr)
 
@@ -30,7 +31,7 @@ def custom_log_creator(custom_str: str):
     return logger_creator
 
 
-def custom_log_checkpoint(custom_str: str, algo):
+def custom_log_checkpoint(custom_str: str, env_config: dict, algo):
     """
     Set a folder for the training result
 
@@ -46,7 +47,8 @@ def custom_log_checkpoint(custom_str: str, algo):
     logdir_prefix = "{}_{}_{}".format(algo, custom_str, timestr)
 
     # check the folder existence
-    create_training_folder(get_current_path() + "/trained_agent/" + logdir_prefix)
+    tmp_path = "/" + env_config.get("parking_type") + "/" + env_config.get("action_type") + "/trained_agent/"
+    create_training_folder(get_current_path() + tmp_path + logdir_prefix)
     return get_current_path() + "/trained_agent/" + logdir_prefix
 
 
