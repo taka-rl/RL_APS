@@ -25,7 +25,7 @@ class Parking(gym.Env):
     metadata = {
         "render_modes": ["human", "no_render"],
         "render_fps": FPS,
-        "action_type": ["continuous"],
+        "action_types": ["continuous", "discrete"],
         "parking_types": ["parallel", "perpendicular"]
     }
 
@@ -46,6 +46,10 @@ class Parking(gym.Env):
                 f"Invalid parking type: {env_config['parking_type']}. "
                 f"Valid options are {self.metadata['parking_types']}")
 
+        if env_config["action_type"] not in self.metadata["action_types"]:
+            raise ValueError(
+                f"Invalid action type: {env_config['action_type']}. Valid options are {self.metadata['action_types']}")
+
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
@@ -53,6 +57,8 @@ class Parking(gym.Env):
 
         if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
+        elif self.action_type == "discrete":
+            self.action_space = gym.spaces.Discrete(6)
 
         self.window = None
         self.surf = None
@@ -81,8 +87,26 @@ class Parking(gym.Env):
                     ACCELERATION_LIMIT,
                     STEERING_LIMIT,
                 ]
-                self.car.loc_old = self.car.car_loc
-                self.car.kinematic_act(action)
+            if self.action_type == "discrete":
+                if action == 0:  # move forward
+                    action = np.array([1, 0])
+                elif action == 1:  # move right forward
+                    action = np.array([1, -np.pi/6])
+                elif action == 2:  # move left forward
+                    action = np.array([1, np.pi/6])
+                elif action == 3:  # move backward
+                    action = np.array([-1, 0])
+                elif action == 4:  # move right backward
+                    action = np.array([-1, -np.pi/6])
+                elif action == 5:  # move left backward
+                    action = np.array([-1, np.pi/6])
+                else:
+                    raise ValueError(
+                        f"Invalid action value: {action}. "
+                        f"Valid values are from 0 to 5")
+
+            self.car.loc_old = self.car.car_loc
+            self.car.kinematic_act(action)
 
             if self.render_mode == "human":
                 self.render()
