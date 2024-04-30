@@ -66,7 +66,6 @@ class Parking(gym.Env):
         self.surf_parkinglot = None
         self.surf_text = None
         self.clock = None
-        self.car = Car()
 
     def step(self, action):
         """
@@ -292,16 +291,15 @@ class Parking(gym.Env):
             options: Optional[dict] = None,
     ):
         super().reset(seed=seed)
-        self.car = Car()
         self.side = self.set_initial_loc()
         # to make sure the initial distance between the car and the parking lot is within 25 meters
         while True:
             self.parking_lot = self.set_initial_parking_loc(self.side)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
-            self.car.car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
-            if not self.check_max_distance():
+            car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
+            if not self.check_max_distance(self.parking_lot_vertices, car_loc):
                 break
-
+        self.car = Car(car_loc)
         self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
         self.state = self.get_normalized_state()
@@ -345,7 +343,7 @@ class Parking(gym.Env):
         return state
 
     @staticmethod
-    def set_initial_loc():
+    def set_initial_loc() -> int:
         """
         Set the initial car and parking lot location
 
@@ -453,7 +451,7 @@ class Parking(gym.Env):
             print("The car crossed the parking lot vertically/horizontally.")
             return reward
 
-        if self.check_max_distance():
+        if self.check_max_distance(self.parking_lot_vertices, self.car.car_loc):
             reward -= 1
             self.terminated = True
             print("The distance between the car and the parking is more than 25 meters")
@@ -514,15 +512,16 @@ class Parking(gym.Env):
                     return True
         return False
 
-    def check_max_distance(self) -> bool:
+    @staticmethod
+    def check_max_distance(parking_lot_vertices, car_loc) -> bool:
         """
         check the distance between the car and the parking lot
 
         Return: True if it is more than 25 meters
         """
-        for parking_lot in self.parking_lot_vertices:
-            if (abs(parking_lot[0] - self.car.car_loc[0]) >= MAX_DISTANCE or
-                    abs(parking_lot[1] - self.car.car_loc[1]) >= MAX_DISTANCE):
+        for parking_lot in parking_lot_vertices:
+            if (abs(parking_lot[0] - car_loc[0]) >= MAX_DISTANCE or
+                    abs(parking_lot[1] - car_loc[1]) >= MAX_DISTANCE):
                 return True
         return False
 
