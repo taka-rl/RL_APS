@@ -49,7 +49,7 @@ def custom_log_checkpoint(custom_str: str, env_config: dict, algo):
     # check the folder existence
     tmp_path = create_folder_path(env_config=env_config, train_str="/trained_agent/")
     create_training_folder(get_current_path() + tmp_path + logdir_prefix)
-    return get_current_path() + "/trained_agent/" + logdir_prefix
+    return get_current_path() + tmp_path + logdir_prefix
 
 
 def set_path(env_config) -> str:
