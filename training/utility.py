@@ -14,7 +14,7 @@ def custom_log_creator(custom_str: str, env_config: dict):
     Return:
 
     """
-    tmp_path = "/" + env_config.get("parking_type") + "/" + env_config.get("action_type") + "/training_result/"
+    tmp_path = create_folder_path(env_config=env_config, train_str="/training_result/")
     custom_path = get_current_path() + tmp_path
     timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
     logdir_prefix = "{}_{}".format(custom_str, timestr)
@@ -47,12 +47,12 @@ def custom_log_checkpoint(custom_str: str, env_config: dict, algo):
     logdir_prefix = "{}_{}_{}".format(algo, custom_str, timestr)
 
     # check the folder existence
-    tmp_path = "/" + env_config.get("parking_type") + "/" + env_config.get("action_type") + "/trained_agent/"
+    tmp_path = create_folder_path(env_config=env_config, train_str="/trained_agent/")
     create_training_folder(get_current_path() + tmp_path + logdir_prefix)
     return get_current_path() + "/trained_agent/" + logdir_prefix
 
 
-def set_path() -> str:
+def set_path(env_config) -> str:
     """
     Set the folder path for the agent depending on the development environment(Win/Mac)
 
@@ -64,13 +64,18 @@ def set_path() -> str:
     os_name = get_os_info()
 
     # depending on OS(Win/Mac)
-    tmp_path = "/trained_agent/"
+    # check the folder existence
+    tmp_path = create_folder_path(env_config=env_config, train_str="/trained_agent/")
 
     if os_name == "Windows":
         checkpoint_path = current_path + tmp_path
     else:
         checkpoint_path = current_path + tmp_path
     return checkpoint_path
+
+
+def create_folder_path(env_config: dict, train_str: str):
+    return "/" + env_config.get("parking_type") + "/" + env_config.get("action_type") + train_str
 
 
 def get_os_info() -> str:
