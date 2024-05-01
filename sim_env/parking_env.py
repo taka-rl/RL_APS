@@ -6,6 +6,7 @@ from typing import Optional
 from sim_env.car import Car
 from sim_env.com_fcn import meters_to_pixels, draw_object
 from sim_env.parameters import *
+from training.utility import set_init_position
 
 
 class Parking(gym.Env):
@@ -26,7 +27,8 @@ class Parking(gym.Env):
         "render_modes": ["human", "no_render"],
         "render_fps": FPS,
         "action_types": ["continuous", "discrete"],
-        "parking_types": ["parallel", "perpendicular"]
+        "parking_types": ["parallel", "perpendicular"],
+        "training_modes": [True, False]
     }
 
     def __init__(self, env_config) -> None:
@@ -49,6 +51,14 @@ class Parking(gym.Env):
         if env_config["action_type"] not in self.metadata["action_types"]:
             raise ValueError(
                 f"Invalid action type: {env_config['action_type']}. Valid options are {self.metadata['action_types']}")
+
+        # for training temporary
+        if env_config["training_mode"] not in self.metadata["training_modes"]:
+            raise ValueError(
+                f"Invalid training mode: {env_config['training_mode']}. "
+                f"Valid options are {self.metadata['training_modes']}"
+            )
+        self.training_mode = env_config["training_mode"]
 
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
@@ -112,7 +122,7 @@ class Parking(gym.Env):
             reward = self._reward()
             self.state = self.get_normalized_state()
 
-        return self.state, reward, self.terminated, self.truncated, {}
+        return self.state, reward, self.terminated, self.truncated, {"step": self.run_steps}
 
     def render(self):
         """
@@ -292,14 +302,21 @@ class Parking(gym.Env):
     ):
         super().reset(seed=seed)
         self.side = self.set_initial_loc()
-        # to make sure the initial distance between the car and the parking lot is within 25 meters
-        while True:
+
+        if not self.training_mode:
+            # to make sure the initial distance between the car and the parking lot is within 25 meters
             self.parking_lot = self.set_initial_parking_loc(self.side)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
-            car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
-            if not self.check_max_distance(self.parking_lot_vertices, car_loc):
-                break
-        self.car = Car(car_loc)
+            while True:
+                car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
+                if not self.check_max_distance(self.parking_lot_vertices, car_loc):
+                    break
+            self.car = Car(car_loc, self.set_initial_heading())
+        else:  # for training
+            car_loc, self.parking_lot, heading_angle = set_init_position(self.side)
+            self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
+            self.car = Car(car_loc, heading_angle)
+
         self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
         self.state = self.get_normalized_state()
@@ -317,6 +334,12 @@ class Parking(gym.Env):
 
         return self.state, {}
 
+    @staticmethod
+    def set_initial_heading() -> float:
+        """
+        Set the initial heading of the car between 0 and 2π radians
+        """
+        return np.random.uniform(0, 2 * np.pi)  # Full circle
     def get_normalized_state(self):
         """
         Prepare and normalize the state vector for the environment by flattening and combining

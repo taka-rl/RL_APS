@@ -10,14 +10,14 @@ from utility import custom_log_creator, custom_log_checkpoint
 ray.init()
 env_name = Parking
 env_config = {"render_mode": "no_render",
-              "action_type": "continuous",
+              "action_type": "discrete",
               "parking_type": "perpendicular"}
 
 # for folder names
 # parking_type + side + num_train + axl
 axl = "axl1"  # acceleration value
 side = "1"  # parking side if selected
-num_train = "1"
+num_train = "10"
 num_steps = str(MAX_STEPS)
 
 custom_str = side + "_" + num_train + "_" + axl + "_" + num_steps

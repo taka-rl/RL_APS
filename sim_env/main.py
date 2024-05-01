@@ -3,12 +3,15 @@ from ray.rllib.algorithms.ppo import PPO
 from parking_env import Parking
 from training.utility import set_path
 
-env_config = dict(render_mode="human", action_type="continuous", parking_type="perpendicular")
+env_config = {"render_mode": "human",
+              "action_type": "discrete",
+              "parking_type": "perpendicular",
+              "training_mode": False}
 env = Parking(env_config)
 
-observation, info = env.reset()
-checkpoint = set_path()
-algo = PPO.from_checkpoint(checkpoint + "PPO_parallel_2024-04-24_00-11-07")
+# folder_path = ""  # trained_agent folder
+# checkpoint = set_path(env_config)
+# algo = PPO.from_checkpoint(checkpoint + folder_path)
 
 episode_reward = 0
 terminated = truncated = False

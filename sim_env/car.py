@@ -4,9 +4,9 @@ from sim_env.parameters import CAR_L, VELOCITY_LIMIT, CAR_STRUCT, DT, WHEEL_STRU
 
 
 class Car:
-    def __init__(self):
-        self.car_loc = np.array([0.0, 0.0])
-        self.psi = self.set_initial_heading()
+    def __init__(self, car_loc, psi):
+        self.car_loc = car_loc
+        self.psi = psi
         self.v = 0.0
         self.delta = 0.0
         self.car_vertices = self.calc_car_vertices()
@@ -66,13 +66,6 @@ class Car:
             np.array: car vertices
         """
         return self.rotate_car(CAR_STRUCT, angle=self.psi) + self.car_loc
-
-    @staticmethod
-    def set_initial_heading() -> float:
-        """
-        Set the initial heading of the car between 0 and 2π radians
-        """
-        return np.random.uniform(0, 2 * np.pi)  # Full circle
 
     def draw_car(self, screen):
         """
