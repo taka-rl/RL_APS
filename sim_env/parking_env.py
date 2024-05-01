@@ -6,7 +6,6 @@ from typing import Optional
 from sim_env.car import Car
 from sim_env.com_fcn import meters_to_pixels, draw_object
 from sim_env.parameters import *
-from training.utility import set_init_position
 
 
 class Parking(gym.Env):
@@ -313,6 +312,7 @@ class Parking(gym.Env):
                     break
             self.car = Car(car_loc, self.set_initial_heading())
         else:  # for training
+            from sim_env.init_state import set_init_position
             car_loc, self.parking_lot, heading_angle = set_init_position(self.side)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
             self.car = Car(car_loc, heading_angle)
