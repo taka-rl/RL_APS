@@ -7,6 +7,7 @@ This repository is a development environment for my thesis which is "Reinforceme
   - car.py: car class
   - com_fcn.py: common functions
   - parameters.py: parameters for the simulation environment
+  - init_state.py: initialize the car/parking lot location and heading angle for the training
 - training: contains the script for the training
   - training.py: for the training
   - utility.py: useful functions for the training
@@ -18,8 +19,6 @@ This repository is a development environment for my thesis which is "Reinforceme
 - Gymnasium
 - Ray RLlib
 
-# Parking type
-This environment provides Parallel and Perpendicular parking.  
 # Kinematic Bicycle model
 - Kinematic bicycle model equation
  
@@ -29,18 +28,40 @@ This environment provides Parallel and Perpendicular parking.
         psi_dot = v * np.tan(delta) / CAR_L
   v: velocity, ψ(psi): heading angle of the car, a: acceleration, δ(delta): steering angle, CAR_L: car length  
   x: the center of the car position in x axle, y: the center of the car position in y axle  
-Maximum velocity is set +/-10km/h  
-Acceleration limitation is -1〜1 m/s^2
 
-# State value for the agent
-Input values are [a, δ], setting -pi/4〜pi/4 for δ.  
-Output values are v, and the distance between the 4 parking corner points(x,y) and the center position of the car(x,y).  
+# Reinforcement learning
+## Environment
+This environment provides Parallel and Perpendicular parking.  
+
+## Action type
+There are two action types which are continuous and discrete.  
+Actions as input values for the agent are [a, δ] in both type.  
+- continuous  
+  a is acceleration, limited between -1 and 1 m/s^2
+  δ is set between -pi/4〜pi/4  
+- discrete
+  Action space is 6.  
+  0: [1, 0] # move forward  
+  1: [1, -np.pi/6] # move right forward  
+  2: [1, np.pi/6] # move left forward  
+  3 :[-1, 0] # move backward  
+  4 :[-1, -np.pi/6] # move right backward  
+  5 :[-1, np.pi/6] # move left backward  
+ 
+## State value for the agent
+Output values of the algorithm are v, and the distance between the 4 parking corner points(x,y) and the center position of the car(x,y).  
 (v is divided by the maximum velocity and the disance is divided by the maximaum distance for normalization.)
+Maximum velocity is +/-10km/h and Maximum distance is 25m.
 
-# Reward type
+## Reward type
 If the car parks in the parking lot succesfully, the reward +1 is given.  
 The reward -1 is given if the following conditions are met.
   - the car get collision.
   - the distance between the car and the parking lot is more than 25meters.
   - the car crosses the parking lot border horizontally/vertically.
+
+# How to use
+## Training
+
+## Visualize the agent
 
