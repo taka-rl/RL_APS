@@ -6,6 +6,7 @@ import random
 from ray.tune.logger import UnifiedLogger
 from datetime import datetime
 
+# parameters for the training
 CAR_LOCATION = {
     1: {
         "1": np.array([18.0, 8.5]),
@@ -70,6 +71,21 @@ PARKING_LOT = {1: np.array([15.0, 2.5]), 2: np.array([15.0, 27.5]),
 
 
 def set_init_position(side):
+    """
+    Set the initial car location, parking lot location and heading angle for the training
+
+    Parameters:
+        side (int)
+            - 1: the parking lot is placed on the bottom side
+            - 2: the parking lot is placed on the top side
+            - 3: the parking lot is placed on the left side
+            - 4: the parking lot is placed on the right side
+
+        Returns:
+            init_car_loc (np.array): initial car location
+            init_parking_lot (np.array): initial parking lot location
+            heading_angle (float): initial heading angle
+    """
     num_dict = str(random.randint(5, 9))
     if side == 1:
         heading_angle = HEADING_ANGLE[num_dict]

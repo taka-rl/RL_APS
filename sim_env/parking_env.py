@@ -340,6 +340,7 @@ class Parking(gym.Env):
         Set the initial heading of the car between 0 and 2π radians
         """
         return np.random.uniform(0, 2 * np.pi)  # Full circle
+
     def get_normalized_state(self):
         """
         Prepare and normalize the state vector for the environment by flattening and combining
