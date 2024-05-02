@@ -27,7 +27,7 @@ class Parking(gym.Env):
         "render_fps": FPS,
         "action_types": ["continuous", "discrete"],
         "parking_types": ["parallel", "perpendicular"],
-        "training_modes": [True, False]
+        "training_modes": ["on", "off"]
     }
 
     def __init__(self, env_config) -> None:
@@ -302,7 +302,7 @@ class Parking(gym.Env):
         super().reset(seed=seed)
         self.side = self.set_initial_loc()
 
-        if not self.training_mode:
+        if self.training_mode == "off":
             # to make sure the initial distance between the car and the parking lot is within 25 meters
             self.parking_lot = self.set_initial_parking_loc(self.side)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
