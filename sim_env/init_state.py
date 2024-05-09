@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 
-def set_init_position(side):
+def set_init_position(side: int):
     """
     Set the initial car location, parking lot location and heading angle for the training
 
@@ -38,9 +38,9 @@ def set_init_position(side):
         },
         2: {
             "1": np.array([18.0, 8.5]),
-            "2": np.array([21.0, 6.5]),
+            "2": np.array([9.0, 23.5]),
             "3": np.array([12.0, 8.5]),
-            "4": np.array([9.0, 6.5]),
+            "4": np.array([21.0, 23.5]),
             "5": np.array([12.0, 21.0]),
             "6": np.array([18.0, 21.0]),
             "7": np.array([13.5, 21.5]),
@@ -49,9 +49,9 @@ def set_init_position(side):
         },
         3: {
             "1": np.array([18.0, 8.5]),
-            "2": np.array([21.0, 6.5]),
+            "2": np.array([6.5, 9.0]),
             "3": np.array([12.0, 8.5]),
-            "4": np.array([9.0, 6.5]),
+            "4": np.array([6.5, 21.0]),
             "5": np.array([9.0, 12.0]),
             "6": np.array([9.0, 18.0]),
             "7": np.array([8.5, 13.5]),
@@ -60,9 +60,9 @@ def set_init_position(side):
         },
         4: {
             "1": np.array([18.0, 8.5]),
-            "2": np.array([21.0, 6.5]),
+            "2": np.array([32.5, 21.0]),
             "3": np.array([12.0, 8.5]),
-            "4": np.array([9.0, 6.5]),
+            "4": np.array([32.5, 9.0]),
             "5": np.array([31.0, 18.0]),
             "6": np.array([31.0, 12.0]),
             "7": np.array([31.5, 16.5]),
@@ -88,18 +88,17 @@ def set_init_position(side):
 
     num_dict = str(random.randint(5, 9))
     if side == 1:
-        heading_angle = HEADING_ANGLE[num_dict]
+        init_heading_angle = HEADING_ANGLE[num_dict]
     elif side == 2:
-        heading_angle = HEADING_ANGLE[num_dict] + np.pi
+        init_heading_angle = HEADING_ANGLE[num_dict] + np.pi
     elif side == 3:
-        heading_angle = HEADING_ANGLE[num_dict] - np.pi / 2
+        init_heading_angle = HEADING_ANGLE[num_dict] - np.pi / 2
     elif side == 4:
-        heading_angle = HEADING_ANGLE[num_dict] + np.pi / 2
+        init_heading_angle = HEADING_ANGLE[num_dict] + np.pi / 2
     else:
         raise ValueError(f"Invalid side: {side}. Valid options are 1 to 4")
 
     init_car_loc = CAR_LOCATION[side][num_dict]
     init_parking_lot = PARKING_LOT[side]
 
-    return init_car_loc, init_parking_lot, heading_angle
-
+    return init_car_loc, init_parking_lot, init_heading_angle
