@@ -339,7 +339,7 @@ class Parking(gym.Env):
         """
         Set the initial heading of the car between 0 and 2π radians
         """
-        return np.random.uniform(0, 2 * np.pi)  # Full circle
+        return np.random.uniform(PI/12*5, PI/12*7)  # Full circle
 
     def get_normalized_state(self):
         """
@@ -355,11 +355,16 @@ class Parking(gym.Env):
                         and the distances to each parking lot vertex, clipped in between -1 and 1.
         """
 
-        # normalize distances between car's current location and parking lot vertices
-        distances = ((self.parking_lot_vertices - self.car.car_loc) / MAX_DISTANCE).flatten()
+        # calculate the distance between the car and the parking lot vertices for the coordinate of the car
+        distances = self.global_to_local(self.car.car_loc, self.parking_lot_vertices, self.car.psi, self.side)
+        distances = np.array(distances).flatten()
 
-        # combine normalized velocity with normalized distances to form the state vector
-        state = np.concatenate(([self.car.v / VELOCITY_LIMIT], distances))
+        # normalization
+        normalized_velocity = self.car.v / VELOCITY_LIMIT
+        normalized_distances = distances / MAX_DISTANCE
+
+        # combine normalized state values
+        state = np.concatenate(([normalized_velocity], normalized_distances))
 
         # clip the state value
         state = np.clip(state, a_min=-1, a_max=1)
@@ -375,6 +380,35 @@ class Parking(gym.Env):
             int value between 1 and 4
         """
         return random.randint(1, 4)
+
+    @staticmethod
+    def global_to_local(car_loc, parking_vertices, car_heading, side) -> np.array(['x', 'y']):
+        """
+        Transform the global coordinate system to the local(car) coordinate system
+
+        Parameters:
+            car_loc (np.array): the center of the car location (x, y coordinate)
+            parking_vertices (np.array): the center of the parking lot or the parking lot vertex (x,y coordinate)
+            car_heading (float): the car's heading angle
+            side (int): representation which side of the window (1:bottom, 2:top, 3:left, or 4:right)
+                        the parking lot is relative to the vehicle.
+
+        dict_angle: necessary orientation adjustments depending on the side
+        Return:
+            np.array: Points transformed into the car's local coordinate system.
+        """
+
+        dict_angle = {1: np.pi / 2, 2: - np.pi / 2, 3: np.pi, 4: 0}  # depending on the parking lot location
+        # Translate
+        translated_vertices = [np.array(vertex) - np.array(car_loc) for vertex in parking_vertices]
+        # Rotation to align the car's forward direction with the local y-axis
+        rotation_matrix = np.array([
+            [np.cos(-car_heading + dict_angle[side]), -np.sin(-car_heading + dict_angle[side])],
+            [np.sin(-car_heading + dict_angle[side]), np.cos(-car_heading + dict_angle[side])]
+        ])
+        # Apply rotation to each translated point
+        local_points = np.array([rotation_matrix.dot(vertex) for vertex in translated_vertices])
+        return local_points
 
     @staticmethod
     def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
