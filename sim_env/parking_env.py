@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import pygame
+import math
 import gymnasium as gym
 from typing import Optional
 from sim_env.car import Car
@@ -310,12 +311,13 @@ class Parking(gym.Env):
                 car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
                 if not self.check_max_distance(self.parking_lot_vertices, car_loc):
                     break
-            self.car = Car(car_loc, self.set_initial_heading())
+            self.car = Car(car_loc, self.set_initial_heading(self.side))
         else:  # for training
             from sim_env.init_state import set_init_position
             car_loc, self.parking_lot, heading_angle = set_init_position(self.side)
+            car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
-            self.car = Car(car_loc, heading_angle)
+            self.car = Car(car_loc,  self.set_initial_heading(self.side))
 
         self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
@@ -335,20 +337,28 @@ class Parking(gym.Env):
         return self.state, {}
 
     @staticmethod
-    def set_initial_heading() -> float:
+    def set_initial_heading(side) -> float:
         """
-        Set the initial heading of the car between 0 and 2π radians
+        Set the initial heading of the car, depending on which side the parking lot is placed
+
         """
-        return np.random.uniform(PI/12*5, PI/12*7)  # Full circle
+        if side == 1:
+            return np.random.uniform(PI / 2, PI / 2)
+        elif side == 2:
+            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
+        elif side == 3:
+            return np.random.uniform(-PI / 12, PI / 12)
+        elif side == 4:
+            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)
+        else:
+            raise ValueError(
+                f"Invalid side value: {side}. "
+                f"Valid values are from 1 to 4")
 
     def get_normalized_state(self):
         """
         Prepare and normalize the state vector for the environment by flattening and combining
         the car's velocity with the distances from parking lot vertices to the car's current location.
-
-        This function calculates the normalized distances between the car and each vertex of the
-        parking lot, then concatenates these distances with the car's normalized velocity to form
-        a comprehensive state vector suitable for use in reinforcement learning algorithms.
 
         Returns:
             np.ndarray: The normalized and flattened state vector consisting of the car's velocity
@@ -356,7 +366,10 @@ class Parking(gym.Env):
         """
 
         # calculate the distance between the car and the parking lot vertices for the coordinate of the car
-        distances = self.global_to_local(self.car.car_loc, self.parking_lot_vertices, self.car.psi, self.side)
+        distances = []
+        for vertex in self.parking_lot_vertices:
+            distance = self.transform_point(vertex[0], vertex[1], self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
+            distances.append(distance)
         distances = np.array(distances).flatten()
 
         # normalization
@@ -382,33 +395,23 @@ class Parking(gym.Env):
         return random.randint(1, 4)
 
     @staticmethod
-    def global_to_local(car_loc, parking_vertices, car_heading, side) -> np.array(['x', 'y']):
+    def transform_point(x, y, car_x, car_y, heading) -> np.array(['x', 'y']):
         """
         Transform the global coordinate system to the local(car) coordinate system
 
-        Parameters:
-            car_loc (np.array): the center of the car location (x, y coordinate)
-            parking_vertices (np.array): the center of the parking lot or the parking lot vertex (x,y coordinate)
-            car_heading (float): the car's heading angle
-            side (int): representation which side of the window (1:bottom, 2:top, 3:left, or 4:right)
-                        the parking lot is relative to the vehicle.
-
-        dict_angle: necessary orientation adjustments depending on the side
         Return:
-            np.array: Points transformed into the car's local coordinate system.
+            np.array: x,y coordinate system of the car
         """
+        # Translate the point to the new origin
+        x -= car_x
+        y -= car_y
 
-        dict_angle = {1: np.pi / 2, 2: - np.pi / 2, 3: np.pi, 4: 0}  # depending on the parking lot location
-        # Translate
-        translated_vertices = [np.array(vertex) - np.array(car_loc) for vertex in parking_vertices]
-        # Rotation to align the car's forward direction with the local y-axis
-        rotation_matrix = np.array([
-            [np.cos(-car_heading + dict_angle[side]), -np.sin(-car_heading + dict_angle[side])],
-            [np.sin(-car_heading + dict_angle[side]), np.cos(-car_heading + dict_angle[side])]
-        ])
-        # Apply rotation to each translated point
-        local_points = np.array([rotation_matrix.dot(vertex) for vertex in translated_vertices])
-        return local_points
+        # Rotate the point based on the heading
+        angle = heading - PI / 2
+        new_x = x * math.cos(-angle) - y * math.sin(-angle)
+        new_y = x * math.sin(-angle) + y * math.cos(-angle)
+
+        return np.array([new_x, new_y])
 
     @staticmethod
     def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
@@ -438,10 +441,10 @@ class Parking(gym.Env):
                     adjusted for an appropriate distance from the parking lot.
 
         """
-        init_dist = random.uniform(10, 20)
+        init_dist = 10  # random.uniform(10, 20)
 
         if side == 1:
-            x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            x_car = random.uniform(parking_loc[0] - 5, parking_loc[0] + 5)
             y_car = parking_loc[1] + init_dist
         elif side == 2:
             x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE

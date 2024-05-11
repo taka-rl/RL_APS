@@ -37,9 +37,9 @@ def set_init_position(side: int):
             "9": np.array([15.0, 7.5]),
         },
         2: {
-            "1": np.array([18.0, 8.5]),
+            "1": np.array([12.0, 21.5]),
             "2": np.array([9.0, 23.5]),
-            "3": np.array([12.0, 8.5]),
+            "3": np.array([18.0, 21.5]),
             "4": np.array([21.0, 23.5]),
             "5": np.array([12.0, 21.0]),
             "6": np.array([18.0, 21.0]),
@@ -48,9 +48,9 @@ def set_init_position(side: int):
             "9": np.array([15.0, 22.5]),
         },
         3: {
-            "1": np.array([18.0, 8.5]),
+            "1": np.array([8.5, 12.0]),
             "2": np.array([6.5, 9.0]),
-            "3": np.array([12.0, 8.5]),
+            "3": np.array([8.5, 18.0]),
             "4": np.array([6.5, 21.0]),
             "5": np.array([9.0, 12.0]),
             "6": np.array([9.0, 18.0]),
@@ -59,9 +59,9 @@ def set_init_position(side: int):
             "9": np.array([7.5, 15.0]),
         },
         4: {
-            "1": np.array([18.0, 8.5]),
+            "1": np.array([31.5, 18.0]),
             "2": np.array([32.5, 21.0]),
-            "3": np.array([12.0, 8.5]),
+            "3": np.array([31.5, 12.0]),
             "4": np.array([32.5, 9.0]),
             "5": np.array([31.0, 18.0]),
             "6": np.array([31.0, 12.0]),
@@ -72,15 +72,50 @@ def set_init_position(side: int):
     }
 
     HEADING_ANGLE = {
-        "1": np.pi / 4,
-        "2": 0.0,
-        "3": np.pi / 4 * 3,
-        "4": np.pi,
-        "5": np.pi / 3,
-        "6": np.pi / 3 * 2,
-        "7": np.pi / 12 * 5,
-        "8": np.pi / 12 * 7,
-        "9": np.pi / 2
+        1: {
+            "1": np.pi / 4,
+            "2": 0.0,
+            "3": np.pi / 4 * 3,
+            "4": np.pi,
+            "5": np.pi / 3,
+            "6": np.pi / 3 * 2,
+            "7": np.pi / 12 * 5,
+            "8": np.pi / 12 * 7,
+            "9": np.pi / 2
+        },
+        2: {
+            "1": - np.pi / 4 * 3,
+            "2": - np.pi,
+            "3": - np.pi / 4,
+            "4": 0.0,
+            "5": - np.pi / 3 * 2,
+            "6": - np.pi / 3,
+            "7": - np.pi / 12 * 7,
+            "8": - np.pi / 12 * 5,
+            "9": - np.pi / 2
+        },
+        3: {
+            "1": - np.pi / 4,
+            "2": - np.pi / 2,
+            "3": np.pi / 4,
+            "4": np.pi / 2,
+            "5": - np.pi / 6,
+            "6": np.pi / 6,
+            "7": - np.pi / 12 * 7,
+            "8": - np.pi / 12 * 5,
+            "9": 0.0
+        },
+        4: {
+            "1": np.pi / 4 * 3,
+            "2": np.pi / 2,
+            "3": - np.pi / 4 * 3,
+            "4": - np.pi / 2,
+            "5": np.pi / 6 * 5,
+            "6": - np.pi / 6 * 5,
+            "7": - np.pi / 12 * 7,
+            "8": - np.pi / 12 * 5,
+            "9": np.pi
+        }
     }
 
     PARKING_LOT = {1: np.array([15.0, 2.5]), 2: np.array([15.0, 27.5]),
@@ -88,13 +123,13 @@ def set_init_position(side: int):
 
     num_dict = str(random.randint(5, 9))
     if side == 1:
-        init_heading_angle = HEADING_ANGLE[num_dict]
+        init_heading_angle = HEADING_ANGLE[side][num_dict]
     elif side == 2:
-        init_heading_angle = HEADING_ANGLE[num_dict] + np.pi
+        init_heading_angle = HEADING_ANGLE[side][num_dict]
     elif side == 3:
-        init_heading_angle = HEADING_ANGLE[num_dict] - np.pi / 2
+        init_heading_angle = HEADING_ANGLE[side][num_dict]
     elif side == 4:
-        init_heading_angle = HEADING_ANGLE[num_dict] + np.pi / 2
+        init_heading_angle = HEADING_ANGLE[side][num_dict]
     else:
         raise ValueError(f"Invalid side: {side}. Valid options are 1 to 4")
 

@@ -81,4 +81,4 @@ OFFSET_PARALLEL = 120 * PIXEL_TO_METER_SCALE
 OFFSET_PERPENDICULAR = 60 * PIXEL_TO_METER_SCALE
 
 MAX_DISTANCE = 25.0  # the maximum distance between the car and the parking lot
-MAX_STEPS = 300  # the maximum step
+MAX_STEPS = 80  # the maximum step
