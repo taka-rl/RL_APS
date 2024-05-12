@@ -7,6 +7,7 @@ from typing import Optional
 from sim_env.car import Car
 from sim_env.com_fcn import meters_to_pixels, draw_object
 from sim_env.parameters import *
+from sim_env.init_state import set_init_position
 
 
 class Parking(gym.Env):
@@ -63,7 +64,7 @@ class Parking(gym.Env):
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(11,), dtype=np.float32)
 
         if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
@@ -181,7 +182,7 @@ class Parking(gym.Env):
 
             # display Multi-line text
             text_str = (f"Car location: {self.car.car_loc}\nVelocity: {self.car.v}\n"
-                        f"Heading angle: {self.car.psi}\n")
+                        f"Heading angle: {self.car.psi}\nDegree: {self.car.psi * (180 / PI)}")
             text_rect = pygame.Rect(400, 500, 100, 100)  # Define the rectangle area for text
             self.draw_multiline_text(self.surf_text, text_str, COLORS["BLACK"], text_rect, font)
 
@@ -301,8 +302,11 @@ class Parking(gym.Env):
             options: Optional[dict] = None,
     ):
         super().reset(seed=seed)
+
+        # choose the side
         self.side = self.set_initial_loc()
 
+        # set the initial positions
         if self.training_mode == "off":
             # to make sure the initial distance between the car and the parking lot is within 25 meters
             self.parking_lot = self.set_initial_parking_loc(self.side)
@@ -313,11 +317,9 @@ class Parking(gym.Env):
                     break
             self.car = Car(car_loc, self.set_initial_heading(self.side))
         else:  # for training
-            from sim_env.init_state import set_init_position
-            car_loc, self.parking_lot, heading_angle = set_init_position(self.side)
-            car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
+            car_loc, self.parking_lot, heading_angle = set_init_position(self.side, randomized=True)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
-            self.car = Car(car_loc,  self.set_initial_heading(self.side))
+            self.car = Car(car_loc,  heading_angle)
 
         self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
@@ -343,7 +345,7 @@ class Parking(gym.Env):
 
         """
         if side == 1:
-            return np.random.uniform(PI / 2, PI / 2)
+            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
         elif side == 2:
             return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
         elif side == 3:
@@ -375,9 +377,11 @@ class Parking(gym.Env):
         # normalization
         normalized_velocity = self.car.v / VELOCITY_LIMIT
         normalized_distances = distances / MAX_DISTANCE
+        normalized_sin_cos_heading = self.angle_to_sin_cos(self.car.psi)
 
         # combine normalized state values
-        state = np.concatenate(([normalized_velocity], normalized_distances))
+        # state = np.concatenate(([normalized_velocity], normalized_distances))  # 9 elements
+        state = np.concatenate(([normalized_velocity], normalized_distances, normalized_sin_cos_heading))  # 11 elements
 
         # clip the state value
         state = np.clip(state, a_min=-1, a_max=1)
@@ -393,6 +397,12 @@ class Parking(gym.Env):
             int value between 1 and 4
         """
         return random.randint(1, 4)
+
+    @staticmethod
+    def angle_to_sin_cos(angle):
+        sin_val = np.sin(angle)
+        cos_val = np.cos(angle)
+        return np.array([sin_val, cos_val])
 
     @staticmethod
     def transform_point(x, y, car_x, car_y, heading) -> np.array(['x', 'y']):
@@ -444,7 +454,7 @@ class Parking(gym.Env):
         init_dist = 10  # random.uniform(10, 20)
 
         if side == 1:
-            x_car = random.uniform(parking_loc[0] - 5, parking_loc[0] + 5)
+            x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
             y_car = parking_loc[1] + init_dist
         elif side == 2:
             x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
@@ -515,7 +525,7 @@ class Parking(gym.Env):
         if self.check_max_distance(self.parking_lot_vertices, self.car.car_loc):
             reward -= 1
             self.terminated = True
-            print("The distance between the car and the parking is more than 25 meters")
+            print("The distance between the car and the parking is more than",  MAX_DISTANCE, "meters")
             return reward
 
         # check a collision
