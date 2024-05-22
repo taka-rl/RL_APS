@@ -64,7 +64,7 @@ class Parking(gym.Env):
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(11,), dtype=np.float32)
 
         if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
@@ -345,13 +345,13 @@ class Parking(gym.Env):
 
         """
         if side == 1:
-            return np.random.uniform(PI / 4, PI / 4 * 3)  # 75~105 degree
+            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
         elif side == 2:
-            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)  # -105 ~ -75 degree
+            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
         elif side == 3:
-            return np.random.uniform(-PI / 12, PI / 12)  # -15 ~ 15 degrees
+            return np.random.uniform(-PI / 12, PI / 12)
         elif side == 4:
-            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)  # 165 ~ +195 degree
+            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)
         else:
             raise ValueError(
                 f"Invalid side value: {side}. "
@@ -613,18 +613,19 @@ class Parking(gym.Env):
                 return np.pi
         elif self.parking_type == "parallel":
             if self.side in [1, 2]:
-                # Assuming the car can face either 0 or pi when parked parallel
-                return 0  # or np.pi based on direction
-            elif self.side == 3:
-                return np.pi / 2
-            elif self.side == 4:
-                return -np.pi / 2
+                return [0, np.pi]  # Car can face either 0 or pi
+            elif self.side in [3, 4]:
+                return [np.pi / 2, -np.pi / 2]  # Car can face either pi/2 or -pi/2
 
     @staticmethod
     def calc_angle_dif(psi, parking_angle):
-        # Calculate angle error
-        angle_error = abs(psi - parking_angle)
-        angle_penalty = 0.5 * (angle_error / MAX_ANGLE_ERROR)
+        # calculate the angle error
+        if isinstance(parking_angle, list):
+            angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
+            angle_error = min(angle_errors)
+        else:
+            angle_error = np.abs((psi - parking_angle + PI) % (2 * PI) - PI)
+        angle_penalty = min(0.5 * (angle_error / MAX_ANGLE_ERROR), 0.5)
         return angle_penalty
 
     def check_cross_border(self) -> bool:

@@ -94,5 +94,5 @@ MAX_DISTANCE = 25.0  # the maximum distance between the car and the parking lot
 MAX_STEPS = 80  # the maximum step
 
 # constants for the reward functions
-MAX_ANGLE_ERROR = PI / 6
+MAX_ANGLE_ERROR = PI / 12
 CENTER_THRESHOLD = 1

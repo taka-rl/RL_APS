@@ -28,10 +28,11 @@ def set_init_position(side: int, parking_type: str, randomized=True):
     PARKING_LOT = {1: np.array([15.0, 2.5]), 2: np.array([15.0, 27.5]),
                    3: np.array([2.5, 15.0]), 4: np.array([37.5, 15.0])}
     init_parking_lot = PARKING_LOT[side]
+
     if parking_type == "perpendicular":
         if randomized:
             init_dist = 7.5  # random.uniform(7.5, 15)
-            x_car = random.uniform(init_parking_lot[0] - 5, init_parking_lot[0] + 5)
+            x_car = init_parking_lot[0] + random.uniform(-5, 5)
             y_car = init_parking_lot[1] + init_dist
             init_heading_angle = np.random.uniform(np.pi / 12 * 5, np.pi / 12 * 7)
 
