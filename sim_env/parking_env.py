@@ -64,7 +64,7 @@ class Parking(gym.Env):
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(11,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
 
         if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
@@ -304,7 +304,7 @@ class Parking(gym.Env):
         super().reset(seed=seed)
 
         # choose the side
-        self.side = self.set_initial_loc()
+        self.side = 1  # self.set_initial_loc()
 
         # set the initial positions
         if self.training_mode == "off":
@@ -317,7 +317,7 @@ class Parking(gym.Env):
                     break
             self.car = Car(car_loc, self.set_initial_heading(self.side))
         else:  # for training
-            car_loc, self.parking_lot, heading_angle = set_init_position(self.side, randomized=True)
+            car_loc, self.parking_lot, heading_angle = set_init_position(self.side, self.parking_type, randomized=True)
             self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
             self.car = Car(car_loc,  heading_angle)
 
@@ -345,13 +345,13 @@ class Parking(gym.Env):
 
         """
         if side == 1:
-            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
+            return np.random.uniform(PI / 4, PI / 4 * 3)  # 75~105 degree
         elif side == 2:
-            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
+            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)  # -105 ~ -75 degree
         elif side == 3:
-            return np.random.uniform(-PI / 12, PI / 12)
+            return np.random.uniform(-PI / 12, PI / 12)  # -15 ~ 15 degrees
         elif side == 4:
-            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)
+            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)  # 165 ~ +195 degree
         else:
             raise ValueError(
                 f"Invalid side value: {side}. "
@@ -375,13 +375,32 @@ class Parking(gym.Env):
         distances = np.array(distances).flatten()
 
         # normalization
-        normalized_velocity = self.car.v / VELOCITY_LIMIT
+        # normalized_velocity = self.car.v / VELOCITY_LIMIT
         normalized_distances = distances / MAX_DISTANCE
-        normalized_sin_cos_heading = self.angle_to_sin_cos(self.car.psi)
+        # normalized_sin_cos_heading = self.angle_to_sin_cos(self.car.psi)
+
+        # polar coordinates
+        # polar_dis, polar_theta = self.calc_polar_coordinate(self.car.car_loc, self.parking_lot_vertices)
+        # normalized_polar_dis = polar_dis / MAX_DISTANCE
+        # normalized_polar_theta = polar_theta / PI
+
+        # guidance reward
+        guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
+                                        self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
+        normalized_guidance = guidance / MAX_DISTANCE
 
         # combine normalized state values
+        # state = normalized_distances  # 8 elements
+        # state = np.concatenate((normalized_distances, normalized_sin_cos_heading))  # 10 elements
         # state = np.concatenate(([normalized_velocity], normalized_distances))  # 9 elements
-        state = np.concatenate(([normalized_velocity], normalized_distances, normalized_sin_cos_heading))  # 11 elements
+        # state = np.concatenate(([normalized_velocity], normalized_distances, normalized_sin_cos_heading))  # 11 elements
+
+        # polar coordinate
+        # state = np.concatenate((normalized_polar_dis, normalized_polar_theta))  # 8 elements
+        # state = np.concatenate(([normalized_velocity], normalized_polar_dis, normalized_polar_theta))  # 9 elements
+
+        # guidance reward
+        state = np.concatenate((normalized_distances, normalized_guidance))  # 10 elements
 
         # clip the state value
         state = np.clip(state, a_min=-1, a_max=1)
@@ -424,6 +443,32 @@ class Parking(gym.Env):
         return np.array([new_x, new_y])
 
     @staticmethod
+    def calc_polar_coordinate(car_loc, parking_lot_vertices):
+        """
+        Calculate the polar coordinates (distance and angle) between
+        the center of the car location and each parking lot vertex.
+
+        Returns:
+            tuple: Two numpy arrays:
+               - An array of distances 'r'
+               - An array of angles 'theta' in radians
+        """
+        car_x, car_y = car_loc
+        polar_dis, polar_theta = [], []
+
+        for vertex in parking_lot_vertices:
+            vertex_x, vertex_y = vertex
+            dx = vertex_x - car_x
+            dy = vertex_y - car_y
+            r = np.sqrt(dx ** 2 + dy ** 2)  # Euclidean distance
+            theta = np.arctan2(dy, dx)  # Angle in radians
+
+            polar_dis.append(r)
+            polar_theta.append(theta)
+
+        return np.array(polar_dis), np.array(polar_theta)
+
+    @staticmethod
     def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
         """
         Set the initial car location
@@ -451,20 +496,20 @@ class Parking(gym.Env):
                     adjusted for an appropriate distance from the parking lot.
 
         """
-        init_dist = 10  # random.uniform(10, 20)
+        init_dist = random.uniform(7.5, 15)
 
         if side == 1:
-            x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            x_car = random.uniform(parking_loc[0] - 10, parking_loc[0] + 10)
             y_car = parking_loc[1] + init_dist
         elif side == 2:
-            x_car = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            x_car = random.uniform(parking_loc[0] - 5, parking_loc[0] + 5)
             y_car = parking_loc[1] - init_dist
         elif side == 3:
             x_car = parking_loc[0] + init_dist
-            y_car = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+            y_car = random.uniform(parking_loc[1] - 5, parking_loc[1] + 5)
         else:
             x_car = parking_loc[0] - init_dist
-            y_car = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+            y_car = random.uniform(parking_loc[1] - 5, parking_loc[1] + 5)
 
         return np.array([x_car, y_car])
 
@@ -540,8 +585,47 @@ class Parking(gym.Env):
             reward += 1
             self.terminated = True
             print("successful parking")
+
+            parking_angle = self.get_parking_angle()
+            angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle)
+
+            # Adjust reward
+            reward -= angle_penalty
             return reward
+
         return reward
+
+    def is_parking_successful(self):
+        distance = abs(self.parking_lot - self.car.car_loc)
+        if distance[0] <= CENTER_THRESHOLD and distance[1] <= CENTER_THRESHOLD:
+            return True
+        return False
+
+    def get_parking_angle(self):
+        if self.parking_type == "perpendicular":
+            if self.side == 1:
+                return np.pi / 2
+            elif self.side == 2:
+                return -np.pi / 2
+            elif self.side == 3:
+                return 0
+            elif self.side == 4:
+                return np.pi
+        elif self.parking_type == "parallel":
+            if self.side in [1, 2]:
+                # Assuming the car can face either 0 or pi when parked parallel
+                return 0  # or np.pi based on direction
+            elif self.side == 3:
+                return np.pi / 2
+            elif self.side == 4:
+                return -np.pi / 2
+
+    @staticmethod
+    def calc_angle_dif(psi, parking_angle):
+        # Calculate angle error
+        angle_error = abs(psi - parking_angle)
+        angle_penalty = 0.5 * (angle_error / MAX_ANGLE_ERROR)
+        return angle_penalty
 
     def check_cross_border(self) -> bool:
         """
