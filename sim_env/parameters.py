@@ -95,4 +95,4 @@ MAX_STEPS = 80  # the maximum step
 
 # constants for the reward functions
 MAX_ANGLE_ERROR = PI / 12
-CENTER_THRESHOLD = 1
+CENTER_THRESHOLD = 0.5
