@@ -64,7 +64,7 @@ class Parking(gym.Env):
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(11,), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
 
         if self.action_type == "continuous":
             self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,), dtype=np.float32)
@@ -581,17 +581,18 @@ class Parking(gym.Env):
             return reward
 
         # check the parking
-        if self.is_parking_successful():
-            reward += 1
-            self.terminated = True
-            print("successful parking")
+        if self.is_car_in_parking_lot():
+            if self.is_parking_successful():
+                reward += 1
+                self.terminated = True
+                print("successful parking")
 
-            parking_angle = self.get_parking_angle()
-            angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle)
+                parking_angle = self.get_parking_angle()
+                angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle)
 
-            # Adjust reward
-            reward -= angle_penalty
-            return reward
+                # Adjust reward
+                reward -= angle_penalty
+                return reward
 
         return reward
 
@@ -652,7 +653,7 @@ class Parking(gym.Env):
         else:
             return np.any(self.car.car_vertices[:, 0] > pa_right_edge)
 
-    def is_parking_successful(self) -> bool:
+    def is_car_in_parking_lot(self) -> bool:
         xy1, xy2, xy3, xy4 = self.parking_lot_vertices
         # Check if all car corners are within the parking area
         for corner in self.car.car_vertices:
