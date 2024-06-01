@@ -377,12 +377,6 @@ class Parking(gym.Env):
         # normalization
         # normalized_velocity = self.car.v / VELOCITY_LIMIT
         normalized_distances = distances / MAX_DISTANCE
-        # normalized_sin_cos_heading = self.angle_to_sin_cos(self.car.psi)
-
-        # polar coordinates
-        # polar_dis, polar_theta = self.calc_polar_coordinate(self.car.car_loc, self.parking_lot_vertices)
-        # normalized_polar_dis = polar_dis / MAX_DISTANCE
-        # normalized_polar_theta = polar_theta / PI
 
         # guidance reward
         guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
@@ -391,13 +385,7 @@ class Parking(gym.Env):
 
         # combine normalized state values
         # state = normalized_distances  # 8 elements
-        # state = np.concatenate((normalized_distances, normalized_sin_cos_heading))  # 10 elements
         # state = np.concatenate(([normalized_velocity], normalized_distances))  # 9 elements
-        # state = np.concatenate(([normalized_velocity], normalized_distances, normalized_sin_cos_heading))  # 11 elements
-
-        # polar coordinate
-        # state = np.concatenate((normalized_polar_dis, normalized_polar_theta))  # 8 elements
-        # state = np.concatenate(([normalized_velocity], normalized_polar_dis, normalized_polar_theta))  # 9 elements
 
         # guidance reward
         state = np.concatenate((normalized_distances, normalized_guidance))  # 10 elements
@@ -418,12 +406,6 @@ class Parking(gym.Env):
         return random.randint(1, 4)
 
     @staticmethod
-    def angle_to_sin_cos(angle):
-        sin_val = np.sin(angle)
-        cos_val = np.cos(angle)
-        return np.array([sin_val, cos_val])
-
-    @staticmethod
     def transform_point(x, y, car_x, car_y, heading) -> np.array(['x', 'y']):
         """
         Transform the global coordinate system to the local(car) coordinate system
@@ -441,32 +423,6 @@ class Parking(gym.Env):
         new_y = x * math.sin(-angle) + y * math.cos(-angle)
 
         return np.array([new_x, new_y])
-
-    @staticmethod
-    def calc_polar_coordinate(car_loc, parking_lot_vertices):
-        """
-        Calculate the polar coordinates (distance and angle) between
-        the center of the car location and each parking lot vertex.
-
-        Returns:
-            tuple: Two numpy arrays:
-               - An array of distances 'r'
-               - An array of angles 'theta' in radians
-        """
-        car_x, car_y = car_loc
-        polar_dis, polar_theta = [], []
-
-        for vertex in parking_lot_vertices:
-            vertex_x, vertex_y = vertex
-            dx = vertex_x - car_x
-            dy = vertex_y - car_y
-            r = np.sqrt(dx ** 2 + dy ** 2)  # Euclidean distance
-            theta = np.arctan2(dy, dx)  # Angle in radians
-
-            polar_dis.append(r)
-            polar_theta.append(theta)
-
-        return np.array(polar_dis), np.array(polar_theta)
 
     @staticmethod
     def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
