@@ -153,10 +153,10 @@ def set_init_position(side: int, parking_type: str, randomized=True):
 
     elif parking_type == "parallel":
         if randomized:
-            init_dist = 7.5  # random.uniform(5, 7.5)
-            x_car = init_parking_lot[0] + random.uniform(-6,  6)
+            init_dist = 5  # random.uniform(5, 7.5)
+            x_car = init_parking_lot[0] + random.uniform(5,  10)
             y_car = init_parking_lot[1] + init_dist
-            init_heading_angle = np.random.uniform(np.pi / 4, np.pi / 4 * 3)
+            init_heading_angle = np.random.uniform(np.pi / 6, np.pi / 3)
 
             return np.array([x_car, y_car]), init_parking_lot, init_heading_angle
 

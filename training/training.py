@@ -1,7 +1,6 @@
 import os
 import ray
 import time
-from sim_env.parameters import MAX_STEPS
 from ray.rllib.algorithms.ppo import PPOConfig
 from sim_env.parking_env import Parking
 from utility import custom_log_creator, custom_log_checkpoint
@@ -10,17 +9,15 @@ from utility import custom_log_creator, custom_log_checkpoint
 ray.init()
 env_name = Parking
 env_config = {"render_mode": "no_render",
-              "action_type": "discrete",
-              "parking_type": "perpendicular"}
+              "action_type": "continuous",
+              "parking_type": "perpendicular",
+              "training_mode": "on"}
 
 # for folder names
-# parking_type + side + num_train + axl
-axl = "axl1"  # acceleration value
-side = "1"  # parking side if selected
-num_train = "10"
-num_steps = str(MAX_STEPS)
+num_train = "500"
+guidance = "guidance_15"
+custom_str = env_config["parking_type"] + "_" + env_config["action_type"] + "_" + num_train + "_" + guidance
 
-custom_str = side + "_" + num_train + "_" + axl + "_" + num_steps
 algo = (
     PPOConfig()
     .environment(env=env_name, env_config=env_config)
