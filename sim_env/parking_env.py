@@ -78,6 +78,11 @@ class Parking(gym.Env):
         self.surf_text = None
         self.clock = None
 
+        if self.parking_type == "parallel":
+            self.parking_strategy = ParallelParking()
+        else:
+            self.parking_strategy = PerpendicularParking()
+
     def step(self, action):
         """
         Let the car(agent) take an action in the parking environment.
@@ -230,72 +235,6 @@ class Parking(gym.Env):
         for car_vertex in self.static_cars_vertices:
             draw_object(self.surf_parkinglot, "GREY", car_vertex)
 
-    def generate_static_obstacles(self):
-        static_cars_vertices = []
-        static_parking_vertices = []
-
-        offset = OFFSET_PARALLEL if self.parking_type == "parallel" else OFFSET_PERPENDICULAR
-
-        # center locations for the static cars
-        if self.side in [1, 2]:
-            static_cars_loc = np.array([[self.parking_lot[0] + offset, self.parking_lot[1]],
-                                        [self.parking_lot[0] - offset, self.parking_lot[1]]])
-
-        else:
-            static_cars_loc = np.array([[self.parking_lot[0], self.parking_lot[1] + offset],
-                                        [self.parking_lot[0], self.parking_lot[1] - offset]])
-
-        # calculate the obstacle cars vertices and parking lots vertices
-        parking_struct = self.get_parking_struct(self.parking_type, self.side)
-        car_struct = self.get_car_struct(self.parking_type, self.side)
-        for loc in static_cars_loc:
-            static_cars_vertices.append(car_struct + loc)
-            static_parking_vertices.append(parking_struct + loc)
-        return static_cars_vertices, static_parking_vertices
-
-    @staticmethod
-    def get_parking_struct(parking_type: str, side: int):
-        """
-        Get the parking structure based on the parking type.
-
-        Parameters:
-            parking_type (str): The type of parking arrangement.
-            side (int): The side of the parking lot
-
-        Returns:
-            np.ndarray: The vertices for parking space structure.
-        """
-        if parking_type == "parallel":
-            return PARALLEL_HORIZONTAL if side in [1, 2] else PARALLEL_VERTICAL
-
-        else:  # perpendicular
-            return PERPENDICULAR_HORIZONTAL if side in [1, 2] else PERPENDICULAR_VERTICAL
-
-    @staticmethod
-    def get_car_struct(parking_type: str, side: int):
-        """
-        Get the car structure based on the parking type.
-
-        Parameters:
-            parking_type (str): The type of parking arrangement.
-            side (int): The side of the parking lot
-
-        Returns:
-            np.ndarray: The vertices for parking space structure.
-        """
-        if parking_type == "parallel":
-            return CAR_STRUCT if side in [1, 2] else np.array([[+CAR_W / 2, +CAR_L / 2],
-                                                               [+CAR_W / 2, -CAR_L / 2],
-                                                               [-CAR_W / 2, -CAR_L / 2],
-                                                               [-CAR_W / 2, +CAR_L / 2]],
-                                                              dtype=np.float32)  # Coordinates adjusted for meters
-        else:  # perpendicular
-            return CAR_STRUCT if side in [3, 4] else np.array([[+CAR_W / 2, +CAR_L / 2],
-                                                               [+CAR_W / 2, -CAR_L / 2],
-                                                               [-CAR_W / 2, -CAR_L / 2],
-                                                               [-CAR_W / 2, +CAR_L / 2]],
-                                                              dtype=np.float32)  # Coordinates adjusted for meters
-
     def reset(
             self,
             seed: Optional[int] = None,
@@ -304,25 +243,27 @@ class Parking(gym.Env):
         super().reset(seed=seed)
 
         # choose the side
-        self.side = 1  # self.set_initial_loc()
+        self.side = self.parking_strategy.set_initial_loc()
 
         # set the initial positions
         if self.training_mode == "off":
-            # to make sure the initial distance between the car and the parking lot is within 25 meters
-            self.parking_lot = self.set_initial_parking_loc(self.side)
-            self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
+            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side)
+            self.parking_lot_vertices = (self.parking_lot +
+                                         self.parking_strategy.get_parking_struct(self.parking_type, self.side))
             while True:
-                car_loc = self.set_initial_car_loc(self.side, self.parking_lot)
+                car_loc = self.parking_strategy.set_initial_car_loc(self.side, self.parking_lot)
                 if not self.check_max_distance(self.parking_lot_vertices, car_loc):
                     break
-            self.car = Car(car_loc, self.set_initial_heading(self.side))
+            self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.side))
         else:  # for training
             car_loc, self.parking_lot, heading_angle = set_init_position(self.side, self.parking_type, randomized=True)
-            self.parking_lot_vertices = self.parking_lot + self.get_parking_struct(self.parking_type, self.side)
-            self.car = Car(car_loc,  heading_angle)
+            self.parking_lot_vertices = (self.parking_lot +
+                                         self.parking_strategy.get_parking_struct(self.parking_type, self.side))
+            self.car = Car(car_loc, heading_angle)
 
         self.car.loc_old = self.car.car_loc
-        self.static_cars_vertices, self.static_parking_lot_vertices = self.generate_static_obstacles()
+        self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
+            self.parking_lot, self.side)
         self.state = self.get_normalized_state()
 
         self.terminated = False
@@ -338,25 +279,6 @@ class Parking(gym.Env):
 
         return self.state, {}
 
-    @staticmethod
-    def set_initial_heading(side) -> float:
-        """
-        Set the initial heading of the car, depending on which side the parking lot is placed
-
-        """
-        if side == 1:
-            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
-        elif side == 2:
-            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
-        elif side == 3:
-            return np.random.uniform(-PI / 12, PI / 12)
-        elif side == 4:
-            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)
-        else:
-            raise ValueError(
-                f"Invalid side value: {side}. "
-                f"Valid values are from 1 to 4")
-
     def get_normalized_state(self):
         """
         Prepare and normalize the state vector for the environment by flattening and combining
@@ -370,19 +292,14 @@ class Parking(gym.Env):
         # calculate the distance between the car and the parking lot vertices for the coordinate of the car
         distances = []
         for vertex in self.parking_lot_vertices:
-            distance = self.transform_point(vertex[0], vertex[1], self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
+            distance = self.transform_point(vertex[0], vertex[1],
+                                            self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
             distances.append(distance)
         distances = np.array(distances).flatten()
 
         # normalization
         # normalized_velocity = self.car.v / VELOCITY_LIMIT
         normalized_distances = distances / MAX_DISTANCE
-        # normalized_sin_cos_heading = self.angle_to_sin_cos(self.car.psi)
-
-        # polar coordinates
-        # polar_dis, polar_theta = self.calc_polar_coordinate(self.car.car_loc, self.parking_lot_vertices)
-        # normalized_polar_dis = polar_dis / MAX_DISTANCE
-        # normalized_polar_theta = polar_theta / PI
 
         # guidance reward
         guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
@@ -391,13 +308,7 @@ class Parking(gym.Env):
 
         # combine normalized state values
         # state = normalized_distances  # 8 elements
-        # state = np.concatenate((normalized_distances, normalized_sin_cos_heading))  # 10 elements
         # state = np.concatenate(([normalized_velocity], normalized_distances))  # 9 elements
-        # state = np.concatenate(([normalized_velocity], normalized_distances, normalized_sin_cos_heading))  # 11 elements
-
-        # polar coordinate
-        # state = np.concatenate((normalized_polar_dis, normalized_polar_theta))  # 8 elements
-        # state = np.concatenate(([normalized_velocity], normalized_polar_dis, normalized_polar_theta))  # 9 elements
 
         # guidance reward
         state = np.concatenate((normalized_distances, normalized_guidance))  # 10 elements
@@ -406,22 +317,6 @@ class Parking(gym.Env):
         state = np.clip(state, a_min=-1, a_max=1)
 
         return state
-
-    @staticmethod
-    def set_initial_loc() -> int:
-        """
-        Set the initial car and parking lot location
-
-        Return:
-            int value between 1 and 4
-        """
-        return random.randint(1, 4)
-
-    @staticmethod
-    def angle_to_sin_cos(angle):
-        sin_val = np.sin(angle)
-        cos_val = np.cos(angle)
-        return np.array([sin_val, cos_val])
 
     @staticmethod
     def transform_point(x, y, car_x, car_y, heading) -> np.array(['x', 'y']):
@@ -441,112 +336,6 @@ class Parking(gym.Env):
         new_y = x * math.sin(-angle) + y * math.cos(-angle)
 
         return np.array([new_x, new_y])
-
-    @staticmethod
-    def calc_polar_coordinate(car_loc, parking_lot_vertices):
-        """
-        Calculate the polar coordinates (distance and angle) between
-        the center of the car location and each parking lot vertex.
-
-        Returns:
-            tuple: Two numpy arrays:
-               - An array of distances 'r'
-               - An array of angles 'theta' in radians
-        """
-        car_x, car_y = car_loc
-        polar_dis, polar_theta = [], []
-
-        for vertex in parking_lot_vertices:
-            vertex_x, vertex_y = vertex
-            dx = vertex_x - car_x
-            dy = vertex_y - car_y
-            r = np.sqrt(dx ** 2 + dy ** 2)  # Euclidean distance
-            theta = np.arctan2(dy, dx)  # Angle in radians
-
-            polar_dis.append(r)
-            polar_theta.append(theta)
-
-        return np.array(polar_dis), np.array(polar_theta)
-
-    @staticmethod
-    def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
-        """
-        Set the initial car location
-
-        ini_dist (float): the initial distance between the car and the parking lot,
-                        randomly setting between 10 and 20 meters.
-
-        parking_loc (np.array): The [x, y] location of the parking lot in meters.
-
-        side (int): determines on which side of the map the parking lot will be placed
-                - 1: the car is placed on the bottom side of the parking area.
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is plus ini_dist from parking_loc[1].
-                - 2: the car is placed on the top side of the parking area.
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is minus ini_dist from parking_loc[1].
-                - 3: the car is placed on the left side of the parking area.
-                    x is plus ini_dist from parking_loc[0].
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-                - 4: the car is placed on the right side of the parking area.
-                    x is minus ini_dist from parking_loc[0].
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-        Return:
-            np.array: the initial center of the car location [x,y] in meters,
-                    adjusted for an appropriate distance from the parking lot.
-
-        """
-        init_dist = random.uniform(7.5, 15)
-
-        if side == 1:
-            x_car = random.uniform(parking_loc[0] - 10, parking_loc[0] + 10)
-            y_car = parking_loc[1] + init_dist
-        elif side == 2:
-            x_car = random.uniform(parking_loc[0] - 5, parking_loc[0] + 5)
-            y_car = parking_loc[1] - init_dist
-        elif side == 3:
-            x_car = parking_loc[0] + init_dist
-            y_car = random.uniform(parking_loc[1] - 5, parking_loc[1] + 5)
-        else:
-            x_car = parking_loc[0] - init_dist
-            y_car = random.uniform(parking_loc[1] - 5, parking_loc[1] + 5)
-
-        return np.array([x_car, y_car])
-
-    @staticmethod
-    def set_initial_parking_loc(side) -> np.array(['x', 'y']):
-        """
-        Set the initial parking lot location
-
-        side (int): determines on which side of the map the parking lot will be placed.
-                - 1: the parking lot is placed on the bottom side,
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is set to 50 pixels (before scaling).
-                - 2: the parking lot is placed on the top side,
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is set to 550 pixels (before scaling).
-                - 3: the parking lot is placed on the left side, x is set to 50 pixels (before scaling),
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-                - 4: the parking lot is placed on the right side, x is set to 750 pixels (before scaling),
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-
-        Return:
-            np.array:the center of the parking lot location [x,y]
-        """
-        if side == 1:
-            x_parking = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
-            y_parking = 50 * PIXEL_TO_METER_SCALE
-        elif side == 2:
-            x_parking = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
-            y_parking = 550 * PIXEL_TO_METER_SCALE
-        elif side == 3:
-            x_parking = 50 * PIXEL_TO_METER_SCALE
-            y_parking = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
-        else:
-            x_parking = 750 * PIXEL_TO_METER_SCALE
-            y_parking = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
-
-        return np.array([x_parking, y_parking])
 
     def _reward(self) -> int:
         self.run_steps += 1
@@ -593,7 +382,6 @@ class Parking(gym.Env):
                 # Adjust reward
                 reward -= angle_penalty
                 return reward
-
         return reward
 
     def is_parking_successful(self):
@@ -704,3 +492,204 @@ class Parking(gym.Env):
             pygame.display.quit()
             pygame.quit()
             self.window = None
+
+
+class BaseParking:
+    @staticmethod
+    def set_initial_loc():
+        return random.randint(1, 4)
+
+    @staticmethod
+    def get_parking_struct(parking_type: str, side: int):
+        """
+        Get the parking structure based on the parking type.
+
+        Parameters:
+            parking_type (str): The type of parking arrangement.
+            side (int): The side of the parking lot
+
+        Returns:
+            np.ndarray: The vertices for parking space structure.
+        """
+        if parking_type == "parallel":
+            return PARALLEL_HORIZONTAL if side in [1, 2] else PARALLEL_VERTICAL
+
+        else:  # perpendicular
+            return PERPENDICULAR_HORIZONTAL if side in [1, 2] else PERPENDICULAR_VERTICAL
+
+    @staticmethod
+    def get_car_struct(parking_type: str, side: int):
+        """
+        Get the car structure based on the parking type.
+
+        Parameters:
+            parking_type (str): The type of parking arrangement.
+            side (int): The side of the parking lot
+
+        Returns:
+            np.ndarray: The vertices for parking space structure.
+        """
+        if parking_type == "parallel":
+            return CAR_STRUCT if side in [1, 2] else np.array([[+CAR_W / 2, +CAR_L / 2],
+                                                               [+CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, +CAR_L / 2]],
+                                                              dtype=np.float32)  # Coordinates adjusted for meters
+        else:  # perpendicular
+            return CAR_STRUCT if side in [3, 4] else np.array([[+CAR_W / 2, +CAR_L / 2],
+                                                               [+CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, -CAR_L / 2],
+                                                               [-CAR_W / 2, +CAR_L / 2]],
+                                                              dtype=np.float32)  # Coordinates adjusted for meters
+
+    @staticmethod
+    def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
+        """
+        Set the initial car location
+
+        ini_dist (float): the initial distance between the car and the parking lot,
+                        randomly setting between 10 and 20 meters.
+
+        parking_loc (np.array): The [x, y] location of the parking lot in meters.
+
+        side (int): determines on which side of the map the parking lot will be placed
+                - 1: the car is placed on the bottom side of the parking area.
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is plus ini_dist from parking_loc[1].
+                - 2: the car is placed on the top side of the parking area.
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is minus ini_dist from parking_loc[1].
+                - 3: the car is placed on the left side of the parking area.
+                    x is plus ini_dist from parking_loc[0].
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+                - 4: the car is placed on the right side of the parking area.
+                    x is minus ini_dist from parking_loc[0].
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+        Return:
+            np.array: the initial center of the car location [x,y] in meters,
+                    adjusted for an appropriate distance from the parking lot.
+
+        """
+        init_dist = 7.5  # random.uniform(7.5, 15)
+
+        if side == 1:
+            x_car = parking_loc[0] + random.uniform(-5, 5)
+            y_car = parking_loc[1] + init_dist
+        elif side == 2:
+            x_car = parking_loc[0] + random.uniform(-5, 5)
+            y_car = parking_loc[1] - init_dist
+        elif side == 3:
+            x_car = parking_loc[0] + init_dist
+            y_car = parking_loc[1] + random.uniform(-5, 5)
+        else:
+            x_car = parking_loc[0] - init_dist
+            y_car = parking_loc[1] + random.uniform(-5, 5)
+
+        return np.array([x_car, y_car])
+
+    @staticmethod
+    def set_initial_parking_loc(side) -> np.array(['x', 'y']):
+        """
+        Set the initial parking lot location
+
+        side (int): determines on which side of the map the parking lot will be placed.
+                - 1: the parking lot is placed on the bottom side,
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is set to 50 pixels (before scaling).
+                - 2: the parking lot is placed on the top side,
+                    x is randomly set between 100 and 700 pixels (before scaling),
+                    and y is set to 550 pixels (before scaling).
+                - 3: the parking lot is placed on the left side, x is set to 50 pixels (before scaling),
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+                - 4: the parking lot is placed on the right side, x is set to 750 pixels (before scaling),
+                    and y is randomly set between 100 and 500 pixels (before scaling).
+
+        Return:
+            np.array:the center of the parking lot location [x,y]
+        """
+        if side == 1:
+            x_parking = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            y_parking = 50 * PIXEL_TO_METER_SCALE
+        elif side == 2:
+            x_parking = random.uniform(100, WINDOW_W - 100) * PIXEL_TO_METER_SCALE
+            y_parking = 550 * PIXEL_TO_METER_SCALE
+        elif side == 3:
+            x_parking = 50 * PIXEL_TO_METER_SCALE
+            y_parking = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+        else:
+            x_parking = 750 * PIXEL_TO_METER_SCALE
+            y_parking = random.uniform(100, WINDOW_H - 100) * PIXEL_TO_METER_SCALE
+
+        return np.array([x_parking, y_parking])
+
+
+class ParallelParking(BaseParking):
+    @staticmethod
+    def set_initial_heading(side):
+        if side == 1:
+            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
+        elif side == 2:
+            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
+        elif side == 3:
+            return np.random.uniform(-PI / 12, PI / 12)
+        elif side == 4:
+            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)
+        else:
+            raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
+
+    @staticmethod
+    def generate_static_obstacles(parking_lot, side):
+        static_cars_vertices = []
+        static_parking_vertices = []
+
+        offset = OFFSET_PARALLEL
+
+        if side in [1, 2]:
+            static_cars_loc = np.array([[parking_lot[0] + offset, parking_lot[1]],
+                                        [parking_lot[0] - offset, parking_lot[1]]])
+        else:
+            static_cars_loc = np.array([[parking_lot[0], parking_lot[1] + offset],
+                                        [parking_lot[0], parking_lot[1] - offset]])
+
+        parking_struct = BaseParking.get_parking_struct(parking_type="parallel", side=side)
+        car_struct = BaseParking.get_car_struct(parking_type="parallel", side=side)
+        for loc in static_cars_loc:
+            static_cars_vertices.append(car_struct + loc)
+            static_parking_vertices.append(parking_struct + loc)
+        return static_cars_vertices, static_parking_vertices
+
+
+class PerpendicularParking(BaseParking):
+    @staticmethod
+    def set_initial_heading(side):
+        if side == 1:
+            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
+        elif side == 2:
+            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
+        elif side == 3:
+            return np.random.uniform(-PI / 12, PI / 12)
+        elif side == 4:
+            return np.random.uniform(PI - PI / 12, PI + PI / 12)
+        else:
+            raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
+
+    @staticmethod
+    def generate_static_obstacles(parking_lot, side):
+        static_cars_vertices = []
+        static_parking_vertices = []
+
+        offset = OFFSET_PERPENDICULAR
+
+        if side in [1, 2]:
+            static_cars_loc = np.array([[parking_lot[0] + offset, parking_lot[1]],
+                                        [parking_lot[0] - offset, parking_lot[1]]])
+        else:
+            static_cars_loc = np.array([[parking_lot[0], parking_lot[1] + offset],
+                                        [parking_lot[0], parking_lot[1] - offset]])
+
+        parking_struct = BaseParking.get_parking_struct(parking_type="perpendicular", side=side)
+        car_struct = BaseParking.get_car_struct(parking_type="perpendicular", side=side)
+        for loc in static_cars_loc:
+            static_cars_vertices.append(car_struct + loc)
+            static_parking_vertices.append(parking_struct + loc)
+        return static_cars_vertices, static_parking_vertices

@@ -32,9 +32,25 @@ def set_init_position(side: int, parking_type: str, randomized=True):
     if parking_type == "perpendicular":
         if randomized:
             init_dist = 7.5  # random.uniform(7.5, 15)
-            x_car = init_parking_lot[0] + random.uniform(-5, 5)
-            y_car = init_parking_lot[1] + init_dist
-            init_heading_angle = np.random.uniform(np.pi / 12 * 5, np.pi / 12 * 7)
+
+            if side == 1:
+                x_car = init_parking_lot[0] + random.uniform(-5, 5)
+                y_car = init_parking_lot[1] + init_dist
+                init_heading_angle = np.random.uniform(np.pi / 12 * 5, np.pi / 12 * 7)
+            elif side == 2:
+                x_car = init_parking_lot[0] + random.uniform(-5, 5)
+                y_car = init_parking_lot[1] - init_dist
+                init_heading_angle = np.random.uniform(-np.pi / 12 * 7, -np.pi / 12 * 5)
+            elif side == 3:
+                x_car = init_parking_lot[0] + init_dist
+                y_car = init_parking_lot[1] + random.uniform(-5, 5)
+                init_heading_angle = np.random.uniform(-np.pi / 12, np.pi / 12)
+            elif side == 4:
+                x_car = init_parking_lot[0] - init_dist
+                y_car = init_parking_lot[1] + random.uniform(-5, 5)
+                init_heading_angle = np.random.uniform(np.pi - np.pi / 12, np.pi + np.pi / 12)
+            else:
+                raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
 
             return np.array([x_car, y_car]), init_parking_lot, init_heading_angle
 

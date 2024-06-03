@@ -57,10 +57,10 @@ PARALLEL_HORIZONTAL = np.array([
     dtype=np.float32)  # Adjusted for meters
 
 PARALLEL_VERTICAL = np.array([
-    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE],
-    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE]],
+    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 40 * PIXEL_TO_METER_SCALE],
+    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 40 * PIXEL_TO_METER_SCALE],
+    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 40 * PIXEL_TO_METER_SCALE],
+    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 40 * PIXEL_TO_METER_SCALE]],
     dtype=np.float32)  # Adjusted for meters
 
 PERPENDICULAR_HORIZONTAL = np.array([
