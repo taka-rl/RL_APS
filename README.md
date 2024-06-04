@@ -28,12 +28,10 @@ The libraries and their versions are as follows.
 ## environment description
 This environment equips both parallel and perpendicular parkings with both discrete and continuous action spaces.  
 As illustrated in the figure below, the custom environment can render a 2D environment with a top-down view and simulate parking movement using front-wheel steering through the Kinematic bicycle model. 
-At each step, the car is rendered based on the input actions, which include acceleration and steering angle, and the next state of the vehicle is simulated.
+At each step, the car is rendered based on the input actions, which include acceleration and steering angle, and the next state of the vehicle is simulated.  
 The yellow rectangles represent the parking lot for two obstacles depicted as grey rectangles. The red rectangle indicates the parking lot for the agent, shown as the green rectangle.
 The grey grid line is drawn at 1-meter intervals.
-Although the visualization window size is 800 by 600 pixels, this corresponds to a physical size of 40 meters by 30 meters, defining 1 pixel as 0.05 meters and units are unified as meters. 
-The parking lot size is 6 meters in length and 4 meters in width, while the car size for the agent is 4 meters in length and 2 meters in width.
-Furthermore, it can display some information such as the center of the car, the velocity, the heading angle and its radian. This is useful for debugging to make sure the car’s movement.
+Although the visualization window size is 800 by 600 pixels, this corresponds to a physical size of 40 meters by 30 meters, defining 1 pixel as 0.05 meters and units are unified as meters. The parking lot size is 6 meters in length and 4 meters in width, while the car size for the agent is 4 meters in length and 2 meters in width. Furthermore, it can display some information such as the center of the car, the velocity, the heading angle and its radian. This is useful for debugging to make sure the car’s movement.
 
 ・Perpendicular parking image  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/ae308d2d-1c6a-4a6c-a707-f5dae83b23db)
@@ -54,7 +52,7 @@ Furthermore, it can display some information such as the center of the car, the 
   x: the center of the car position in x axle, y: the center of the car position in y axle
   
   The steering angle is limited between −𝜋/4 and 𝜋/4 to make sure the car's actions are realistic and to prevent the agent's exploration range from being too large.
-  Therefore, in a given time, according to the equations (20), the coordinate of the center of the car (𝑥′, 𝑦′) after moving can be obtained by the equations.
+  Therefore, in a given time, according to the equations above, the coordinate of the center of the car (𝑥′, 𝑦′) after moving can be obtained by the following equations.
 
       x_dash = dt ∗ x_dot + x  
       y_dash = dt ∗ y_dot + y  
@@ -116,7 +114,7 @@ Gymnasium: pip install "gymnasium[all]"
 
 ## Training
 In the training.py, you can choose the parking type and action space type.  
-It is recommneded to set "no_render" as "render mode" for the training in terms of efficiency and speed.  
+It is recommneded to set "no_render" as "render_mode" for the training in terms of efficiency and speed.  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/727ef3c3-1115-4794-83c7-a2f08ed3b6d1)
 
 You can set the number of iterations for the training at line 17, num_train = "the number of iterations".  
@@ -134,11 +132,12 @@ After these settings, you can execute the training.py script. After the training
 ## Visualize the agent
 After the training, you can observe the trained agent behaviour using, main.py script.  
 Line 12, set the folder name in the trained_agent folder saved after the training.  
+Do not forget to set "human" as "render_mode" at line 6.
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/20be06ef-1e91-43f5-9275-8d805f5ac903)
 
 ## Evaluation
 Use the following command so that you can see data in the training_agent folder.  
-tensorboard --logdir=folder path
+tensorboard --logdir=folder path  
 tensorboard --logdir=C:\Users\-------\----
 
 For example:  
