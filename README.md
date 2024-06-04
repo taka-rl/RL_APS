@@ -1,6 +1,17 @@
 # RL_APS
 This repository is a development environment for my thesis which is "Reinforcement learning based automated parking systems". It provides the training envrionment for the agent in both parallel and perpendicular parkings.
 
+The following videos present the trained agent in the parking simulation.
+The environment is a continuous action space in the perpendicular parking.
+- without guidance
+  
+https://github.com/taka-rl/RL_APS/assets/157423802/d21c33ac-b5c0-4244-801e-7933abfa9792
+
+- with guidance
+  
+https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26dfaa3a3
+
+
 # Folder structure
 - sim_env: contains the necessary scripts for the parking simulation
   - parking_env.py: environment class
@@ -106,11 +117,19 @@ This check is implemented to ensure realistic behavior, preventing the car from 
 Maximum distance:  
 When the agent is farther away from the parking lot than the set maximum distance, it obtains a -1 reward.  
 
+### guidance point
+The agent received a +1 reward when it parked in the parking lot. However, the reward system was modified with the introduction of the guidance point.  
+If the car’s vertices are within the parking lot and the center of the car is within a set distance threshold from the center of the parking lot, the agent receives a +1 reward. A small value is then subtracted from this reward based on the angle error to ensure the car is parallel with the parking lot borders. The penalty for angle error is linearly related, where an angle error of 0 degrees results in no penalty, and larger errors reduce the reward accordingly, up to a maximum penalty of 0.5.  
+The reason for this is to encourage the agent to park near the center of the parking lot and to be parallel to the borders. During the training, the maximum angle error value was set to 15 degrees, and the distance threshold was set to 0.5 meters for perpendicular parking and 1 meter for parallel parking.
+
 # How to use
 ## instal tools
 The first is to install necessary libraries.  
 ray rllib: pip install "ray[rllib]" tensorflow  
 Gymnasium: pip install "gymnasium[all]"  
+
+## parameter settings
+You can modify the maximum velocity, steps, acceleration, steering angle, car size, parking size and so on related to the simulation in parameters.py script.
 
 ## Training
 In the training.py, you can choose the parking type and action space type.  
