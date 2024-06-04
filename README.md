@@ -120,7 +120,8 @@ When the agent is farther away from the parking lot than the set maximum distanc
 ### guidance point
 The agent received a +1 reward when it parked in the parking lot. However, the reward system was modified with the introduction of the guidance point.  
 If the car’s vertices are within the parking lot and the center of the car is within a set distance threshold from the center of the parking lot, the agent receives a +1 reward. A small value is then subtracted from this reward based on the angle error to ensure the car is parallel with the parking lot borders. The penalty for angle error is linearly related, where an angle error of 0 degrees results in no penalty, and larger errors reduce the reward accordingly, up to a maximum penalty of 0.5.  
-The reason for this is to encourage the agent to park near the center of the parking lot and to be parallel to the borders. During the training, the maximum angle error value was set to 15 degrees, and the distance threshold was set to 0.5 meters for perpendicular parking and 1 meter for parallel parking.
+The reason for this is to encourage the agent to park near the center of the parking lot and to be parallel to the borders.   
+You can see the difference agent behaviour whether the guidance is used or not in 2 videos in Chapter RL_APS above.
 
 # How to use
 ## instal tools
