@@ -132,6 +132,9 @@ Gymnasium: pip install "gymnasium[all]"
 ## parameter settings
 You can modify the maximum velocity, steps, acceleration, steering angle, car size, parking size and so on related to the simulation in parameters.py script.
 
+If "training_mode" is "on" in main.py or training.py, the following initial position setting is exeuted by init_state.py. If not, it is executed by parking_env.py.  
+Parking lot position, Car position, Car's heading angle  
+
 ## Training
 In the training.py, you can choose the parking type and action space type.  
 It is recommneded to set "no_render" as "render_mode" for the training in terms of efficiency and speed.  
@@ -150,10 +153,17 @@ After these settings, you can execute the training.py script. After the training
            - training_result: the training result is stored.  
 
 ## Visualize the agent
-After the training, you can observe the trained agent behaviour using, main.py script.  
+After the training, you can observe the trained agent behaviour using main.py script.  
 Line 12, set the folder name in the trained_agent folder saved after the training.  
 Do not forget to set "human" as "render_mode" at line 6.
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/20be06ef-1e91-43f5-9275-8d805f5ac903)
+
+Choose how the action is set among the following three options.
+If you use the trained agent, Line 22 should be executed and others should be commented out.  
+![image](https://github.com/taka-rl/RL_APS/assets/157423802/76e5b056-7324-49bf-978f-0b7237aa2674)  
+Line 22: action is chosen by the trained agent.  
+Line 23: The random action is taken.  
+Line 24: The action is set manually.  
 
 ## Evaluation
 Use the following command so that you can see data in the training_agent folder.  
