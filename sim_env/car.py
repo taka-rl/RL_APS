@@ -9,10 +9,10 @@ class Car:
         self.psi = psi
         self.v = 0.0
         self.delta = 0.0
-        self.car_vertices = self.calc_car_vertices()
         self.config = config
         self.wheel_size = self.config.wheel_size
         self.car_size = self.config.car_size
+        self.car_vertices = self.calc_car_vertices()
 
     def kinematic_act(self, action):
         """

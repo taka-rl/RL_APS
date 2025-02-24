@@ -62,14 +62,19 @@ class Parking(gym.Env):
             )
         self.training_mode = env_config["training_mode"]
 
+        # Config setting
+        self.config = env_config['config']
+
         # environment setting
         self.render_mode = env_config["render_mode"]
         self.parking_type = env_config["parking_type"]
         self.action_type = env_config["action_type"]
-        self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
-
-        # Config setting
-        self.config = env_config['config']
+        if self.config.state_type == 'type1':
+            self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(8,), dtype=np.float32)
+        elif self.config.state_type == 'type2':
+            self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
+        elif self.config.state_type == 'type3':
+            self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
 
         # Action type
         if self.action_type == "continuous":
@@ -277,7 +282,7 @@ class Parking(gym.Env):
                 car_loc = self.parking_strategy.set_initial_car_loc(self.side, self.parking_lot)
                 if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
                     break
-            self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.side))
+            self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.side), self.config)
         else:  # for training
             car_loc, self.parking_lot, heading_angle = set_init_position(self.side, self.parking_type, randomized=True)
             self.parking_lot_vertices = (self.parking_lot +
@@ -321,20 +326,23 @@ class Parking(gym.Env):
         distances = np.array(distances).flatten()
 
         # normalization
-        # normalized_velocity = self.car.v / VELOCITY_LIMIT
         normalized_distances = distances / self.config.velocity_limit
 
-        # guidance reward
-        guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
-                                        self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
-        normalized_guidance = guidance / self.config.max_distance
+        # type1 state (default state)
+        if self.config.state_type == 'type1':
+            state = normalized_distances  # 8 elements
 
-        # combine normalized state values
-        # state = normalized_distances  # 8 elements
-        # state = np.concatenate(([normalized_velocity], normalized_distances))  # 9 elements
+        # type2 state (guidance reward)
+        if self.config.state_type == 'type2':
+            guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
+                                            self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
+            normalized_guidance = guidance / self.config.max_distance
+            state = np.concatenate((normalized_distances, normalized_guidance))  # 10 elements
 
-        # guidance reward
-        state = np.concatenate((normalized_distances, normalized_guidance))  # 10 elements
+        # type3 state (velocity)
+        if self.config.state_type == 'type3':
+            normalized_velocity = self.car.v / self.config.velocity_limit
+            state = np.concatenate((normalized_velocity, normalized_distances))  # 9 elements
 
         # clip the state value
         state = np.clip(state, a_min=-1, a_max=1)
@@ -392,19 +400,29 @@ class Parking(gym.Env):
             print("The car has a collision")
             return reward
 
-        # check the parking
-        if self.is_car_in_parking_lot():
-            if self.is_parking_successful(self.parking_lot, self.car.car_loc, self.config.center_threshold):
+        # type1 (default reward)
+        if self.config.reward_type == 'type1':
+            if self.is_car_in_parking_lot():
                 reward += 1
                 self.terminated = True
                 print("successful parking")
-
-                parking_angle = self.get_parking_angle(self.parking_type, self.side)
-                angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle, self.config.max_angle_error)
-
-                # Adjust reward
-                reward -= angle_penalty
                 return reward
+
+        # type2 (guidance reward)
+        if self.config.reward_type == 'type2':
+            if self.is_car_in_parking_lot():
+                if self.is_parking_successful(self.parking_lot, self.car.car_loc, self.config.center_threshold):
+                    reward += 1
+                    self.terminated = True
+                    print("successful parking")
+
+                    parking_angle = self.get_parking_angle(self.parking_type, self.side)
+                    angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle, self.config.max_angle_error)
+
+                    # Adjust reward
+                    reward -= angle_penalty
+                    return reward
+
         return reward
 
     @staticmethod
@@ -435,12 +453,12 @@ class Parking(gym.Env):
     def calc_angle_dif(psi, parking_angle, max_angle_error):
         # calculate the angle error
         if isinstance(parking_angle, list):
-            # angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
-            angle_errors = [np.abs((psi - angle) % PI) for angle in parking_angle]
+            angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
+            # angle_errors = [np.abs((psi - angle) % PI) for angle in parking_angle]
             angle_error = min(angle_errors)
         else:
-            # angle_error = np.abs((psi - parking_angle + PI) % (2 * PI) - PI)
-            angle_error = np.abs((psi - parking_angle) % PI)
+            angle_error = np.abs((psi - parking_angle + PI) % (2 * PI) - PI)
+            # angle_error = np.abs((psi - parking_angle) % PI)
         angle_penalty = min(0.5 * (angle_error / max_angle_error), 0.5)
         return angle_penalty
 

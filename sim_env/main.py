@@ -1,18 +1,26 @@
 import time
 from ray.rllib.algorithms.ppo import PPO
-from parameters import Config
+from parameters import Config, PI
 from parking_env import Parking
 from training.utility import set_path
+
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=1.0,
+                reward_type='type2', state_type='type2')
 
 env_config = {"render_mode": "human",
               "action_type": "continuous",
               "parking_type": "perpendicular",
               "training_mode": "on",
-              "config": Config()}
+              "config": config}
 
 env = Parking(env_config)
 
-folder_path = "PPO_perpendicular_continuous_10_guidance_15"  # trained_agent folder
+folder_path = "PPO_perpendicular_continuous_100_guidance_15"  # trained_agent folder
 checkpoint = set_path(env_config)
 algo = PPO.from_checkpoint(checkpoint + folder_path)
 

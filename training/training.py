@@ -3,18 +3,24 @@ import ray
 import time
 from ray.rllib.algorithms.ppo import PPOConfig
 from sim_env.parking_env import Parking
-from sim_env.parameters import Config
+from sim_env.parameters import Config, PI
 from utility import custom_log_creator, custom_log_checkpoint
 
 
 ray.init()
 env_name = Parking
-config = Config()
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=1.0,
+                reward_type='type2', state_type='type2')
 env_config = {"render_mode": "no_render",
               "action_type": "continuous",
               "parking_type": "perpendicular",
               "training_mode": "on",
-              'config': Config()}
+              'config': config}
 
 
 # for folder names

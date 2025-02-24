@@ -118,8 +118,8 @@ class Config:
         self.parking_lot_size = ParkingLotSize(parking_length, parking_width)
 
         # Reward and State settings
-        self.reward = reward_type
-        self.state = state_type
+        self.reward_type = reward_type
+        self.state_type = state_type
 
         # Action limits
         self.acceleration_limit = np.float32(acceleration_limit)
