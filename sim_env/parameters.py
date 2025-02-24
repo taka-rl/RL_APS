@@ -1,98 +1,151 @@
 import numpy as np
 
-# parameters for actions
+
 PI = np.pi
-ACCELERATION_LIMIT = 1.0
-STEERING_LIMIT = PI / 4
-VELOCITY_LIMIT = 10.0
-DT = 0.1
+PIXEL_TO_METER_SCALE = np.float32(0.05)
 
-# parameters for rendering the simulation environment
-FPS = 30
-COLORS = {
-    "RED": (255, 100, 100),
-    "GREEN": (0, 255, 0),
-    "BLUE": (100, 200, 255),
-    "YELLOW": (200, 200, 0),
-    "BLACK": (0, 0, 0),
-    "GREY": (100, 100, 100),
-    "WHITE": (255, 255, 255),
-    "GRID_COLOR": (200, 200, 200)
-}
-GRID_SIZE = 20
-WINDOW_W, WINDOW_H = 800, 600
-PIXEL_TO_METER_SCALE = 0.05  # Define the scale as 1 pixel = 0.05 meters
 
-# parameters for cars and parking lot in the parking environment
-'''
-Car: Length: 4m, Width: 2m
-Perpendicular parking: Length: 6m, Width: 4m
-Parallel parking: Length: 6m, Width: 4m
-'''
-CAR_L, CAR_W = 80 * PIXEL_TO_METER_SCALE, 40 * PIXEL_TO_METER_SCALE  # Car length and width in meters
-CAR_STRUCT = np.array([[+CAR_L / 2, +CAR_W / 2],
-                       [+CAR_L / 2, -CAR_W / 2],
-                       [-CAR_L / 2, -CAR_W / 2],
-                       [-CAR_L / 2, +CAR_W / 2]],
-                      dtype=np.float32)  # Coordinates adjusted for meters
+class CarSize:
+    """
+    Represents the car size.
+    The default car size is as follows:
+        Length: 4 meter
+        Width: 2 meter
+    """
+    def __init__(self, length: float = 4.0, width: float = 2.0):
+        self.length = np.float32(length)
+        self.width = np.float32(width)
+        self.car_struct = np.array([[+self.length / 2, +self.width / 2],
+                                    [+self.length / 2, -self.width / 2],
+                                    [-self.length / 2, -self.width / 2],
+                                    [-self.length / 2, +self.width / 2]],
+                                   dtype=np.float32)
 
-WHEEL_L, WHEEL_W = 15 * PIXEL_TO_METER_SCALE, 7 * PIXEL_TO_METER_SCALE  # Wheel length and width in meters
-WHEEL_STRUCT = np.array([[+WHEEL_L / 2, +WHEEL_W / 2],
-                         [+WHEEL_L / 2, -WHEEL_W / 2],
-                         [-WHEEL_L / 2, -WHEEL_W / 2],
-                         [-WHEEL_L / 2, +WHEEL_W / 2]],
-                        dtype=np.float32)  # Coordinates adjusted for meters
+        self.car_struct_2 = np.array([[+self.width / 2, +self.length / 2],
+                                      [+self.width / 2, -self.length / 2],
+                                      [-self.width / 2, -self.length / 2],
+                                      [-self.width / 2, +self.length / 2]],
+                                     dtype=np.float32)
 
-WHEEL_POS = np.array([[25 * PIXEL_TO_METER_SCALE, 15 * PIXEL_TO_METER_SCALE],
-                      [25 * PIXEL_TO_METER_SCALE, -15 * PIXEL_TO_METER_SCALE],
-                      [-25 * PIXEL_TO_METER_SCALE, 15 * PIXEL_TO_METER_SCALE],
-                      [-25 * PIXEL_TO_METER_SCALE, -15 * PIXEL_TO_METER_SCALE]],
-                     dtype=np.float32)  # Position adjusted for meters
 
-PARALLEL_HORIZONTAL = np.array([
-    [+CAR_L / 2 + 40 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE],
-    [+CAR_L / 2 + 40 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 40 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 40 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE]],
-    dtype=np.float32)  # Adjusted for meters
+class WheelSize:
+    """
+    Represents the car size.
+    The default wheel size is as follows:
+        Length: 0.75 meter
+        Width: 0.35 meter
 
-PARALLEL_VERTICAL = np.array([
-    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 40 * PIXEL_TO_METER_SCALE],
-    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 40 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 40 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 40 * PIXEL_TO_METER_SCALE]],
-    dtype=np.float32)  # Adjusted for meters
+    The center of each wheel position is as follows:
+        Top right: 1.25, 0.75
+        Bottom right: 1.25, -0.75
+        Bottom left: -1.25, -0.75
+        Top left: -1.25, 0.75
+    """
 
-PERPENDICULAR_HORIZONTAL = np.array([
-    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE],
-    [+CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, -CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE, +CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE]],
-    dtype=np.float32)  # Adjusted for meters
+    def __init__(self, length: float = 0.75, width: float = 0.35):
+        self.length = np.float32(length)
+        self.width = np.float32(width)
 
-PERPENDICULAR_VERTICAL = np.array([
-    [+CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE],
-    [+CAR_L / 2 + 20 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE, -CAR_W / 2 - 20 * PIXEL_TO_METER_SCALE],
-    [-CAR_L / 2 - 20 * PIXEL_TO_METER_SCALE, +CAR_W / 2 + 20 * PIXEL_TO_METER_SCALE]],
-    dtype=np.float32)  # Adjusted for meters
+        self.wheel_struct = np.array([[+self.length / 2, +self.width / 2],
+                                      [+self.length / 2, -self.width / 2],
+                                      [-self.length / 2, -self.width / 2],
+                                      [-self.length / 2, +self.width / 2]],
+                                     dtype=np.float32)
+        self.wheel_pos = np.array([[1.25, 0.75],
+                                   [1.25, -0.75],
+                                   [-1.25, -0.75],
+                                   [-1.25, 0.75]],
+                                  dtype=np.float32)
 
-OFFSET_PARALLEL = 160 * PIXEL_TO_METER_SCALE
-OFFSET_PERPENDICULAR = 80 * PIXEL_TO_METER_SCALE
-'''
-OFFSET_PERPENDICULAR
-60 + 10
-70 + 15
-80 + 20
-OFFSET_PARALLEL
-120 + 20
-130 + 30
-140 + 40
-'''
 
-MAX_DISTANCE = 25.0  # the maximum distance between the car and the parking lot
-MAX_STEPS = 80  # the maximum step
+class ParkingLotSize:
+    """
+    Presents a variety of parking lot types.
+    The default parking lot size is as follows:
+        Length: 6 meter
+        Width: 4 meter
+    """
+    def __init__(self, length: float = 6.0, width: float = 4.0):
+        self.length = np.float32(length)
+        self.width = np.float32(width)
 
-# constants for the reward functions
-MAX_ANGLE_ERROR = PI / 12
-CENTER_THRESHOLD = 0.5
+        self.parallel_horizontal = np.array([
+            [+self.length / 2, +self.width / 2],
+            [+self.length / 2, -self.width / 2],
+            [-self.length / 2, -self.width / 2],
+            [-self.length / 2, +self.width / 2]],
+            dtype=np.float32)
+
+        self.parallel_vertical = np.array([
+            [+self.width / 2, +self.length / 2],
+            [+self.width / 2, -self.length / 2],
+            [-self.width / 2, -self.length / 2],
+            [-self.width / 2, +self.length / 2]],
+            dtype=np.float32)
+
+        self.perpendicular_horizontal = np.array([
+            [+self.width / 2, +self.length / 2],
+            [+self.width / 2, -self.length / 2],
+            [-self.width / 2, -self.length / 2],
+            [-self.width / 2, +self.length / 2]],
+            dtype=np.float32)
+
+        self.perpendicular_vertical = np.array([
+            [+self.length / 2, +self.width / 2],
+            [+self.length / 2, -self.width / 2],
+            [-self.length / 2, -self.width / 2],
+            [-self.length / 2, +self.width / 2]],
+            dtype=np.float32)
+
+        self.offset_parallel = np.float32(8.0)
+        self.offset_perpendicular = np.float32(4.0)
+
+
+class Config:
+    """Stores all configuration parameters for the environment."""
+    def __init__(self,
+                 car_length: float = 4.0, car_width: float = 2.0,
+                 wheel_length: float = 0.75, wheel_width: float = 0.35,
+                 parking_length: float = 6.0, parking_width: float = 4.0,
+                 max_distance: float = 25.0, max_steps: int = 80,
+                 acceleration_limit: float = 1.0, steering_limit: float = PI/4, velocity_limit: float = 10.0,
+                 max_angle_error: float = PI/12, center_threshold: float = 1.0,
+                 reward_type: str = 'type1', state_type: str = 'type1'
+                 ):
+
+        self.car_size = CarSize(car_length, car_width)
+        self.wheel_size = WheelSize(wheel_length, wheel_width)
+        self.parking_lot_size = ParkingLotSize(parking_length, parking_width)
+
+        # Reward and State settings
+        self.reward = reward_type
+        self.state = state_type
+
+        # Action limits
+        self.acceleration_limit = np.float32(acceleration_limit)
+        self.steering_limit = np.float32(steering_limit)
+        self.velocity_limit = np.float32(velocity_limit)
+        self.dt = np.float32(0.1)
+        self.max_distance = np.float32(max_distance)
+        self.max_steps = max_steps
+
+        # Guidance reward
+        self.max_angle_error = np.float32(max_angle_error)
+        self.center_threshold = np.float32(center_threshold)
+
+        # Rendering settings
+        self.fps = 30
+        self.window_width = 800
+        self.window_height = 600
+        self.grid_size = 20
+
+        self.colors = {
+            "RED": (255, 100, 100),
+            "GREEN": (0, 255, 0),
+            "BLUE": (100, 200, 255),
+            "YELLOW": (200, 200, 0),
+            "BLACK": (0, 0, 0),
+            "GREY": (100, 100, 100),
+            "WHITE": (255, 255, 255),
+            "GRID_COLOR": (200, 200, 200)
+        }

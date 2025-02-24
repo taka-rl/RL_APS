@@ -1,15 +1,18 @@
 import numpy as np
 from sim_env.com_fcn import draw_object
-from sim_env.parameters import CAR_L, VELOCITY_LIMIT, CAR_STRUCT, DT, WHEEL_STRUCT, WHEEL_POS
+from sim_env.parameters import Config
 
 
 class Car:
-    def __init__(self, car_loc, psi):
+    def __init__(self, car_loc, psi, config: Config):
         self.car_loc = car_loc
         self.psi = psi
         self.v = 0.0
         self.delta = 0.0
         self.car_vertices = self.calc_car_vertices()
+        self.config = config
+        self.wheel_size = self.config.wheel_size
+        self.car_size = self.config.car_size
 
     def kinematic_act(self, action):
         """
@@ -29,15 +32,15 @@ class Car:
         x_dot = self.v * np.cos(self.psi)
         y_dot = self.v * np.sin(self.psi)
         v_dot = action[0]
-        psi_dot = self.v * np.tan(action[1]) / CAR_L
+        psi_dot = self.v * np.tan(action[1]) / self.car_size.length
         car_loc = np.array([x_dot, y_dot])
-        self.update_state(car_loc, v_dot, psi_dot, DT)
+        self.update_state(car_loc, v_dot, psi_dot, self.config.dt)
         self.delta = action[1]
         self.car_vertices = self.calc_car_vertices()
 
     def update_state(self, car_loc, v_dot, psi_dot, dt):
         self.car_loc += dt * car_loc
-        self.v = np.clip(self.v + v_dot, -VELOCITY_LIMIT, VELOCITY_LIMIT)
+        self.v = np.clip(self.v + v_dot, -self.config.velocity_limit, self.config.velocity_limit)
         self.psi += dt * psi_dot
 
     @staticmethod
@@ -65,7 +68,7 @@ class Car:
         Return:
             np.array: car vertices
         """
-        return self.rotate_car(CAR_STRUCT, angle=self.psi) + self.car_loc
+        return self.rotate_car(self.car_size.car_struct, angle=self.psi) + self.car_loc
 
     def draw_car(self, screen):
         """
@@ -75,16 +78,16 @@ class Car:
             screen: pygame.Surface
         """
         # draw the car(agent)
-        draw_object(screen, "GREEN", self.car_vertices)
+        draw_object(screen, self.config.colors["GREEN"], self.car_vertices)
 
         # wheels
         # calculate the rotation of the wheels
-        wheel_points = self.rotate_car(WHEEL_POS, angle=self.psi)
+        wheel_points = self.rotate_car(self.wheel_size.wheel_pos, angle=self.psi)
         # draw each wheel
         for i, wheel_point in enumerate(wheel_points):
             if i < 2:
-                wheel_vertices = self.rotate_car(WHEEL_STRUCT, angle=self.psi + self.delta)
+                wheel_vertices = self.rotate_car(self.wheel_size.wheel_struct, angle=self.psi + self.delta)
             else:
-                wheel_vertices = self.rotate_car(WHEEL_STRUCT, angle=self.psi)
+                wheel_vertices = self.rotate_car(self.wheel_size.wheel_struct, angle=self.psi)
             wheel_vertices += wheel_point + self.car_loc
-            draw_object(screen, "RED", wheel_vertices)
+            draw_object(screen, self.config.colors["RED"], wheel_vertices)

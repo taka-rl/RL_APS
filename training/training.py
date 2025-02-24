@@ -3,15 +3,19 @@ import ray
 import time
 from ray.rllib.algorithms.ppo import PPOConfig
 from sim_env.parking_env import Parking
+from sim_env.parameters import Config
 from utility import custom_log_creator, custom_log_checkpoint
 
 
 ray.init()
 env_name = Parking
+config = Config()
 env_config = {"render_mode": "no_render",
               "action_type": "continuous",
               "parking_type": "perpendicular",
-              "training_mode": "on"}
+              "training_mode": "on",
+              'config': Config()}
+
 
 # for folder names
 num_train = "500"
