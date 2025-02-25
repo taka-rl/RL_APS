@@ -454,11 +454,9 @@ class Parking(gym.Env):
         # calculate the angle error
         if isinstance(parking_angle, list):
             angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
-            # angle_errors = [np.abs((psi - angle) % PI) for angle in parking_angle]
             angle_error = min(angle_errors)
         else:
             angle_error = np.abs((psi - parking_angle + PI) % (2 * PI) - PI)
-            # angle_error = np.abs((psi - parking_angle) % PI)
         angle_penalty = min(0.5 * (angle_error / max_angle_error), 0.5)
         return angle_penalty
 
