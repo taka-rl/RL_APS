@@ -1,4 +1,7 @@
 import pytest
+import numpy as np
+from gymnasium.spaces import Discrete
+
 from sim_env.parking_env import Parking
 from sim_env.parameters import Config
 
@@ -98,6 +101,29 @@ def test_continue_perpendicular_env_step(continuous_perpendicular_env):
     assert isinstance(truncated, bool), "Truncated flag shall be a boolean."
 
 
+def test_discrete_perpendicular_env_step(discrete_perpendicular_env):
+    """Test stepping in the discrete and perpendicular parking environment."""
+    # Reset the environment
+    discrete_perpendicular_env.reset()
+    assert isinstance(discrete_perpendicular_env.action_space, Discrete)
+    assert discrete_perpendicular_env.action_space.n == 6, "Action space should have 6 discrete actions."
+
+    # Valid actions (0 to 5)
+    actions = (0, 1, 2, 3, 4, 5)
+    for action in actions:
+        state, reward, terminated, truncated, info = discrete_perpendicular_env.step(action)
+        assert state is not None, "State shall update after a step."
+        assert isinstance(state, np.ndarray), "State should be a NumPy array."
+        assert np.all(state >= -1.0) and np.all(state <= 1.0), "State value shall be between -1.0 and 1.0"
+        assert isinstance(reward, (int, float)), "Reward shall be a number."
+        assert isinstance(terminated, bool), "Terminated flag shall be a boolean."
+        assert isinstance(truncated, bool), "Truncated flag shall be a boolean."
+
+    # Invalid action (expecting ValueError)
+    with pytest.raises(ValueError, match="Invalid action value: 7"):
+        discrete_perpendicular_env.step(7)
+
+
 # --------------------------------------------- Environment reset ---------------------------------------------
 def test_continue_perpendicular_env_reset(continuous_perpendicular_env):
     """Test reset functionality."""
@@ -105,3 +131,8 @@ def test_continue_perpendicular_env_reset(continuous_perpendicular_env):
     assert state is not None, "Reset shall return an initial state."
     assert not continuous_perpendicular_env.terminated, "Environment shall not be terminated after reset."
     assert not continuous_perpendicular_env.truncated, "Environment shall not be truncated after reset."
+
+
+# --------------------------------------------- Reward ---------------------------------------------
+
+# --------------------------------------------- State ---------------------------------------------
