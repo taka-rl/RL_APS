@@ -66,6 +66,7 @@ def parking_env(reward_type: str = 'type1', state_type: str = 'type1'):
     }
     return Parking(env_config)
 
+
 # --------------------------------------------- Initialization ---------------------------------------------
 def test_continue_perpendicular_env_init(continuous_perpendicular_env):
     """Test if the continue and perpendicular parking environment is initialized properly."""
@@ -106,7 +107,7 @@ def test_continue_perpendicular_env_step(continuous_perpendicular_env):
     state, reward, terminated, truncated, info = continuous_perpendicular_env.step(action)
 
     assert state is not None, "State shall update after a step."
-    assert -1.0 <= state.all() <= 1.0, "State value shall be between -1.0 and 1.0"
+    assert np.all(state >= -1.0) and np.all(state <= 1.0), "State value shall be between -1.0 and 1.0"
     assert isinstance(reward, (int, float)), "Reward shall be a number."
     assert isinstance(terminated, bool), "Terminated flag shall be a boolean."
     assert isinstance(truncated, bool), "Truncated flag shall be a boolean."
@@ -201,3 +202,10 @@ def test_state_type3():
     assert isinstance(state, np.ndarray), "State shall be a NumPy array."
     assert np.all(state >= -1.0) and np.all(state <= 1.0), "State value shall be between -1.0 and 1.0"
     assert state.shape is not 9, "State shape shall be 9."
+
+
+def test_state_type4():
+    """Test if it returns value error"""
+    # Invalid state type
+    with pytest.raises(ValueError, match="State type shall be either type1, type2 or type3"):
+        env = parking_env(state_type='type4')
