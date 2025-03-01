@@ -75,6 +75,8 @@ class Parking(gym.Env):
             self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
         elif self.config.state_type == 'type3':
             self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
+        else:
+            raise ValueError('State type shall be either type1, type2 or type3')
 
         # Action type
         if self.action_type == "continuous":
@@ -333,16 +335,19 @@ class Parking(gym.Env):
             state = normalized_distances  # 8 elements
 
         # type2 state (guidance reward)
-        if self.config.state_type == 'type2':
+        elif self.config.state_type == 'type2':
             guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
                                             self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
             normalized_guidance = guidance / self.config.max_distance
             state = np.concatenate((normalized_distances, normalized_guidance))  # 10 elements
 
         # type3 state (velocity)
-        if self.config.state_type == 'type3':
-            normalized_velocity = self.car.v / self.config.velocity_limit
+        elif self.config.state_type == 'type3':
+            normalized_velocity = np.array([self.car.v / self.config.velocity_limit])
             state = np.concatenate((normalized_velocity, normalized_distances))  # 9 elements
+
+        else:
+            raise ValueError('State type shall be either type1, type2 or type3')
 
         # clip the state value
         state = np.clip(state, a_min=-1, a_max=1)
