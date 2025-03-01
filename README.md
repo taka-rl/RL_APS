@@ -12,22 +12,47 @@ https://github.com/taka-rl/RL_APS/assets/157423802/d21c33ac-b5c0-4244-801e-7933a
 https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26dfaa3a3
 
 
-# Folder structure
-- sim_env: contains the necessary scripts for the parking simulation
-  - parking_env.py: environment class
-  - car.py: car class
-  - com_fcn.py: common functions
-  - parameters.py: parameters for the simulation environment
-  - init_state.py: initialize the car/parking lot location and heading angle for the training
-- training: contains the script for the training
-  - training.py: for the training
-  - utility.py: useful functions for the training
-- practice_rllib: to learn how to use Ray RLlib for my thesis
-- practice_pygame: to learn how to draw the parking environment for my thesis
+## Folder structure
 
-# Simulation Environment
-## used tools
+
+    ├── sim_env                         # simulation environment
+    │   ├── car.py                      # car class
+    │   ├── com_fcn.py                  # common function
+    │   ├── init_state.py               # initialize state for training mode
+    │   ├── main.py                     # visualize the trained agent
+    │   ├── parameters.py               # parameter class
+    │   ├── parking.py                  # parking class
+    │   └── parking_env.py              # parking environment class
+    ├── tests                           # unit test
+    │   └── test_parking_env.py         # test for parking environment
+    ├── training                        # training
+    │   ├── parallel                    # training results for parallel parking
+    │   │    ├── continuous             # continuous action
+    │   │    │     ├── trained_agent    # trained agent
+    │   │    │     └── training_result  # training result
+    │   │    └── discrete               # discrete action
+    │   │    │     ├── trained_agent    # trained agent
+    │   │    │     └── training_result  # training result
+    │   ├── perpendicular               # training results for perpendicular parking 
+    │   │    ├── continuous             # continuous action
+    │   │    │     ├── trained_agent    # trained agent
+    │   │    │     └── training_result  # training result
+    │   │    └── discrete               # discrete action
+    │   │    │     ├── trained_agent    # trained agent
+    │   │    │     └── training_result  # training result
+    │   ├── training.py                 # for training
+    │   └── utility.py                  # utility functions
+    ├── old                              
+    ├── practice_pygame                 # pygame practice
+    ├── practice_rllib                  # Ray RLlib practice
+    ├── requirements.txt
+    └── README.md
+
+
+## Simulation Environment
+### used tools
 The libraries and their versions are as follows.
+
 | tool | version |
 | ---- | ----|
 | Python | 3.10.11 |
@@ -36,8 +61,8 @@ The libraries and their versions are as follows.
 | Numpy | 1.26.3 |
 | Pygame | 2.1.3 |
 
-## environment description
-This environment equips both parallel and perpendicular parkings with both discrete and continuous action spaces.  
+### environment description
+This environment equips both parallel and perpendicular parking's with both discrete and continuous action spaces.  
 As illustrated in the figure below, the custom environment can render a 2D environment with a top-down view and simulate parking movement using front-wheel steering through the Kinematic bicycle model. 
 At each step, the car is rendered based on the input actions, which include acceleration and steering angle, and the next state of the vehicle is simulated.  
 The yellow rectangles represent the parking lot for two obstacles depicted as grey rectangles. The red rectangle indicates the parking lot for the agent, shown as the green rectangle.
@@ -50,7 +75,7 @@ Although the visualization window size is 800 by 600 pixels, this corresponds to
 ・Parallel parking image  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/34acb574-9777-4ce0-91b5-6789214f6dda)
 
-# Kinematic Bicycle model
+## Kinematic Bicycle model
 - Kinematic bicycle model equation  
   In order to simulate the car’s movement, the kinematic bicycle model was used in the environment. (x, y) are the coordinates of the center of the car. The car’s velocity is controlled within 10 km/m since the car is usually at a low speed during parking.
   This means if the velocity becomes over 10 km/m, it is clipped as 10 km/m. The following equation is the Kinematic bicycle model used in the simulation.
@@ -70,12 +95,12 @@ Although the visualization window size is 800 by 600 pixels, this corresponds to
       v = v_dot + v  
       ψ = dt ∗ ψ_dot  
   
-# Reinforcement learning
-## Environment
+## Reinforcement learning
+### Environment
 The overview of RL model for this project is illustrated in the following figure.  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/192dc6cb-3ee7-4fec-8e92-db4cdd4a516c)
 
-## Action type
+### Action type
 There are two action types which are continuous and discrete.  
 Actions as input values for the agent are [a, δ] in both type.  
 a is acceleration, limited between -1 and 1 m/s^2  as the maximum value.
@@ -85,59 +110,58 @@ a is acceleration, limited between -1 and 1 m/s^2  as the maximum value.
 
 - discrete
   There are 6 different actions. 
-  | number | action values[𝑎, δ] | description |
-  | --- | --- | --- |
-  | 0 | [1, 0] | move forward |
-  | 1 | [1, -𝜋/6] | move right forward |
-  | 2 | [1, 𝜋/6] | move left forward |
-  | 3 | [-1, 0] | move backward |
-  | 4 | [-1, -𝜋/6] | move right backward |
-  | 5 | [-1, 𝜋/6] | move left backward |
+
+  | number | action values[𝑎, δ] | description         |
+  |--------|----------------------|---------------------|
+  | 0      | [1, 0]               | move forward        |
+  | 1      | [1, -𝜋/6]           | move right forward  |
+  | 2      | [1, 𝜋/6]            | move left forward   |
+  | 3      | [-1, 0]              | move backward       |
+  | 4      | [-1, -𝜋/6]          | move right backward |
+  | 5      | [-1, 𝜋/6]           | move left backward  |
  
-## State value for the agent
+### State value for the agent
 This section describes the state value designed in this project.  
 The coordinate of the parking space corner points, which means the transformed coordinate system from the global coordinate system to the local coordinate system.
 In global coordinates, the car must account for its own position and orientation within the global frame, complicating calculations. Expressing a global coordinate system as a local coordinate system simplifies the representation, making it easier to manage and understand. The following figure illustrates the local coordinate system where the front side of the car is positive along the y-axis, and the right side of the car is positive along the x-axis. The distance between each parking lot vertex and the center of the car is transformed into the car’s relative coordinate system.
 
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/dc39da5f-558b-4350-ae86-c97411c1dfbf)
 
-The disance is divided by the maximaum distance for normalization and the Maximum distance is 25m.
+The distance is divided by the maximum distance for normalization and the Maximum distance is 25m.
 
-## Reward type
-The following reward functions are desingned in this project. The reward is given at the end of each episode. Therefore, the current episode is terminated when one of these events happens.  
-Successful reward:  
-When the agent reverses into the parking lot, then the agent obtains a +1 reward.  
-Collision check:  
-When the agent enters the grey rectangle, the agent obtains a -1 reward.  
-Maximum step:  
-When the agent takes more than the set maximum step, it obtains a -1 reward.  
-Line cross-check:  
-When the agent crosses the parking lot border vertically or horizontally, it obtains a -1 reward.  
-This check is implemented to ensure realistic behavior, preventing the car from crossing to the opposite side of the parking lot to park. It is dependent on the placement of the parking lot. If the agent crosses the bottom border in Figure 10, it indicates a horizontal border crossing. Another example is if the parking lot is placed on the right side of the visualization window; when the agent crosses the right border of the parking lot, it indicates a vertical border crossing.  
-Maximum distance:  
-When the agent is farther away from the parking lot than the set maximum distance, it obtains a -1 reward.  
+### Reward type
+The following reward functions are designed in this project. The reward is given at the end of each episode. Therefore, the current episode is terminated when one of these events happens.  
 
-### guidance point
+| Reward type       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Successful reward | When the agent reverses into the parking lot, then the agent obtains a +1 reward.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Collision check   | When the agent enters the grey rectangle, the agent obtains a -1 reward.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 
+| Maximum step      | When the agent takes more than the set maximum step, it obtains a -1 reward.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Line cross-check  | When the agent crosses the parking lot border vertically or horizontally, it obtains a -1 reward. This check is implemented to ensure realistic behavior, preventing the car from crossing to the opposite side of the parking lot to park. It is dependent on the placement of the parking lot. If the agent crosses the bottom border, it indicates a horizontal border crossing. Another example is if the parking lot is placed on the right side of the visualization window; when the agent crosses the right border of the parking lot, it indicates a vertical border crossing. |
+| Maximum distance  | When the agent is farther away from the parking lot than the set maximum distance, it obtains a -1 reward.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+  
+
+#### guidance point
 The agent received a +1 reward when it parked in the parking lot. However, the reward system was modified with the introduction of the guidance point.  
 If the car’s vertices are within the parking lot and the center of the car is within a set distance threshold from the center of the parking lot, the agent receives a +1 reward. A small value is then subtracted from this reward based on the angle error to ensure the car is parallel with the parking lot borders. The penalty for angle error is linearly related, where an angle error of 0 degrees results in no penalty, and larger errors reduce the reward accordingly, up to a maximum penalty of 0.5.  
-The reason for this is to encourage the agent to park near the center of the parking lot and to be parallel to the borders.   
-You can see the difference agent behaviour whether the guidance is used or not in 2 videos in Chapter RL_APS above.
+The reason for this is to encourage the agent to park near the center of the parking lot and to be parallel to the borders.
 
-# How to use
-## instal tools
+## How to use
+### install tools
 The first is to install necessary libraries.  
-ray rllib: pip install "ray[rllib]" tensorflow  
-Gymnasium: pip install "gymnasium[all]"  
 
-## parameter settings
+ray rllib: `pip install "ray[rllib]" tensorflow`  
+Gymnasium: `pip install "gymnasium[all]"`
+
+### parameter settings
 You can modify the maximum velocity, steps, acceleration, steering angle, car size, parking size and so on related to the simulation in parameters.py script.
 
-If "training_mode" is "on" in main.py or training.py, the following initial position setting is exeuted by init_state.py. If not, it is executed by parking_env.py.  
+If `training_mode` is "on" in `main.py` or `training.py`, the following initial position setting is executed by `init_state.py`. If not, it is executed by `parking_env.py`.  
 Parking lot position, Car position, Car's heading angle  
 
-## Training
+### Training
 In the training.py, you can choose the parking type and action space type.  
-It is recommneded to set "no_render" as "render_mode" for the training in terms of efficiency and speed.  
+It is recommended to set "no_render" as "render_mode" for the training in terms of efficiency and speed.  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/727ef3c3-1115-4794-83c7-a2f08ed3b6d1)
 
 You can set the number of iterations for the training at line 17, num_train = "the number of iterations".  
@@ -167,8 +191,10 @@ Line 24: The action is set manually.
 
 ## Evaluation
 Use the following command so that you can see data in the training_agent folder.  
+```
 tensorboard --logdir=folder path  
 tensorboard --logdir=C:\Users\-------\----
+```
 
 For example:  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/3a254879-2176-43c9-8a95-a777b348c38c)  
