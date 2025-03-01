@@ -169,12 +169,15 @@ You can set the number of iterations for the training at line 17, num_train = "t
 
 After these settings, you can execute the training.py script. After the training, the result folder and the agent folder are saved in the training folder.
 
-* folder structure for the training  
-  training
-    - parking type
-       - action space
-           - trained_agent: the policy data is stored.  
-           - training_result: the training result is stored.  
+- folder structure for the training  
+
+
+    ├── training                         # training
+         └── parking type                # parallel/perpendiuclar parking
+               └── action space          # continuous/discrete action
+                    ├── trained_agent    # the policy data is stored.
+                    └── training_result  # the training result is stored.
+
 
 ## Visualize the agent
 After the training, you can observe the trained agent behaviour using main.py script.  
