@@ -61,7 +61,7 @@ def parking_env(reward_type: str = 'type1', state_type: str = 'type1'):
         "render_mode": "no_render",
         "action_type": "continuous",
         "parking_type": "perpendicular",
-        "training_mode": "off",
+        "training_mode": "on",
         "config": Config(reward_type=reward_type, state_type=state_type)
     }
     return Parking(env_config)
@@ -148,6 +148,90 @@ def test_continue_perpendicular_env_reset(continuous_perpendicular_env):
 
 
 # --------------------------------------------- Reward ---------------------------------------------
+# Make tests for 4 sides * 2 parking (parallel and perpendicular) for Reward
+def test_reward_max_step():
+    """Test if max step penalty is applied correctly."""
+    env = parking_env()
+    env.reset()
+    env.run_steps = env.config.max_steps
+    reward = env._reward()
+    assert reward < 0, "Agent shall receive a negative reward for exceeding max steps."
+    assert env.terminated is True
+    assert env.truncated is True
+
+
+def test_reward_cross_border():
+    """Test if cross border penalty is applied correctly."""
+    env = parking_env()
+
+    env.reset()
+    env.car = Car(([20, -0.5]), 0, Config())
+
+    reward = env._reward()
+    assert reward < 0, "Agent shall receive a negative reward for crossing border."
+
+
+def test_reward_max_distance():
+    """Test if max distance penalty is applied correctly."""
+    env = parking_env()
+
+    env.reset()
+    env.car = Car(([25, 30]), 0, Config())
+
+    reward = env._reward()
+    assert reward < 0, "Agent shall receive a negative reward for crossing border."
+
+
+def test_reward_collision():
+    """Test if collision penalty is applied correctly."""
+    env = parking_env()
+
+    env.reset()
+    env.car = Car(([10.0, 4.0]), 0, Config())
+
+    reward = env._reward()
+    assert reward < 0, "Agent shall receive a negative reward for crossing border."
+
+
+def test_reward_type1():
+    """Test if reward type1 is applied correctly."""
+    env = parking_env()
+
+    env.reset()
+    env.car = Car(([15.0, 2.0]), 0, Config())
+
+    # print(env.parking_lot_vertices)
+    # print(env.car.car_loc)
+    # print(env.static_cars_vertices)
+
+    # Set the parking lot vertices
+    env.parking_lot_vertices = np.array([[17,   5.5],
+                                         [17,  -0.5],
+                                         [13,  -0.5],
+                                         [13,   5.5]]
+                                        )
+
+    reward = env._reward()
+    assert reward > 0, "Agent shall receive a positive reward."
+
+
+def test_reward_type2():
+    """Test if reward type2 is applied correctly."""
+    env = parking_env(reward_type='type2')
+
+    env.reset()
+    env.car = Car(([15.0, 2.0]), 0, Config())
+
+    # Set the parking lot vertices
+    env.parking_lot_vertices = np.array([[17, 5.5],
+                                         [17, -0.5],
+                                         [13, -0.5],
+                                         [13, 5.5]]
+                                        )
+
+    reward = env._reward()
+    assert reward > 0, "Agent shall receive a positive reward."
+
 
 # --------------------------------------------- State ---------------------------------------------
 def test_state_type1():

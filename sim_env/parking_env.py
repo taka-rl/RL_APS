@@ -378,7 +378,7 @@ class Parking(gym.Env):
         reward = 0
 
         # check the number of the step
-        if self.run_steps == self.config.max_steps:
+        if self.run_steps >= self.config.max_steps:
             reward -= 1
             self.truncated = True
             self.terminated = True
