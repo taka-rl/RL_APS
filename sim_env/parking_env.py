@@ -265,16 +265,16 @@ class Parking(gym.Env):
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
-        # choose the side
-        self.side = self.config.side
-
-        # set the initial positions
+        # set the side and initial positions
         if self.training_mode == 'on':
+            self.side = self.config.side
             self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side,
                                                                              self.config.window_width,
                                                                              self.config.window_height)
-        else:
+        else:  # 'off'
+            self.side = self.parking_strategy.set_initial_loc()
             self.parking_lot = self.config.default_parking_locations[self.config.side]
+
         self.parking_lot_vertices = (self.parking_lot +
                                      self.parking_strategy.get_parking_struct(self.parking_type, self.side))
         while True:

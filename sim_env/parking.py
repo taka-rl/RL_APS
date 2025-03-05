@@ -9,6 +9,16 @@ class BaseParking:
         self.parking_lot_size = self.config.parking_lot_size
         self.car_size = self.config.car_size
 
+    @staticmethod
+    def set_initial_loc() -> int:
+        """
+        Set the parking lot location randomly
+
+        Return:
+            int: the randomized value
+        """
+        return random.randint(1, 4)
+
     def get_parking_struct(self, parking_type: str, side: int) -> np.ndarray:
         """
         Get the parking structure based on the parking type.
