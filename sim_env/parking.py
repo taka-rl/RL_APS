@@ -1,6 +1,6 @@
 import numpy as np
 import random
-from sim_env.parameters import Config, PI, PIXEL_TO_METER_SCALE
+from sim_env.parameters import Config, PIXEL_TO_METER_SCALE
 
 
 class BaseParking:
@@ -8,16 +8,6 @@ class BaseParking:
         self.config = config
         self.parking_lot_size = self.config.parking_lot_size
         self.car_size = self.config.car_size
-
-    @staticmethod
-    def set_initial_loc() -> int:
-        """
-        Set the parking lot location
-
-        Return:
-            int: It
-        """
-        return random.randint(1, 4)
 
     def get_parking_struct(self, parking_type: str, side: int) -> np.ndarray:
         """
@@ -60,7 +50,8 @@ class BaseParking:
             return self.car_size.car_struct if side in [3, 4] else self.car_size.car_struct_2
 
     @staticmethod
-    def set_initial_car_loc(side, parking_loc) -> np.array(['x', 'y']):
+    def set_initial_car_loc(side: int, parking_loc,
+                            initial_distance_range: tuple, car_loc_randomized_range: tuple) -> np.array(['x', 'y']):
         """
         Set the initial car location
 
@@ -87,25 +78,26 @@ class BaseParking:
                     adjusted for an appropriate distance from the parking lot.
 
         """
-        init_dist = 7.5  # random.uniform(7.5, 15)
+
+        init_dist = random.uniform(initial_distance_range[0], initial_distance_range[1])
 
         if side == 1:
-            x_car = parking_loc[0] + random.uniform(-5, 5)
+            x_car = parking_loc[0] + random.uniform(car_loc_randomized_range[0], car_loc_randomized_range[1])
             y_car = parking_loc[1] + init_dist
         elif side == 2:
-            x_car = parking_loc[0] + random.uniform(-5, 5)
+            x_car = parking_loc[0] + random.uniform(car_loc_randomized_range[0], car_loc_randomized_range[1])
             y_car = parking_loc[1] - init_dist
         elif side == 3:
             x_car = parking_loc[0] + init_dist
-            y_car = parking_loc[1] + random.uniform(-5, 5)
+            y_car = parking_loc[1] + random.uniform(car_loc_randomized_range[0], car_loc_randomized_range[1])
         else:
             x_car = parking_loc[0] - init_dist
-            y_car = parking_loc[1] + random.uniform(-5, 5)
+            y_car = parking_loc[1] + random.uniform(car_loc_randomized_range[0], car_loc_randomized_range[1])
 
         return np.array([x_car, y_car])
 
     @staticmethod
-    def set_initial_parking_loc(side, window_w, window_h) -> np.array(['x', 'y']):
+    def set_initial_parking_loc(side: int, window_w: int, window_h: int) -> np.array(['x', 'y']):
         """
         Set the initial parking lot location
 
@@ -139,25 +131,20 @@ class BaseParking:
 
         return np.array([x_parking, y_parking])
 
+    def set_initial_heading(self, parking_type: str, side: int):
+        """Set car's initial heading angle"""
+        if side > 4:
+            raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
+
+        heading_range = self.config.heading_angle_range[parking_type][side]
+        return random.uniform(heading_range[0], heading_range[1])
+
 
 class ParallelParking(BaseParking):
     def __init__(self, config: Config):
         super().__init__(config)
 
-    @staticmethod
-    def set_initial_heading(side):
-        if side == 1:
-            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
-        elif side == 2:
-            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
-        elif side == 3:
-            return np.random.uniform(-PI / 12, PI / 12)
-        elif side == 4:
-            return np.random.uniform(-PI / 12 * 11, PI / 12 * 11)
-        else:
-            raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
-
-    def generate_static_obstacles(self, parking_lot, side):
+    def generate_static_obstacles(self, parking_lot, side: int):
         static_cars_vertices = []
         static_parking_vertices = []
 
@@ -182,20 +169,7 @@ class PerpendicularParking(BaseParking):
     def __init__(self, config: Config):
         super().__init__(config)
 
-    @staticmethod
-    def set_initial_heading(side):
-        if side == 1:
-            return np.random.uniform(PI / 12 * 5, PI / 12 * 7)
-        elif side == 2:
-            return np.random.uniform(-PI / 12 * 7, -PI / 12 * 5)
-        elif side == 3:
-            return np.random.uniform(-PI / 12, PI / 12)
-        elif side == 4:
-            return np.random.uniform(PI - PI / 12, PI + PI / 12)
-        else:
-            raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
-
-    def generate_static_obstacles(self, parking_lot, side):
+    def generate_static_obstacles(self, parking_lot, side: int):
         static_cars_vertices = []
         static_parking_vertices = []
 

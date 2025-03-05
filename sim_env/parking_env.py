@@ -7,7 +7,6 @@ from sim_env.car import Car
 from sim_env.com_fcn import meters_to_pixels, draw_object
 from sim_env.parameters import PI
 from sim_env.parking import ParallelParking, PerpendicularParking
-from sim_env.init_state import set_init_position
 
 
 class Parking(gym.Env):
@@ -263,33 +262,28 @@ class Parking(gym.Env):
         for car_vertex in self.static_cars_vertices:
             draw_object(self.surf_parkinglot, "GREY", car_vertex)
 
-    def reset(
-            self,
-            seed: Optional[int] = None,
-            options: Optional[dict] = None,
-    ):
+    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
         # choose the side
-        self.side = 1  # self.parking_strategy.set_initial_loc()
+        self.side = self.config.side
 
         # set the initial positions
-        if self.training_mode == "off":
+        if self.training_mode == 'on':
             self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side,
                                                                              self.config.window_width,
                                                                              self.config.window_height)
-            self.parking_lot_vertices = (self.parking_lot +
-                                         self.parking_strategy.get_parking_struct(self.parking_type, self.side))
-            while True:
-                car_loc = self.parking_strategy.set_initial_car_loc(self.side, self.parking_lot)
-                if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
-                    break
-            self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.side), self.config)
-        else:  # for training
-            car_loc, self.parking_lot, heading_angle = set_init_position(self.side, self.parking_type, randomized=True)
-            self.parking_lot_vertices = (self.parking_lot +
-                                         self.parking_strategy.get_parking_struct(self.parking_type, self.side))
-            self.car = Car(car_loc, heading_angle, self.config)
+        else:
+            self.parking_lot = self.config.default_parking_locations[self.config.side]
+        self.parking_lot_vertices = (self.parking_lot +
+                                     self.parking_strategy.get_parking_struct(self.parking_type, self.side))
+        while True:
+            car_loc = self.parking_strategy.set_initial_car_loc(self.side, self.parking_lot,
+                                                                self.config.initial_distance_range,
+                                                                self.config.car_loc_randomize_range)
+            if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
+                break
+        self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.parking_type, self.side), self.config)
 
         self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
