@@ -1,7 +1,7 @@
 # RL_APS
-This repository is a development environment for my thesis which is "Reinforcement learning based automated parking systems". It provides the training envrionment for the agent in both parallel and perpendicular parkings.
+This repository is a development environment for my thesis: "Reinforcement Learning-Based Automated Parking Systems." It provides the training environment for the agent in both parallel and perpendicular parking scenarios.
 
-The following videos present the trained agent in the parking simulation.
+The following videos present the trained agent's behavior in the parking simulation.
 The environment is a continuous action space in the perpendicular parking.
 - without guidance
   
@@ -18,7 +18,6 @@ https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26
     ├── sim_env                         # simulation environment
     │   ├── car.py                      # car class
     │   ├── com_fcn.py                  # common function
-    │   ├── init_state.py               # initialize state for training mode
     │   ├── main.py                     # visualize the trained agent
     │   ├── parameters.py               # parameter class
     │   ├── parking.py                  # parking class
@@ -45,8 +44,8 @@ https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26
     ├── old                              
     ├── practice_pygame                 # pygame practice
     ├── practice_rllib                  # Ray RLlib practice
-    ├── requirements.txt
-    └── README.md
+    ├── requirements.txt                # Required dependencies
+    └── README.md                       # Project documentation
 
 
 ## Simulation Environment
@@ -62,7 +61,7 @@ The libraries and their versions are as follows.
 | Pygame | 2.1.3 |
 
 ### environment description
-This environment equips both parallel and perpendicular parking's with both discrete and continuous action spaces.  
+This environment supports both parallel and perpendicular parking, using either discrete or continuous action spaces.  
 As illustrated in the figure below, the custom environment can render a 2D environment with a top-down view and simulate parking movement using front-wheel steering through the Kinematic bicycle model. 
 At each step, the car is rendered based on the input actions, which include acceleration and steering angle, and the next state of the vehicle is simulated.  
 The yellow rectangles represent the parking lot for two obstacles depicted as grey rectangles. The red rectangle indicates the parking lot for the agent, shown as the green rectangle.
@@ -153,24 +152,24 @@ The first is to install necessary libraries.
 ray rllib: `pip install "ray[rllib]" tensorflow`  
 Gymnasium: `pip install "gymnasium[all]"`
 
-### parameter settings
-You can modify the maximum velocity, steps, acceleration, steering angle, car size, parking size and so on related to the simulation in parameters.py script.
+### Settings for training
+1. Set parameters for training in the Config object in `training.py`
+   You can modify the maximum velocity, steps, acceleration, steering angle, car size, parking lot size, reward and state types and so on related to the simulation.
+   The Config object is defined in `parameters.py`.
+   ![image](https://github.com/user-attachments/assets/9f9eb8e3-5e1d-4183-8608-7100339cd6ec)  
 
-If `training_mode` is "on" in `main.py` or `training.py`, the following initial position setting is executed by `init_state.py`. If not, it is executed by `parking_env.py`.  
-Parking lot position, Car position, Car's heading angle  
+2. Choose the parking type and action space type.
+   It is recommended to set "no_render" as "render_mode" for the training in terms of efficiency and speed.  
+   ![image](https://github.com/user-attachments/assets/d72b6a73-551b-4157-b046-9fdbe85fe309)
 
-### Training
-In the training.py, you can choose the parking type and action space type.  
-It is recommended to set "no_render" as "render_mode" for the training in terms of efficiency and speed.  
-![image](https://github.com/taka-rl/RL_APS/assets/157423802/727ef3c3-1115-4794-83c7-a2f08ed3b6d1)
 
-You can set the number of iterations for the training at line 17, num_train = "the number of iterations".  
-![image](https://github.com/taka-rl/RL_APS/assets/157423802/52a9e6ef-559e-4633-8428-04fc09d1f8bf)
+3. Set the number of iterations for the training at line 31, num_train = "the number of iterations".  
+   ![image](https://github.com/user-attachments/assets/51581c24-2955-454f-a923-177ff5cce1b8)
 
-After these settings, you can execute the training.py script. After the training, the result folder and the agent folder are saved in the training folder.
+4. After these settings, you can execute the training.py script. After the training, the result folder and the agent folder are saved in the training folder.
 
-- folder structure for the training  
-
+- folder structure for the training
+  
 
     ├── training                         # training
          └── parking type                # parallel/perpendiuclar parking
@@ -180,7 +179,7 @@ After these settings, you can execute the training.py script. After the training
 
 
 ## Visualize the agent
-After the training, you can observe the trained agent behaviour using main.py script.  
+After the training, you can observe the trained agent's behaviour using main.py script.  
 Line 12, set the folder name in the trained_agent folder saved after the training.  
 Do not forget to set "human" as "render_mode" at line 6.
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/20be06ef-1e91-43f5-9275-8d805f5ac903)
