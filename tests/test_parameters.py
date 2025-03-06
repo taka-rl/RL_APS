@@ -81,13 +81,55 @@ def test_config_defaults():
         "GRID_COLOR": (200, 200, 200)
     }
 
+    # Parking lot and Car location, and car's heading angle for training
+    expected_parking_locations = {1: np.array([15.0, 2.5]),
+                                  2: np.array([15.0, 27.5]),
+                                  3: np.array([2.5, 15.0]),
+                                  4: np.array([37.5, 15.0])}
+
+    for key in expected_parking_locations:
+        assert np.array_equal(config.default_parking_locations[key], expected_parking_locations[key])
+
+    assert config.side == 1
+    assert config.car_loc_randomize_range == (-5, 5)
+    assert config.initial_distance_range == (7.5, 15.0)
+    assert config.heading_angle_range == {
+        "perpendicular": {
+            1: (PI / 12 * 5, PI / 12 * 7),
+            2: (-PI / 12 * 7, -PI / 12 * 5),
+            3: (-PI / 12, PI / 12),
+            4: (PI - PI / 12, PI + PI / 12),
+        },
+        "parallel": {
+            1: (PI / 6, PI / 3),
+            2: (-PI / 6, -PI / 3),
+            3: (-PI / 12, PI / 12),
+            4: (-PI / 12 * 11, PI / 12 * 11),
+        }
+    }
+
 
 def test_config_custom():
     """Test custom configuration initialization."""
     custom_config = Config(car_length=4.8, car_width=2.1,
                            max_distance=30.0, max_steps=100,
                            acceleration_limit=1.5, steering_limit=PI/5,
-                           reward_type='type2', state_type='type3'
+                           reward_type='type2', state_type='type3',
+                           side=2, default_parking_locations={1: np.array([12.0, 5.5]), 2: np.array([18.0, 25.5]),
+                                                              3: np.array([3.5, 16.0]), 4: np.array([36.5, 12.0])},
+                           car_loc_randomize_range=(-7.0, 7.0), initial_distance_range=(10, 17.5),
+                           heading_angle_range={"perpendicular": {1: (PI / 12 * 6, PI / 12 * 8),
+                                                                  2: (-PI / 12 * 9, -PI / 12 * 6),
+                                                                  3: (-PI / 6, PI / 6),
+                                                                  4: (PI - PI / 8, PI + PI / 8),
+                                                                  },
+                                                "parallel": {1: (PI / 6, PI / 3),
+                                                             2: (-PI / 6, -PI / 3),
+                                                             3: (-PI / 12, PI / 12),
+                                                             4: (-PI / 12 * 11, PI / 12 * 11)
+                                                             }
+                                                }
+
                            )
     assert custom_config.car_size.length == np.float32(4.8)
     assert custom_config.car_size.width == np.float32(2.1)
@@ -101,3 +143,30 @@ def test_config_custom():
     # Action limits
     assert custom_config.acceleration_limit == np.float32(1.5)
     assert custom_config.steering_limit == np.float32(PI / 5)
+
+    # Parking lot and Car location, and car's heading angle for training
+    expected_parking_locations = {1: np.array([12.0, 5.5]),
+                                  2: np.array([18.0, 25.5]),
+                                  3: np.array([3.5, 16.0]),
+                                  4: np.array([36.5, 12.0])
+                                  }
+    for key in expected_parking_locations:
+        assert np.array_equal(custom_config.default_parking_locations[key], expected_parking_locations[key])
+
+    assert custom_config.side == 2
+    assert custom_config.car_loc_randomize_range == (-7.0, 7.0)
+    assert custom_config.initial_distance_range == (10, 17.5)
+    assert custom_config.heading_angle_range == {"perpendicular": {1: (PI / 12 * 6, PI / 12 * 8),
+                                                                   2: (-PI / 12 * 9, -PI / 12 * 6),
+                                                                   3: (-PI / 6, PI / 6),
+                                                                   4: (PI - PI / 8, PI + PI / 8),
+                                                                   },
+                                                 "parallel": {1: (PI / 6, PI / 3),
+                                                              2: (-PI / 6, -PI / 3),
+                                                              3: (-PI / 12, PI / 12),
+                                                              4: (-PI / 12 * 11, PI / 12 * 11)
+                                                              }
+                                                 }
+
+    assert set(custom_config.heading_angle_range["parallel"].keys()) == {1, 2, 3, 4}
+    assert set(custom_config.heading_angle_range["perpendicular"].keys()) == {1, 2, 3, 4}

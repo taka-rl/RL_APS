@@ -222,7 +222,8 @@ def test_reward_type2():
     env.reset()
     env.car = Car(([15.0, 2.0]), 0, Config())
 
-    # Set the parking lot vertices
+    # Set the parking lot and its vertices
+    env.parking_lot = np.array([15.0, 2.5])
     env.parking_lot_vertices = np.array([[17, 5.5],
                                          [17, -0.5],
                                          [13, -0.5],
