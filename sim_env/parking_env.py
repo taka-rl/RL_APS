@@ -233,7 +233,8 @@ class Parking(gym.Env):
             pygame.display.flip()
 
     @staticmethod
-    def draw_multiline_text(screen, text, color, rect, font, aa=False, bkg=None):
+    def draw_multiline_text(screen: pygame.Surface, text: str, color: tuple,
+                            rect: pygame.Rect, font: pygame.font, aa=False, bkg=None) -> None:
         lines = text.splitlines()
         rendered_lines = []
         for line in lines:
@@ -256,11 +257,11 @@ class Parking(gym.Env):
             pygame.draw.line(surf_parkinglot, color["GRID_COLOR"], (0, y), (window_w, y))
         return surf_parkinglot
 
-    def _draw_static_obstacles(self):
+    def _draw_static_obstacles(self) -> None:
         for parking_lot_vertex in self.static_parking_lot_vertices:
-            draw_object(self.surf_parkinglot, "YELLOW", parking_lot_vertex)
+            draw_object(self.surf_parkinglot, self.config.colors["YELLOW"], parking_lot_vertex)
         for car_vertex in self.static_cars_vertices:
-            draw_object(self.surf_parkinglot, "GREY", car_vertex)
+            draw_object(self.surf_parkinglot, self.config.colors["GREY"], car_vertex)
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
@@ -349,7 +350,7 @@ class Parking(gym.Env):
         return state
 
     @staticmethod
-    def transform_point(x, y, car_x, car_y, heading) -> np.array(['x', 'y']):
+    def transform_point(x: float, y: float, car_x: float, car_y: float, heading: float) -> np.array(['x', 'y']):
         """
         Transform the global coordinate system to the local(car) coordinate system
 
@@ -425,14 +426,14 @@ class Parking(gym.Env):
         return reward
 
     @staticmethod
-    def is_parking_successful(parking_lot, car_loc, center_threshold):
+    def is_parking_successful(parking_lot: np.ndarray, car_loc: np.ndarray, center_threshold: np.float32) -> bool:
         distance = abs(parking_lot - car_loc)
         if distance[0] <= center_threshold and distance[1] <= center_threshold:
             return True
         return False
 
     @staticmethod
-    def get_parking_angle(parking_type, side):
+    def get_parking_angle(parking_type: str, side: int):
         if parking_type == "perpendicular":
             if side == 1:
                 return PI / 2
@@ -449,7 +450,7 @@ class Parking(gym.Env):
                 return [PI / 2, -PI / 2]  # Car can face either pi/2 or -pi/2
 
     @staticmethod
-    def calc_angle_dif(psi, parking_angle, max_angle_error):
+    def calc_angle_dif(psi: float, parking_angle: [float, list], max_angle_error: np.float32) -> float:
         # calculate the angle error
         if isinstance(parking_angle, list):
             angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
@@ -460,7 +461,7 @@ class Parking(gym.Env):
         return angle_penalty
 
     @staticmethod
-    def check_cross_border(parking_lot_vertices, side, car_vertices) -> bool:
+    def check_cross_border(parking_lot_vertices: np.ndarray, side: int, car_vertices: np.ndarray) -> bool:
         """
         check if the car doesn't cross the horizontal/vertical parking border
 
@@ -501,7 +502,7 @@ class Parking(gym.Env):
         return False
 
     @staticmethod
-    def check_max_distance(parking_lot_vertices, car_loc, max_distance) -> bool:
+    def check_max_distance(parking_lot_vertices: np.ndarray, car_loc: np.ndarray, max_distance: np.float32) -> bool:
         """
         check the distance between the car and the parking lot
 
@@ -514,7 +515,7 @@ class Parking(gym.Env):
         return False
 
     @staticmethod
-    def check_boundary(xy1, xy2, obj) -> bool:
+    def check_boundary(xy1: np.ndarray, xy2: np.ndarray, obj: np.ndarray) -> bool:
         """
         check if obj is in between xy1 and xy2
 
@@ -530,7 +531,7 @@ class Parking(gym.Env):
             return True
         return False
 
-    def close(self):
+    def close(self) -> None:
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
