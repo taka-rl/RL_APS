@@ -7,10 +7,17 @@ PIXEL_TO_METER_SCALE = np.float32(0.05)
 
 class CarSize:
     """
-    Represents the car size.
-    The default car size is as follows:
-        Length: 4 meter
-        Width: 2 meter
+    Represents the dimensions of the car.
+
+    Attributes:
+        length (np.float32): Length of the car in meters (default: 4.0m).
+        width (np.float32): Width of the car in meters (default: 2.0m).
+        car_struct (np.ndarray): 2D array defining the car's four corner coordinates in meters.
+        car_struct_2 (np.ndarray): Alternative 2D array representation for perpendicular parking.
+
+    Default car size:
+        - Length: 4 meters
+        - Width: 2 meters
     """
     def __init__(self, length: float = 4.0, width: float = 2.0):
         self.length = np.float32(length)
@@ -30,16 +37,23 @@ class CarSize:
 
 class WheelSize:
     """
-    Represents the car size.
-    The default wheel size is as follows:
-        Length: 0.75 meter
-        Width: 0.35 meter
+    Represents the dimensions and positions of the car's wheels.
 
-    The center of each wheel position is as follows:
-        Top right: 1.25, 0.75
-        Bottom right: 1.25, -0.75
-        Bottom left: -1.25, -0.75
-        Top left: -1.25, 0.75
+    Attributes:
+        length (np.float32): Length of a single wheel in meters (default: 0.75m).
+        width (np.float32): Width of a single wheel in meters (default: 0.35m).
+        wheel_struct (np.ndarray): 2D array defining the wheel's four corner coordinates in meters.
+        wheel_pos (np.ndarray): Coordinates of the four wheels relative to the car.
+
+    Default wheel size:
+        - Length: 0.75 meters
+        - Width: 0.35 meters
+
+    Wheel positions:
+        - Top right: (1.25, 0.75)
+        - Bottom right: (1.25, -0.75)
+        - Bottom left: (-1.25, -0.75)
+        - Top left: (-1.25, 0.75)
     """
 
     def __init__(self, length: float = 0.75, width: float = 0.35):
@@ -60,10 +74,21 @@ class WheelSize:
 
 class ParkingLotSize:
     """
-    Presents a variety of parking lot types.
-    The default parking lot size is as follows:
-        Length: 6 meter
-        Width: 4 meter
+    Represents different parking lot configurations.
+
+    Attributes:
+        length (np.float32): Length of the parking lot in meters (default: 6.0m).
+        width (np.float32): Width of the parking lot in meters (default: 4.0m).
+        parallel_horizontal (np.ndarray): Array defining the parking structure for horizontal parallel parking.
+        parallel_vertical (np.ndarray): Array defining the parking structure for vertical parallel parking.
+        perpendicular_horizontal (np.ndarray): Array defining the parking structure for horizontal perpendicular parking.
+        perpendicular_vertical (np.ndarray): Array defining the parking structure for vertical perpendicular parking.
+        offset_parallel (np.float32): Offset distance for static obstacles in parallel parking.
+        offset_perpendicular (np.float32): Offset distance for static obstacles in perpendicular parking.
+
+    Default parking lot size:
+        - Length: 6 meters
+        - Width: 4 meters
     """
 
     def __init__(self, length: float = 6.0, width: float = 4.0):
@@ -103,7 +128,53 @@ class ParkingLotSize:
 
 
 class Config:
-    """Stores all configuration parameters for the environment."""
+    """
+    Stores all configuration parameters for the parking environment.
+
+    Attributes:
+        car_size (CarSize): Car size settings.
+        wheel_size (WheelSize): Wheel size settings.
+        parking_lot_size (ParkingLotSize): Parking lot size settings.
+
+        reward_type (str): Reward type used in reinforcement learning (default: 'type1').
+            - type1: Default reward, primarily based on parking success.
+            - type2: Includes a guidance reward, encouraging the agent to park parallel to the parking lot.
+        state_type (str): State representation type used in reinforcement learning (default: 'type1').
+            - type1: The agent receives relative coordinate data for each (x, y) vertex between the parking lot and
+                        the agent location. It has 8 elements.
+            - type2: The agent receives relative coordinate data for each (x, y) vertex between the parking lot and
+                        the agent location, plus an additional guidance distance to help with alignment.
+                        It has 10 elements.
+            - type3: The agent receives relative coordinate data for each (x, y) vertex between the parking lot and
+                        the agent location, along with its velocity. It has 9 elements.
+
+        acceleration_limit (np.float32): Maximum acceleration limit in m/s².
+        steering_limit (np.float32): Maximum steering angle limit in radians.
+        velocity_limit (np.float32): Maximum velocity limit in m/s.
+        dt (np.float32): Time step used in simulation.
+        max_distance (np.float32): Maximum distance for parking in meters.
+        max_steps (int): Maximum number of steps per episode.
+
+        max_angle_error (np.float32): Maximum allowable angle error for guidance reward.
+        center_threshold (np.float32): Threshold for parking center alignment.
+
+        fps (int): Frames per second for rendering.
+        window_width (int): Width of the simulation window in pixels.
+        window_height (int): Height of the simulation window in pixels.
+        grid_size (int): Grid size for rendering.
+        window_width_offset (int): Offset to keep parking within the screen boundaries.
+        window_height_offset (int): Offset to keep parking within the screen boundaries.
+
+        colors (dict): Dictionary containing RGB tuples for different UI elements.
+
+        default_parking_locations (dict): Dictionary mapping parking lot sides (1-4) to their respective locations.
+        side (Union[int, Tuple[int, ...]]): Defines which side of the environment the parking lot is placed.
+        car_loc_randomize_range (tuple): Range for randomizing car initial position.
+        initial_distance_range (tuple): Range for setting the initial distance between car and parking lot.
+        heading_angle_range (dict): Dictionary defining possible initial heading angles for the car.
+
+    """
+
     def __init__(self,
                  car_length: float = 4.0, car_width: float = 2.0,
                  wheel_length: float = 0.75, wheel_width: float = 0.35,
