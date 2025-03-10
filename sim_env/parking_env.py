@@ -2,12 +2,11 @@ import numpy as np
 import pygame
 import math
 import gymnasium as gym
-from typing import Optional
+from typing import Optional, Union, List
 from sim_env.car import Car
 from sim_env.com_fcn import meters_to_pixels, draw_object
 from sim_env.parameters import PI
 from sim_env.parking import ParallelParking, PerpendicularParking
-from sim_env.init_state import set_init_position
 
 
 class Parking(gym.Env):
@@ -234,7 +233,8 @@ class Parking(gym.Env):
             pygame.display.flip()
 
     @staticmethod
-    def draw_multiline_text(screen, text, color, rect, font, aa=False, bkg=None):
+    def draw_multiline_text(screen: pygame.Surface, text: str, color: tuple,
+                            rect: pygame.Rect, font: pygame.font, aa=False, bkg=None) -> None:
         lines = text.splitlines()
         rendered_lines = []
         for line in lines:
@@ -257,39 +257,34 @@ class Parking(gym.Env):
             pygame.draw.line(surf_parkinglot, color["GRID_COLOR"], (0, y), (window_w, y))
         return surf_parkinglot
 
-    def _draw_static_obstacles(self):
+    def _draw_static_obstacles(self) -> None:
         for parking_lot_vertex in self.static_parking_lot_vertices:
-            draw_object(self.surf_parkinglot, "YELLOW", parking_lot_vertex)
+            draw_object(self.surf_parkinglot, self.config.colors["YELLOW"], parking_lot_vertex)
         for car_vertex in self.static_cars_vertices:
-            draw_object(self.surf_parkinglot, "GREY", car_vertex)
+            draw_object(self.surf_parkinglot, self.config.colors["GREY"], car_vertex)
 
-    def reset(
-            self,
-            seed: Optional[int] = None,
-            options: Optional[dict] = None,
-    ):
+    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
-        # choose the side
-        self.side = 1  # self.parking_strategy.set_initial_loc()
+        # set the side and initial positions
+        self.side = self.parking_strategy.set_initial_loc(self.config.side)
+        if self.training_mode == 'off':
+            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side, self.config.window_width,
+                                                                             self.config.window_height,
+                                                                             self.config.window_width_offset,
+                                                                             self.config.window_height_offset)
+        else:  # 'on'
+            self.parking_lot = self.config.default_parking_locations[self.config.side]
 
-        # set the initial positions
-        if self.training_mode == "off":
-            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side,
-                                                                             self.config.window_width,
-                                                                             self.config.window_height)
-            self.parking_lot_vertices = (self.parking_lot +
-                                         self.parking_strategy.get_parking_struct(self.parking_type, self.side))
-            while True:
-                car_loc = self.parking_strategy.set_initial_car_loc(self.side, self.parking_lot)
-                if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
-                    break
-            self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.side), self.config)
-        else:  # for training
-            car_loc, self.parking_lot, heading_angle = set_init_position(self.side, self.parking_type, randomized=True)
-            self.parking_lot_vertices = (self.parking_lot +
-                                         self.parking_strategy.get_parking_struct(self.parking_type, self.side))
-            self.car = Car(car_loc, heading_angle, self.config)
+        self.parking_lot_vertices = (self.parking_lot +
+                                     self.parking_strategy.get_parking_struct(self.parking_type, self.side))
+        while True:
+            car_loc = self.parking_strategy.set_initial_car_loc(self.side, self.parking_lot,
+                                                                self.config.initial_distance_range,
+                                                                self.config.car_loc_randomize_range)
+            if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
+                break
+        self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.parking_type, self.side), self.config)
 
         self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
@@ -355,7 +350,7 @@ class Parking(gym.Env):
         return state
 
     @staticmethod
-    def transform_point(x, y, car_x, car_y, heading) -> np.array(['x', 'y']):
+    def transform_point(x: float, y: float, car_x: float, car_y: float, heading: float) -> np.array(['x', 'y']):
         """
         Transform the global coordinate system to the local(car) coordinate system
 
@@ -416,7 +411,7 @@ class Parking(gym.Env):
         # type2 (guidance reward)
         if self.config.reward_type == 'type2':
             if self.is_car_in_parking_lot():
-                if self.is_parking_successful(self.parking_lot, self.car.car_loc, self.config.center_threshold):
+                if self.is_car_in_threshold(self.parking_lot, self.car.car_loc, self.config.center_threshold):
                     reward += 1
                     self.terminated = True
                     print("successful parking")
@@ -431,14 +426,39 @@ class Parking(gym.Env):
         return reward
 
     @staticmethod
-    def is_parking_successful(parking_lot, car_loc, center_threshold):
+    def is_car_in_threshold(parking_lot: np.ndarray, car_loc: np.ndarray, center_threshold: np.float32) -> bool:
+        """
+        Determines whether the car has successfully parked within the designated parking lot.
+        The function checks if the car's center is within a defined threshold distance from the parking lot center.
+
+        Parameters:
+            parking_lot (np.ndarray): The [x, y] coordinates of the parking lot center.
+            car_loc (np.ndarray): The [x, y] coordinates of the car's center.
+            center_threshold (np.float32): The maximum allowable distance between the car's center
+                                            and the parking lot center for a successful parking.
+
+        Returns:
+            bool: True if the car is within the parking lot and within the threshold distance, False otherwise.
+        """
         distance = abs(parking_lot - car_loc)
         if distance[0] <= center_threshold and distance[1] <= center_threshold:
             return True
         return False
 
     @staticmethod
-    def get_parking_angle(parking_type, side):
+    def get_parking_angle(parking_type: str, side: int) -> Union[float, List[float]]:
+        """
+        Determines the expected parking angle based on parking type and side.
+
+        Parameters:
+            parking_type (str): The type of parking ("parallel" or "perpendicular").
+            side (int): The side where the parking lot is located (1 to 4).
+
+        Returns:
+            Union[float, List[float]]: The expected parking angle.
+                - A single float for perpendicular parking.
+                - A list of floats for parallel parking.
+        """
         if parking_type == "perpendicular":
             if side == 1:
                 return PI / 2
@@ -455,7 +475,19 @@ class Parking(gym.Env):
                 return [PI / 2, -PI / 2]  # Car can face either pi/2 or -pi/2
 
     @staticmethod
-    def calc_angle_dif(psi, parking_angle, max_angle_error):
+    def calc_angle_dif(psi: float, parking_angle: Union[float, List[float]], max_angle_error: np.float32) -> float:
+        """
+        Calculates the angle difference penalty.
+
+        Parameters:
+            psi (float): The current heading angle of the car.
+            parking_angle (Union[float, List[float]]): The target parking angle,
+                which can be a single float or a list of possible angles.
+            max_angle_error (float): The maximum allowed angle error.
+
+        Returns:
+            float: The calculated angle penalty.
+        """
         # calculate the angle error
         if isinstance(parking_angle, list):
             angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
@@ -466,7 +498,7 @@ class Parking(gym.Env):
         return angle_penalty
 
     @staticmethod
-    def check_cross_border(parking_lot_vertices, side, car_vertices) -> bool:
+    def check_cross_border(parking_lot_vertices: np.ndarray, side: int, car_vertices: np.ndarray) -> bool:
         """
         check if the car doesn't cross the horizontal/vertical parking border
 
@@ -491,6 +523,13 @@ class Parking(gym.Env):
             return np.any(car_vertices[:, 0] > pa_right_edge)
 
     def is_car_in_parking_lot(self) -> bool:
+        """
+        Checks if the car's vertices (corners) are entirely within the parking lot.
+        This function verifies whether all four corners of the car remain within the defined parking lot boundaries.
+
+        Returns:
+            bool: True if the entire car is within the parking lot, False otherwise.
+        """
         xy1, xy2, xy3, xy4 = self.parking_lot_vertices
         # Check if all car corners are within the parking area
         for corner in self.car.car_vertices:
@@ -499,6 +538,15 @@ class Parking(gym.Env):
         return True
 
     def check_collision(self) -> bool:
+        """
+        Determines whether the car has collided with any static obstacles.
+
+        The function iterates through all static parked cars in the environment and checks
+        if any corner of the agent's car overlaps with the boundary of another car.
+
+        Returns:
+            bool: True if a collision is detected, False otherwise.
+        """
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
             for car_vertex in self.car.car_vertices:
@@ -507,7 +555,7 @@ class Parking(gym.Env):
         return False
 
     @staticmethod
-    def check_max_distance(parking_lot_vertices, car_loc, max_distance) -> bool:
+    def check_max_distance(parking_lot_vertices: np.ndarray, car_loc: np.ndarray, max_distance: np.float32) -> bool:
         """
         check the distance between the car and the parking lot
 
@@ -520,11 +568,11 @@ class Parking(gym.Env):
         return False
 
     @staticmethod
-    def check_boundary(xy1, xy2, obj) -> bool:
+    def check_boundary(xy1: np.ndarray, xy2: np.ndarray, obj: np.ndarray) -> bool:
         """
         check if obj is in between xy1 and xy2
 
-        Parameter
+        Parameters:
             xy1: top right (x,y) position
             xy2: bottom left (x,y) position
             obj: targeted object (x,y) position
@@ -536,7 +584,7 @@ class Parking(gym.Env):
             return True
         return False
 
-    def close(self):
+    def close(self) -> None:
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()

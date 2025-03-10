@@ -1,5 +1,5 @@
+from typing import Union, Tuple
 import numpy as np
-
 
 PI = np.pi
 PIXEL_TO_METER_SCALE = np.float32(0.05)
@@ -65,6 +65,7 @@ class ParkingLotSize:
         Length: 6 meter
         Width: 4 meter
     """
+
     def __init__(self, length: float = 6.0, width: float = 4.0):
         self.length = np.float32(length)
         self.width = np.float32(width)
@@ -108,11 +109,12 @@ class Config:
                  wheel_length: float = 0.75, wheel_width: float = 0.35,
                  parking_length: float = 6.0, parking_width: float = 4.0,
                  max_distance: float = 25.0, max_steps: int = 80,
-                 acceleration_limit: float = 1.0, steering_limit: float = PI/4, velocity_limit: float = 10.0,
-                 max_angle_error: float = PI/12, center_threshold: float = 1.0,
-                 reward_type: str = 'type1', state_type: str = 'type1'
+                 acceleration_limit: float = 1.0, steering_limit: float = PI / 4, velocity_limit: float = 10.0,
+                 max_angle_error: float = PI / 12, center_threshold: float = 1.0,
+                 reward_type: str = 'type1', state_type: str = 'type1',
+                 side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None, car_loc_randomize_range: tuple = (-5, 5),
+                 initial_distance_range: tuple = (7.5, 15.0), heading_angle_range: dict = None,
                  ):
-
         self.car_size = CarSize(car_length, car_width)
         self.wheel_size = WheelSize(wheel_length, wheel_width)
         self.parking_lot_size = ParkingLotSize(parking_length, parking_width)
@@ -138,6 +140,8 @@ class Config:
         self.window_width = 800
         self.window_height = 600
         self.grid_size = 20
+        self.window_width_offset = 100
+        self.window_height_offset = 50
 
         self.colors = {
             "RED": (255, 100, 100),
@@ -149,3 +153,26 @@ class Config:
             "WHITE": (255, 255, 255),
             "GRID_COLOR": (200, 200, 200)
         }
+
+        # Parking lot and Car location, and car's heading angle for training
+        self.default_parking_locations = default_parking_locations or {1: np.array([15.0, 2.5]),
+                                                                       2: np.array([15.0, 27.5]),
+                                                                       3: np.array([2.5, 15.0]),
+                                                                       4: np.array([37.5, 15.0])}
+        self.side = side
+        self.car_loc_randomize_range = car_loc_randomize_range
+        self.initial_distance_range = initial_distance_range
+        self.heading_angle_range = heading_angle_range or {
+                    "perpendicular": {
+                        1: (PI/12 * 5, PI/12 * 7),
+                        2: (-PI/12 * 7, -PI/12 * 5),
+                        3: (-PI/12, PI/12),
+                        4: (PI - PI/12, PI + PI/12),
+                    },
+                    "parallel": {
+                        1: (PI/6, PI/3),
+                        2: (-PI/6, -PI/3),
+                        3: (-PI/12, PI/12),
+                        4: (-PI/12 * 11, PI/12 * 11),
+                    }
+                }
