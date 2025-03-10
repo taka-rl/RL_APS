@@ -15,6 +15,6 @@ def meters_to_pixels(meters):
     return meters / PIXEL_TO_METER_SCALE
 
 
-def draw_object(screen, color, vertex):
+def draw_object(screen: pygame.Surface, color: tuple, vertex):
     pixel_vertex = meters_to_pixels(vertex)
     pygame.draw.polygon(screen, color, pixel_vertex)

@@ -1,3 +1,4 @@
+from typing import Union, Tuple
 import numpy as np
 
 PI = np.pi
@@ -111,7 +112,7 @@ class Config:
                  acceleration_limit: float = 1.0, steering_limit: float = PI / 4, velocity_limit: float = 10.0,
                  max_angle_error: float = PI / 12, center_threshold: float = 1.0,
                  reward_type: str = 'type1', state_type: str = 'type1',
-                 side: int = 1, default_parking_locations: dict = None, car_loc_randomize_range: tuple = (-5, 5),
+                 side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None, car_loc_randomize_range: tuple = (-5, 5),
                  initial_distance_range: tuple = (7.5, 15.0), heading_angle_range: dict = None,
                  ):
         self.car_size = CarSize(car_length, car_width)

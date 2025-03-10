@@ -1,3 +1,4 @@
+from typing import Union, Tuple
 import numpy as np
 import random
 from sim_env.parameters import Config, PIXEL_TO_METER_SCALE
@@ -10,14 +11,23 @@ class BaseParking:
         self.car_size = self.config.car_size
 
     @staticmethod
-    def set_initial_loc() -> int:
+    def set_initial_loc(side: Union[int, Tuple[int, ...]]) -> int:
         """
         Set the parking lot location randomly
 
+        Parameters:
+            side (Union[int, Tuple[int, ...]]):
+                - If int, return as is (fixed side).
+                - If tuple, randomly choose a side.
+
         Return:
-            int: the randomized value
+            int: The selected parking lot side.
         """
-        return random.randint(1, 4)
+        if isinstance(side, int):
+            return side
+        if isinstance(side, tuple):
+            return random.choice(side)
+        raise ValueError(f"Invalid side type: {type(side)}. Expected int or tuple.")
 
     def get_parking_struct(self, parking_type: str, side: int) -> np.ndarray:
         """
@@ -143,8 +153,11 @@ class BaseParking:
 
     def set_initial_heading(self, parking_type: str, side: int):
         """Set car's initial heading angle"""
-        if side > 4:
-            raise ValueError(f"Invalid side value: {side}. Valid values are from 1 to 4")
+        if parking_type not in ["perpendicular", "parallel"]:
+            raise ValueError(f"Invalid parking type: {parking_type}. Must be 'perpendicular' or 'parallel'.")
+
+        if side not in self.config.heading_angle_range[parking_type]:
+            raise ValueError(f"Invalid side value: {side}. Must be 1, 2, 3, or 4.")
 
         heading_range = self.config.heading_angle_range[parking_type][side]
         return random.uniform(heading_range[0], heading_range[1])

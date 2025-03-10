@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 import math
 import gymnasium as gym
-from typing import Optional
+from typing import Optional, Union, List
 from sim_env.car import Car
 from sim_env.com_fcn import meters_to_pixels, draw_object
 from sim_env.parameters import PI
@@ -267,13 +267,11 @@ class Parking(gym.Env):
         super().reset(seed=seed)
 
         # set the side and initial positions
+        self.side = self.parking_strategy.set_initial_loc(self.config.side)
         if self.training_mode == 'on':
-            self.side = self.config.side
-            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side,
-                                                                             self.config.window_width,
+            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side, self.config.window_width,
                                                                              self.config.window_height)
         else:  # 'off'
-            self.side = self.parking_strategy.set_initial_loc()
             self.parking_lot = self.config.default_parking_locations[self.config.side]
 
         self.parking_lot_vertices = (self.parking_lot +
@@ -411,7 +409,7 @@ class Parking(gym.Env):
         # type2 (guidance reward)
         if self.config.reward_type == 'type2':
             if self.is_car_in_parking_lot():
-                if self.is_parking_successful(self.parking_lot, self.car.car_loc, self.config.center_threshold):
+                if self.is_car_in_threshold(self.parking_lot, self.car.car_loc, self.config.center_threshold):
                     reward += 1
                     self.terminated = True
                     print("successful parking")
@@ -426,14 +424,39 @@ class Parking(gym.Env):
         return reward
 
     @staticmethod
-    def is_parking_successful(parking_lot: np.ndarray, car_loc: np.ndarray, center_threshold: np.float32) -> bool:
+    def is_car_in_threshold(parking_lot: np.ndarray, car_loc: np.ndarray, center_threshold: np.float32) -> bool:
+        """
+        Determines whether the car has successfully parked within the designated parking lot.
+        The function checks if the car's center is within a defined threshold distance from the parking lot center.
+
+        Parameters:
+            parking_lot (np.ndarray): The [x, y] coordinates of the parking lot center.
+            car_loc (np.ndarray): The [x, y] coordinates of the car's center.
+            center_threshold (np.float32): The maximum allowable distance between the car's center
+                                            and the parking lot center for a successful parking.
+
+        Returns:
+            bool: True if the car is within the parking lot and within the threshold distance, False otherwise.
+        """
         distance = abs(parking_lot - car_loc)
         if distance[0] <= center_threshold and distance[1] <= center_threshold:
             return True
         return False
 
     @staticmethod
-    def get_parking_angle(parking_type: str, side: int):
+    def get_parking_angle(parking_type: str, side: int) -> Union[float, List[float]]:
+        """
+        Determines the expected parking angle based on parking type and side.
+
+        Parameters:
+            parking_type (str): The type of parking ("parallel" or "perpendicular").
+            side (int): The side where the parking lot is located (1 to 4).
+
+        Returns:
+            Union[float, List[float]]: The expected parking angle.
+                - A single float for perpendicular parking.
+                - A list of floats for parallel parking.
+        """
         if parking_type == "perpendicular":
             if side == 1:
                 return PI / 2
@@ -450,7 +473,19 @@ class Parking(gym.Env):
                 return [PI / 2, -PI / 2]  # Car can face either pi/2 or -pi/2
 
     @staticmethod
-    def calc_angle_dif(psi: float, parking_angle: [float, list], max_angle_error: np.float32) -> float:
+    def calc_angle_dif(psi: float, parking_angle: Union[float, List[float]], max_angle_error: np.float32) -> float:
+        """
+        Calculates the angle difference penalty.
+
+        Parameters:
+            psi (float): The current heading angle of the car.
+            parking_angle (Union[float, List[float]]): The target parking angle,
+                which can be a single float or a list of possible angles.
+            max_angle_error (float): The maximum allowed angle error.
+
+        Returns:
+            float: The calculated angle penalty.
+        """
         # calculate the angle error
         if isinstance(parking_angle, list):
             angle_errors = [np.abs((psi - angle + PI) % (2 * PI) - PI) for angle in parking_angle]
@@ -486,6 +521,13 @@ class Parking(gym.Env):
             return np.any(car_vertices[:, 0] > pa_right_edge)
 
     def is_car_in_parking_lot(self) -> bool:
+        """
+        Checks if the car's vertices (corners) are entirely within the parking lot.
+        This function verifies whether all four corners of the car remain within the defined parking lot boundaries.
+
+        Returns:
+            bool: True if the entire car is within the parking lot, False otherwise.
+        """
         xy1, xy2, xy3, xy4 = self.parking_lot_vertices
         # Check if all car corners are within the parking area
         for corner in self.car.car_vertices:
@@ -494,6 +536,15 @@ class Parking(gym.Env):
         return True
 
     def check_collision(self) -> bool:
+        """
+        Determines whether the car has collided with any static obstacles.
+
+        The function iterates through all static parked cars in the environment and checks
+        if any corner of the agent's car overlaps with the boundary of another car.
+
+        Returns:
+            bool: True if a collision is detected, False otherwise.
+        """
         for static_car_vertex in self.static_cars_vertices:
             xy1, xy2, xy3, xy4 = static_car_vertex
             for car_vertex in self.car.car_vertices:
@@ -519,7 +570,7 @@ class Parking(gym.Env):
         """
         check if obj is in between xy1 and xy2
 
-        Parameter
+        Parameters:
             xy1: top right (x,y) position
             xy2: bottom left (x,y) position
             obj: targeted object (x,y) position
