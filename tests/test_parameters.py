@@ -69,6 +69,8 @@ def test_config_defaults():
     assert config.window_width == 800
     assert config.window_height == 600
     assert config.grid_size == 20
+    assert config.window_width_offset == 100
+    assert config.window_height_offset == 50
 
     assert config.colors == {
         "RED": (255, 100, 100),

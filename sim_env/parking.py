@@ -73,30 +73,36 @@ class BaseParking:
     def set_initial_car_loc(side: int, parking_loc,
                             initial_distance_range: tuple, car_loc_randomized_range: tuple) -> np.array(['x', 'y']):
         """
-        Set the initial car location
+        Determines the initial car location based on the parking side and randomized distance.
 
-        ini_dist (float): the initial distance between the car and the parking lot,
-                        randomly setting between 10 and 20 meters.
+        This function sets the initial position of the car in relation to the parking lot, ensuring that
+        it starts at a reasonable distance for a parking maneuver. The location is randomized within a given range.
 
-        parking_loc (np.array): The [x, y] location of the parking lot in meters.
+        Parameters:
+            side (int): Determines the parking lot side on the map:
+                - `1`: Car is placed below the parking lot.
+                    - `x` is randomly chosen from `car_loc_randomized_range` around `parking_loc[0]`.
+                    - `y` is set to `parking_loc[1] + init_dist`.
+                - `2`: Car is placed above the parking lot.
+                    - `x` is randomly chosen from `car_loc_randomized_range` around `parking_loc[0]`.
+                    - `y` is set to `parking_loc[1] - init_dist`.
+                - `3`: Car is placed to the left of the parking lot.
+                    - `x` is set to `parking_loc[0] + init_dist`.
+                    - `y` is randomly chosen from `car_loc_randomized_range` around `parking_loc[1]`.
+                - `4`: Car is placed to the right of the parking lot.
+                    - `x` is set to `parking_loc[0] - init_dist`.
+                    - `y` is randomly chosen from `car_loc_randomized_range` around `parking_loc[1]`.
 
-        side (int): determines on which side of the map the parking lot will be placed
-                - 1: the car is placed on the bottom side of the parking area.
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is plus ini_dist from parking_loc[1].
-                - 2: the car is placed on the top side of the parking area.
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is minus ini_dist from parking_loc[1].
-                - 3: the car is placed on the left side of the parking area.
-                    x is plus ini_dist from parking_loc[0].
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-                - 4: the car is placed on the right side of the parking area.
-                    x is minus ini_dist from parking_loc[0].
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-        Return:
-            np.array: the initial center of the car location [x,y] in meters,
-                    adjusted for an appropriate distance from the parking lot.
+            parking_loc (np.ndarray): The `[x, y]` coordinates of the parking lot in meters.
 
+            initial_distance_range (tuple): The range `(min, max)` within which the initial distance
+                between the car and the parking lot is randomly selected.
+
+            car_loc_randomized_range (tuple): The range `(min, max)` within which the x or y position
+                (depending on side) is randomly selected for additional randomness in placement.
+
+        Returns:
+            np.ndarray: The `[x, y]` coordinates representing the initial position of the car in meters.
         """
 
         init_dist = random.uniform(initial_distance_range[0], initial_distance_range[1])
@@ -117,37 +123,50 @@ class BaseParking:
         return np.array([x_car, y_car])
 
     @staticmethod
-    def set_initial_parking_loc(side: int, window_w: int, window_h: int) -> np.array(['x', 'y']):
+    def set_initial_parking_loc(side: int, window_w: int, window_h: int,
+                                window_w_offset: int, window_h_offset: int) -> np.array(['x', 'y']):
         """
-        Set the initial parking lot location
+        Determines the initial location of the parking lot based on the given side.
 
-        side (int): determines on which side of the map the parking lot will be placed.
-                - 1: the parking lot is placed on the bottom side,
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is set to 50 pixels (before scaling).
-                - 2: the parking lot is placed on the top side,
-                    x is randomly set between 100 and 700 pixels (before scaling),
-                    and y is set to 550 pixels (before scaling).
-                - 3: the parking lot is placed on the left side, x is set to 50 pixels (before scaling),
-                    and y is randomly set between 100 and 500 pixels (before scaling).
-                - 4: the parking lot is placed on the right side, x is set to 750 pixels (before scaling),
-                    and y is randomly set between 100 and 500 pixels (before scaling).
+        This function sets the parking lot's position on the map, ensuring proper placement while maintaining
+        a margin from the screen edges. The position is adjusted based on predefined offsets and converted
+        from pixels to meters using `PIXEL_TO_METER_SCALE`.
 
-        Return:
-            np.array:the center of the parking lot location [x,y]
+        Parameters:
+            side (int): Specifies which side of the map the parking lot is placed:
+                - `1`: Parking lot is at the **bottom** of the map.
+                    - `x` is randomly chosen between `window_w_offset` and `window_w - window_w_offset`.
+                    - `y` is set to `window_h_offset` (bottom).
+                - `2`: Parking lot is at the **top** of the map.
+                    - `x` is randomly chosen between `window_w_offset` and `window_w - window_w_offset`.
+                    - `y` is set to `window_h - window_h_offset` (top).
+                - `3`: Parking lot is on the **left** side of the map.
+                    - `x` is set to `window_h_offset` (left).
+                    - `y` is randomly chosen between `window_h_offset` and `window_h - window_h_offset`.
+                - `4`: Parking lot is on the **right** side of the map.
+                    - `x` is set to `window_w - window_w_offset` (right).
+                    - `y` is randomly chosen between `window_h_offset` and `window_h - window_h_offset`.
+
+            window_w (int): The width of the simulation window (in pixels).
+            window_h (int): The height of the simulation window (in pixels).
+            window_w_offset (int): The margin to avoid placing the parking lot too close to the left or right edges.
+            window_h_offset (int): The margin to avoid placing the parking lot too close to the top or bottom edges.
+
+        Returns:
+            np.ndarray: A `[x, y]` array representing the center location of the parking lot in meters.
         """
         if side == 1:
-            x_parking = random.uniform(100, window_w - 100) * PIXEL_TO_METER_SCALE
-            y_parking = 50 * PIXEL_TO_METER_SCALE
+            x_parking = random.uniform(window_w_offset, window_w - window_w_offset) * PIXEL_TO_METER_SCALE
+            y_parking = window_h_offset * PIXEL_TO_METER_SCALE
         elif side == 2:
-            x_parking = random.uniform(100, window_w - 100) * PIXEL_TO_METER_SCALE
-            y_parking = 550 * PIXEL_TO_METER_SCALE
+            x_parking = random.uniform(window_w_offset, window_w - window_w_offset) * PIXEL_TO_METER_SCALE
+            y_parking = (window_h - window_h_offset) * PIXEL_TO_METER_SCALE
         elif side == 3:
-            x_parking = 50 * PIXEL_TO_METER_SCALE
-            y_parking = random.uniform(100, window_h - 100) * PIXEL_TO_METER_SCALE
+            x_parking = window_h_offset * PIXEL_TO_METER_SCALE
+            y_parking = random.uniform(window_h_offset, window_h - window_h_offset) * PIXEL_TO_METER_SCALE
         else:
-            x_parking = 750 * PIXEL_TO_METER_SCALE
-            y_parking = random.uniform(100, window_h - 100) * PIXEL_TO_METER_SCALE
+            x_parking = (window_w - window_w_offset) * PIXEL_TO_METER_SCALE
+            y_parking = random.uniform(window_h_offset, window_h - window_h_offset) * PIXEL_TO_METER_SCALE
 
         return np.array([x_parking, y_parking])
 

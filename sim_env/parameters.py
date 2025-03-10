@@ -140,6 +140,8 @@ class Config:
         self.window_width = 800
         self.window_height = 600
         self.grid_size = 20
+        self.window_width_offset = 100
+        self.window_height_offset = 50
 
         self.colors = {
             "RED": (255, 100, 100),

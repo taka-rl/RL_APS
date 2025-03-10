@@ -270,7 +270,9 @@ class Parking(gym.Env):
         self.side = self.parking_strategy.set_initial_loc(self.config.side)
         if self.training_mode == 'off':
             self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side, self.config.window_width,
-                                                                             self.config.window_height)
+                                                                             self.config.window_height,
+                                                                             self.config.window_width_offset,
+                                                                             self.config.window_height_offset)
         else:  # 'on'
             self.parking_lot = self.config.default_parking_locations[self.config.side]
 
