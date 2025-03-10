@@ -81,7 +81,8 @@ class ParkingLotSize:
         width (np.float32): Width of the parking lot in meters (default: 4.0m).
         parallel_horizontal (np.ndarray): Array defining the parking structure for horizontal parallel parking.
         parallel_vertical (np.ndarray): Array defining the parking structure for vertical parallel parking.
-        perpendicular_horizontal (np.ndarray): Array defining the parking structure for horizontal perpendicular parking.
+        perpendicular_horizontal (np.ndarray): Array defining the parking structure for
+                                                horizontal perpendicular parking.
         perpendicular_vertical (np.ndarray): Array defining the parking structure for vertical perpendicular parking.
         offset_parallel (np.float32): Offset distance for static obstacles in parallel parking.
         offset_perpendicular (np.float32): Offset distance for static obstacles in perpendicular parking.
@@ -183,8 +184,9 @@ class Config:
                  acceleration_limit: float = 1.0, steering_limit: float = PI / 4, velocity_limit: float = 10.0,
                  max_angle_error: float = PI / 12, center_threshold: float = 1.0,
                  reward_type: str = 'type1', state_type: str = 'type1',
-                 side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None, car_loc_randomize_range: tuple = (-5, 5),
-                 initial_distance_range: tuple = (7.5, 15.0), heading_angle_range: dict = None,
+                 side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None,
+                 car_loc_randomize_range: tuple = (-5, 5), initial_distance_range: tuple = (7.5, 15.0),
+                 heading_angle_range: dict = None
                  ):
         self.car_size = CarSize(car_length, car_width)
         self.wheel_size = WheelSize(wheel_length, wheel_width)

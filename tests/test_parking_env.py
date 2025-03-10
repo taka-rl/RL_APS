@@ -8,7 +8,7 @@ from sim_env.car import Car
 
 
 # --------------------------------------------- Common functions for test ---------------------------------------------
-def parking_env(reward_type: str = 'type1', state_type: str = 'type1', side: int = 1):
+def parking_env(reward_type: str = 'type1', state_type: str = 'type1'):
     env_config = {
         'render_mode': 'no_render',
         'action_type': 'continuous',

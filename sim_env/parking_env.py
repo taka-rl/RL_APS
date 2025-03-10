@@ -274,7 +274,11 @@ class Parking(gym.Env):
                                                                              self.config.window_width_offset,
                                                                              self.config.window_height_offset)
         else:  # 'on'
-            self.parking_lot = self.config.default_parking_locations[self.config.side]
+            if isinstance(self.config.side, tuple):
+                self.side = self.parking_strategy.set_initial_loc(self.config.side)
+                self.parking_lot = self.config.default_parking_locations[self.side]
+            if isinstance(self.config.side, int):
+                self.parking_lot = self.config.default_parking_locations[self.config.side]
 
         self.parking_lot_vertices = (self.parking_lot +
                                      self.parking_strategy.get_parking_struct(self.parking_type, self.side))
