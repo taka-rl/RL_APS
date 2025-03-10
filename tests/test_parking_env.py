@@ -8,7 +8,7 @@ from sim_env.car import Car
 
 
 # --------------------------------------------- Common functions for test ---------------------------------------------
-def parking_env(reward_type: str = 'type1', state_type: str = 'type1'):
+def parking_env(reward_type: str = 'type1', state_type: str = 'type1', side: int = 1):
     env_config = {
         'render_mode': 'no_render',
         'action_type': 'continuous',
@@ -187,7 +187,7 @@ def test_reward_collision():
     env = parking_env()
 
     env.reset()
-    env.car = Car(([10.0, 4.0]), 0, Config())
+    env.car = Car(([10.0, 2.5]), 0, Config())
 
     reward = env._reward()
     assert reward < 0, 'Agent shall receive a negative reward for crossing border.'

@@ -268,10 +268,10 @@ class Parking(gym.Env):
 
         # set the side and initial positions
         self.side = self.parking_strategy.set_initial_loc(self.config.side)
-        if self.training_mode == 'on':
+        if self.training_mode == 'off':
             self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side, self.config.window_width,
                                                                              self.config.window_height)
-        else:  # 'off'
+        else:  # 'on'
             self.parking_lot = self.config.default_parking_locations[self.config.side]
 
         self.parking_lot_vertices = (self.parking_lot +

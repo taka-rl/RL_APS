@@ -91,6 +91,7 @@ def test_config_defaults():
         assert np.array_equal(config.default_parking_locations[key], expected_parking_locations[key])
 
     assert config.side == 1
+    assert type(config.side) is int
     assert config.car_loc_randomize_range == (-5, 5)
     assert config.initial_distance_range == (7.5, 15.0)
     assert config.heading_angle_range == {
@@ -154,6 +155,12 @@ def test_config_custom():
         assert np.array_equal(custom_config.default_parking_locations[key], expected_parking_locations[key])
 
     assert custom_config.side == 2
+    assert type(custom_config.side) is int
+
+    custom_config.side = (3, 4)
+    assert type(custom_config.side) is tuple
+    assert custom_config.side == (3, 4)
+
     assert custom_config.car_loc_randomize_range == (-7.0, 7.0)
     assert custom_config.initial_distance_range == (10, 17.5)
     assert custom_config.heading_angle_range == {"perpendicular": {1: (PI / 12 * 6, PI / 12 * 8),
