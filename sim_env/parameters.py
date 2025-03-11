@@ -156,23 +156,28 @@ class Config:
         max_distance (np.float32): Maximum distance for parking in meters.
         max_steps (int): Maximum number of steps per episode.
 
-        max_angle_error (np.float32): Maximum allowable angle error for guidance reward.
-        center_threshold (np.float32): Threshold for parking center alignment.
+        max_angle_error (np.float32): Maximum allowable angle error for guidance reward in radians.
+        center_threshold (np.float32): Threshold for parking center alignment in meters.
 
         fps (int): Frames per second for rendering.
         window_width (int): Width of the simulation window in pixels.
         window_height (int): Height of the simulation window in pixels.
-        grid_size (int): Grid size for rendering.
-        window_width_offset (int): Offset to keep parking within the screen boundaries.
-        window_height_offset (int): Offset to keep parking within the screen boundaries.
+        grid_size (int): Grid size for rendering in pixels.
+        window_width_offset (int): Offset to keep parking within the screen boundaries in pixels.
+        window_height_offset (int): Offset to keep parking within the screen boundaries in pixels.
 
         colors (dict): Dictionary containing RGB tuples for different UI elements.
 
         default_parking_locations (dict): Dictionary mapping parking lot sides (1-4) to their respective locations.
         side (Union[int, Tuple[int, ...]]): Defines which side of the environment the parking lot is placed.
-        car_loc_randomize_range (tuple): Range for randomizing car initial position.
-        initial_distance_range (tuple): Range for setting the initial distance between car and parking lot.
-        heading_angle_range (dict): Dictionary defining possible initial heading angles for the car.
+                                            It can be a single integer(fixed side) or a tuple(randomized side selection)
+                                                1: Bottom side.
+                                                2: Top side.
+                                                3: Left side.
+                                                4: Right side.
+        car_loc_randomize_range (tuple): Range for randomizing car initial position in meters.
+        initial_distance_range (tuple): Range for setting the initial distance between car and parking lot in meters.
+        heading_angle_range (dict): Dictionary defining possible initial heading angles for the car in radians.
 
     """
 
@@ -181,8 +186,8 @@ class Config:
                  wheel_length: float = 0.75, wheel_width: float = 0.35,
                  parking_length: float = 6.0, parking_width: float = 4.0,
                  max_distance: float = 25.0, max_steps: int = 80,
-                 acceleration_limit: float = 1.0, steering_limit: float = PI / 4, velocity_limit: float = 10.0,
-                 max_angle_error: float = PI / 12, center_threshold: float = 1.0,
+                 acceleration_limit: float = 1.0, steering_limit: float = PI/4, velocity_limit: float = 10.0,
+                 max_angle_error: float = PI/12, center_threshold: float = 1.0,
                  reward_type: str = 'type1', state_type: str = 'type1',
                  side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None,
                  car_loc_randomize_range: tuple = (-5, 5), initial_distance_range: tuple = (7.5, 15.0),
@@ -232,6 +237,15 @@ class Config:
                                                                        2: np.array([15.0, 27.5]),
                                                                        3: np.array([2.5, 15.0]),
                                                                        4: np.array([37.5, 15.0])}
+
+        if isinstance(side, int):
+            if side not in (1, 2, 3, 4):
+                raise ValueError("side must be an integer between 1 and 4.")
+        elif isinstance(side, tuple):
+            if not all(isinstance(s, int) and s in (1, 2, 3, 4) for s in side):
+                raise ValueError("Each value in side tuple must be an integer between 1 and 4.")
+        else:
+            raise TypeError("side must be either an int (fixed side) or a tuple (randomized side selection).")
         self.side = side
         self.car_loc_randomize_range = car_loc_randomize_range
         self.initial_distance_range = initial_distance_range

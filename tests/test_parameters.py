@@ -3,7 +3,7 @@ import numpy as np
 from sim_env.parameters import CarSize, WheelSize, ParkingLotSize, Config, PI
 
 
-@pytest.mark.parametrize("length, width", [
+@pytest.mark.parametrize('length, width', [
     (4.0, 2.0),
     (4.5, 2.2)
 ])
@@ -15,7 +15,7 @@ def test_car_size(length, width):
     assert car.car_struct.shape == (4, 2)  # Shall have 4 corner points
 
 
-@pytest.mark.parametrize("length, width", [
+@pytest.mark.parametrize('length, width', [
     (0.75, 0.35),
     (0.8, 0.4)
 ])
@@ -28,7 +28,7 @@ def test_wheel_size(length, width):
     assert wheel.wheel_pos.shape == (4, 2)  # Shall have 4 wheels
 
 
-@pytest.mark.parametrize("length, width", [
+@pytest.mark.parametrize('length, width', [
     (6.0, 4.0),
     (7.0, 4.5)
 ])
@@ -73,14 +73,14 @@ def test_config_defaults():
     assert config.window_height_offset == 50
 
     assert config.colors == {
-        "RED": (255, 100, 100),
-        "GREEN": (0, 255, 0),
-        "BLUE": (100, 200, 255),
-        "YELLOW": (200, 200, 0),
-        "BLACK": (0, 0, 0),
-        "GREY": (100, 100, 100),
-        "WHITE": (255, 255, 255),
-        "GRID_COLOR": (200, 200, 200)
+        'RED': (255, 100, 100),
+        'GREEN': (0, 255, 0),
+        'BLUE': (100, 200, 255),
+        'YELLOW': (200, 200, 0),
+        'BLACK': (0, 0, 0),
+        'GREY': (100, 100, 100),
+        'WHITE': (255, 255, 255),
+        'GRID_COLOR': (200, 200, 200)
     }
 
     # Parking lot and Car location, and car's heading angle for training
@@ -97,13 +97,13 @@ def test_config_defaults():
     assert config.car_loc_randomize_range == (-5, 5)
     assert config.initial_distance_range == (7.5, 15.0)
     assert config.heading_angle_range == {
-        "perpendicular": {
+        'perpendicular': {
             1: (PI / 12 * 5, PI / 12 * 7),
             2: (-PI / 12 * 7, -PI / 12 * 5),
             3: (-PI / 12, PI / 12),
             4: (PI - PI / 12, PI + PI / 12),
         },
-        "parallel": {
+        'parallel': {
             1: (PI / 6, PI / 3),
             2: (-PI / 6, -PI / 3),
             3: (-PI / 12, PI / 12),
@@ -121,12 +121,12 @@ def test_config_custom():
                            side=2, default_parking_locations={1: np.array([12.0, 5.5]), 2: np.array([18.0, 25.5]),
                                                               3: np.array([3.5, 16.0]), 4: np.array([36.5, 12.0])},
                            car_loc_randomize_range=(-7.0, 7.0), initial_distance_range=(10, 17.5),
-                           heading_angle_range={"perpendicular": {1: (PI / 12 * 6, PI / 12 * 8),
+                           heading_angle_range={'perpendicular': {1: (PI / 12 * 6, PI / 12 * 8),
                                                                   2: (-PI / 12 * 9, -PI / 12 * 6),
                                                                   3: (-PI / 6, PI / 6),
                                                                   4: (PI - PI / 8, PI + PI / 8),
                                                                   },
-                                                "parallel": {1: (PI / 6, PI / 3),
+                                                'parallel': {1: (PI / 6, PI / 3),
                                                              2: (-PI / 6, -PI / 3),
                                                              3: (-PI / 12, PI / 12),
                                                              4: (-PI / 12 * 11, PI / 12 * 11)
@@ -165,17 +165,39 @@ def test_config_custom():
 
     assert custom_config.car_loc_randomize_range == (-7.0, 7.0)
     assert custom_config.initial_distance_range == (10, 17.5)
-    assert custom_config.heading_angle_range == {"perpendicular": {1: (PI / 12 * 6, PI / 12 * 8),
+    assert custom_config.heading_angle_range == {'perpendicular': {1: (PI / 12 * 6, PI / 12 * 8),
                                                                    2: (-PI / 12 * 9, -PI / 12 * 6),
                                                                    3: (-PI / 6, PI / 6),
                                                                    4: (PI - PI / 8, PI + PI / 8),
                                                                    },
-                                                 "parallel": {1: (PI / 6, PI / 3),
+                                                 'parallel': {1: (PI / 6, PI / 3),
                                                               2: (-PI / 6, -PI / 3),
                                                               3: (-PI / 12, PI / 12),
                                                               4: (-PI / 12 * 11, PI / 12 * 11)
                                                               }
                                                  }
 
-    assert set(custom_config.heading_angle_range["parallel"].keys()) == {1, 2, 3, 4}
-    assert set(custom_config.heading_angle_range["perpendicular"].keys()) == {1, 2, 3, 4}
+    assert set(custom_config.heading_angle_range['parallel'].keys()) == {1, 2, 3, 4}
+    assert set(custom_config.heading_angle_range['perpendicular'].keys()) == {1, 2, 3, 4}
+
+
+@pytest.mark.parametrize('side, expected_exception', [
+    (1, None),
+    ((3, 2), None),
+    ((2, 4, 5), ValueError),
+    (6, ValueError),
+    ([1, 3], TypeError),
+    ('left', TypeError),
+    ((1, "left"), ValueError)
+])
+def test_config_side(side, expected_exception):
+    """Test side initialization in Config class."""
+    if expected_exception:
+        # This shall raise an error
+        with pytest.raises(expected_exception):
+            Config(side=side)
+    else:
+        # No error expected and check if the side is correctly assigned
+        config = Config(side=side)
+        assert config.side == side
+
