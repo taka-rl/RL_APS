@@ -23,7 +23,10 @@ https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26
     │   ├── parking.py                  # parking class
     │   └── parking_env.py              # parking environment class
     ├── tests                           # unit test
-    │   └── test_parking_env.py         # test for parking environment
+    │   ├── test_car.py                 # test for Car class
+    │   ├── test_parameters.py          # test for parameters
+    │   ├── test_parking.py             # test for BaseParking, PerpendicularParking and ParallelParking class 
+    │   └── test_parking_env.py         # test for the parking environment
     ├── training                        # training
     │   ├── parallel                    # training results for parallel parking
     │   │    ├── continuous             # continuous action
