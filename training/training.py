@@ -3,20 +3,40 @@ import ray
 import time
 from ray.rllib.algorithms.ppo import PPOConfig
 from sim_env.parking_env import Parking
+from sim_env.parameters import Config, PI
 from utility import custom_log_creator, custom_log_checkpoint
 
 
 ray.init()
 env_name = Parking
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=1.0,
+                reward_type='type1', state_type='type1',
+                side=(1, 2), car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
+                )
 env_config = {"render_mode": "no_render",
               "action_type": "continuous",
               "parking_type": "perpendicular",
-              "training_mode": "on"}
+              "training_mode": "on",
+              'config': config}
+
 
 # for folder names
-num_train = "500"
-guidance = "guidance_15"
-custom_str = env_config["parking_type"] + "_" + env_config["action_type"] + "_" + num_train + "_" + guidance
+num_train = "100"
+if config.state_type == 'type1':
+    custom_str = env_config["parking_type"] + "_" + env_config["action_type"] + "_" + num_train
+if config.state_type == 'type2':
+    guidance = "guidance_15"
+    custom_str = env_config["parking_type"] + "_" + env_config["action_type"] + "_" + num_train + "_" + guidance
+if config.state_type == 'type3':
+    ratio = "035_015"
+    guidance = "guidance_15"
+    custom_str = (env_config["parking_type"] + "_" + env_config["action_type"] + "_"
+                  + num_train + "_" + guidance  + "_" + ratio)
 
 algo = (
     PPOConfig()
