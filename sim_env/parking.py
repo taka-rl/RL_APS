@@ -186,7 +186,7 @@ class ParallelParking(BaseParking):
     def __init__(self, config: Config):
         super().__init__(config)
 
-    def generate_static_obstacles(self, parking_lot, side: int):
+    def generate_static_obstacles(self, parking_lot: np.ndarray, side: int):
         static_cars_vertices = []
         static_parking_vertices = []
 
@@ -211,7 +211,7 @@ class PerpendicularParking(BaseParking):
     def __init__(self, config: Config):
         super().__init__(config)
 
-    def generate_static_obstacles(self, parking_lot, side: int):
+    def generate_static_obstacles(self, parking_lot: np.ndarray, side: int):
         static_cars_vertices = []
         static_parking_vertices = []
 
