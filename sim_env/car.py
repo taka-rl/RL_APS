@@ -1,5 +1,4 @@
 import numpy as np
-from sim_env.com_fcn import draw_object
 from sim_env.parameters import Config
 
 
@@ -10,7 +9,6 @@ class Car:
         self.v = 0.0
         self.delta = 0.0
         self.config = config
-        self.wheel_size = self.config.wheel_size
         self.car_size = self.config.car_size
         self.car_vertices = self.calc_car_vertices()
 
@@ -69,25 +67,3 @@ class Car:
             np.array: car vertices
         """
         return self.rotate_car(self.car_size.car_struct, angle=self.psi) + self.car_loc
-
-    def draw_car(self, screen):
-        """
-        Draw the car(agent) and its wheel
-
-        Parameters:
-            screen: pygame.Surface
-        """
-        # draw the car(agent)
-        draw_object(screen, self.config.colors["GREEN"], self.car_vertices)
-
-        # wheels
-        # calculate the rotation of the wheels
-        wheel_points = self.rotate_car(self.wheel_size.wheel_pos, angle=self.psi)
-        # draw each wheel
-        for i, wheel_point in enumerate(wheel_points):
-            if i < 2:
-                wheel_vertices = self.rotate_car(self.wheel_size.wheel_struct, angle=self.psi + self.delta)
-            else:
-                wheel_vertices = self.rotate_car(self.wheel_size.wheel_struct, angle=self.psi)
-            wheel_vertices += wheel_point + self.car_loc
-            draw_object(screen, self.config.colors["RED"], wheel_vertices)
