@@ -17,11 +17,11 @@ https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26
 
     ├── sim_env                         # simulation environment
     │   ├── car.py                      # car class
-    │   ├── com_fcn.py                  # common function
     │   ├── main.py                     # visualize the trained agent
     │   ├── parameters.py               # parameter class
     │   ├── parking.py                  # parking class
-    │   └── parking_env.py              # parking environment class
+    │   ├── parking_env.py              # parking environment class
+    │   └── renderer.py                 # renderer class
     ├── tests                           # unit test
     │   ├── test_car.py                 # test for Car class
     │   ├── test_parameters.py          # test for parameters
