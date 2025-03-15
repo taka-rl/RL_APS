@@ -1,32 +1,6 @@
 import numpy as np
 import pytest
-
-from sim_env.parameters import Config, PI, PIXEL_TO_METER_SCALE
-from sim_env.parking import BaseParking, ParallelParking, PerpendicularParking
-
-
-@pytest.fixture
-def sample_config():
-    """Returns a default Config object for testing."""
-    return Config()
-
-
-@pytest.fixture
-def base_parking(sample_config):
-    """Returns a BaseParking instance for testing."""
-    return BaseParking(sample_config)
-
-
-@pytest.fixture
-def parallel_parking(sample_config):
-    """Returns a ParallelParking instance for testing."""
-    return ParallelParking(sample_config)
-
-
-@pytest.fixture
-def perpendicular_parking(sample_config):
-    """Returns a PerpendicularParking instance for testing."""
-    return PerpendicularParking(sample_config)
+from sim_env.parameters import PI, PIXEL_TO_METER_SCALE
 
 
 # ---------------------- Test `set_initial_loc` ----------------------
