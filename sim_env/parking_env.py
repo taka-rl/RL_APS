@@ -1,10 +1,9 @@
 import numpy as np
-import pygame
 import math
 import gymnasium as gym
 from typing import Optional, Union, List
 from sim_env.car import Car
-from sim_env.com_fcn import meters_to_pixels, draw_object
+from sim_env.renderer import Renderer
 from sim_env.parameters import PI
 from sim_env.parking import ParallelParking, PerpendicularParking
 
@@ -13,14 +12,40 @@ class Parking(gym.Env):
     """
     A Gymnasium environment for the parking simulation.
 
+    This environment simulates a parking scenario where an autonomous vehicle (agent)
+    attempts to park in a designated space while navigating obstacles and constraints.
+
     Attributes:
-        render_mode (list): List of rendering modes including "human", "no_render".
-        action_type (list): List of action types including "continuous".
-        window: A reference to the Pygame window to render the environment.
-        surf: A surface object used for rendering graphics.
-        surf_car: A surface object representing the car(agent) in the environment.
-        surf_parkinglot: A surface object representing the parking lot in the environment
-        clock: An object representing the game clock for managing time in the environment.
+        metadata (dict): Defines available modes and configurations, including:
+            - 'render_modes': ['human', 'no_render']
+            - 'action_types': ['continuous', 'discrete']
+            - 'parking_types': ['parallel', 'perpendicular']
+            - 'training_modes': ['on', 'off']
+
+        render_mode (str): The selected rendering mode for visualization ('human' or 'no_render').
+        action_type (str): Defines the type of actions ('continuous' or 'discrete').
+        parking_type (str): Specifies the parking type ('parallel' or 'perpendicular').
+        training_mode (str): Defines whether the environment is in training mode ('on' or 'off').
+        config (Config): Configuration object storing environment parameters.
+        renderer (Renderer): The rendering system used to visualize the parking environment.
+
+        observation_space (gym.spaces.Box): Defines the state representation of the environment.
+        action_space (gym.spaces.Discrete or gym.spaces.Box): Defines the action space for the agent.
+
+        parking_strategy (ParallelParking or PerpendicularParking):
+            Determines the parking lot structure and rules based on the selected parking type.
+
+        state (np.ndarray or None): The current state of the environment.
+        terminated (bool or None): Indicates if the episode has ended.
+        truncated (bool or None): Indicates if the episode ended due to reaching max steps.
+        run_steps (int or None): Tracks the number of steps taken in an episode.
+        side (int or None): Indicates the side of the environment where the parking lot is located.
+        parking_lot (np.ndarray or None): The coordinates defining the parking lot position.
+        parking_lot_vertices (np.ndarray or None): The corner vertices of the parking lot.
+        car (Car or None): The autonomous vehicle (agent) in the environment.
+        static_cars_vertices (np.ndarray or None): The vertices of static parked cars in the environment.
+        static_parking_lot_vertices (np.ndarray or None): The vertices of additional obstacles in the parking lot.
+
     """
 
     metadata = {
@@ -84,12 +109,7 @@ class Parking(gym.Env):
             self.action_space = gym.spaces.Discrete(6)
 
         # Rendering settings
-        self.window = None
-        self.surf = None
-        self.surf_car = None
-        self.surf_parkinglot = None
-        self.surf_text = None
-        self.clock = None
+        self.renderer = Renderer(self.config.render_config, self.config.wheel_size)
 
         # Parking type settings
         if self.parking_type == "parallel":
@@ -170,98 +190,13 @@ class Parking(gym.Env):
             )
             return
         else:
-            return self._render(self.render_mode, self.config.window_width, self.config.window_height)
+            return self._render(self.render_mode)
 
-    def _render(self, mode: str, window_w: int, window_h: int):
+    def _render(self, mode: str):
         if mode == "human":
-            if self.window is None:
-                # Initialize the parking environment window
-                pygame.init()
-                pygame.display.init()
-                self.window = pygame.display.set_mode((window_w, window_h))
-                pygame.display.set_caption("Parking Environment")
-                if self.clock is None:
-                    self.clock = pygame.time.Clock()
-
-                # Initialize the text display
-                if self.surf_text is None:
-                    pygame.font.init()
-                    self.surf_text = pygame.Surface((window_w, window_h), flags=pygame.SRCALPHA)
-            font = pygame.font.SysFont('Times New Roman', 15)
-            self.surf_text.fill((0, 0, 0, 0))
-
-            # Initialize the parking lot surface
-            if self.surf_parkinglot is None:
-                self.surf_parkinglot = self._create_parking_surface(window_w, window_h,
-                                                                    self.config.colors, self.config.grid_size)
-                # draw the static obstacles
-                self._draw_static_obstacles()
-                # Draw the targeted parking space
-                draw_object(self.surf_parkinglot, self.config.colors["RED"], self.parking_lot_vertices)
-
-            # Initialize the car(agent)
-            if self.surf_car is None:
-                self.surf_car = pygame.Surface((window_w, window_h), flags=pygame.SRCALPHA)
-            self.surf_car.fill((0, 0, 0, 0))
-
-            # draw the car(agent) movement
-            self.car.draw_car(self.surf_car)
-
-            # draw the car path
-            car_loc_old = meters_to_pixels(self.car.loc_old)
-            car_loc = meters_to_pixels(self.car.car_loc)
-            pygame.draw.line(self.surf_parkinglot, self.config.colors["BLACK"], car_loc_old, car_loc)
-
-            # display Multi-line text
-            text_str = (f"Car location: {self.car.car_loc}\nVelocity: {self.car.v}\n"
-                        f"Heading angle: {self.car.psi}\nDegree: {self.car.psi * (180 / PI)}")
-            text_rect = pygame.Rect(400, 500, 100, 100)  # Define the rectangle area for text
-            self.draw_multiline_text(self.surf_text, text_str, self.config.colors["BLACK"], text_rect, font)
-
-            # Compose the final surface
-            surf = self.surf_parkinglot.copy()
-            surf.blit(self.surf_car, (0, 0))
-            surf = pygame.transform.flip(surf, False, True)
-            surf.blit(self.surf_text, (0, 0))
-
-            # Update the display
-            pygame.event.pump()
-            self.clock.tick(self.config.fps)
-            # assert self.window is not None
-            self.window.fill(self.config.colors["BLACK"])
-            self.window.blit(surf, (0, 0))
-            pygame.display.flip()
-
-    @staticmethod
-    def draw_multiline_text(screen: pygame.Surface, text: str, color: tuple,
-                            rect: pygame.Rect, font: pygame.font, aa=False, bkg=None) -> None:
-        lines = text.splitlines()
-        rendered_lines = []
-        for line in lines:
-            line_surface = font.render(line, aa, color, bkg)
-            rendered_lines.append(line_surface)
-
-        y = rect.top
-        for line_surface in rendered_lines:
-            line_height = line_surface.get_height()
-            screen.blit(line_surface, (rect.left, y))
-            y += line_height  # Move y down to start the next line
-
-    @staticmethod
-    def _create_parking_surface(window_w: int, window_h: int, color: dict, grid_size: int):
-        surf_parkinglot = pygame.Surface((window_w, window_h), flags=pygame.SRCALPHA)
-        surf_parkinglot.fill(color["WHITE"])
-        for x in range(0, window_w, grid_size):
-            pygame.draw.line(surf_parkinglot, color["GRID_COLOR"], (x, 0), (x, window_h))
-        for y in range(0, window_h, grid_size):
-            pygame.draw.line(surf_parkinglot, color["GRID_COLOR"], (0, y), (window_w, y))
-        return surf_parkinglot
-
-    def _draw_static_obstacles(self) -> None:
-        for parking_lot_vertex in self.static_parking_lot_vertices:
-            draw_object(self.surf_parkinglot, self.config.colors["YELLOW"], parking_lot_vertex)
-        for car_vertex in self.static_cars_vertices:
-            draw_object(self.surf_parkinglot, self.config.colors["GREY"], car_vertex)
+            self.renderer.initialize_window()
+            self.renderer.draw_static_elements(self.parking_lot_vertices, self.static_parking_lot_vertices, self.static_cars_vertices)
+            self.renderer.render(self.car, self.car.loc_old)
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
@@ -269,8 +204,8 @@ class Parking(gym.Env):
         # set the side and initial positions
         self.side = self.parking_strategy.set_initial_loc(self.config.side)
         if self.training_mode == 'off':
-            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side, self.config.window_width,
-                                                                             self.config.window_height,
+            self.parking_lot = self.parking_strategy.set_initial_parking_loc(self.side, self.renderer.window_width,
+                                                                             self.renderer.window_height,
                                                                              self.config.window_width_offset,
                                                                              self.config.window_height_offset)
         else:  # 'on'
@@ -298,13 +233,6 @@ class Parking(gym.Env):
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
-
-        self.window = None
-        self.surf = None
-        self.surf_car = None
-        self.surf_parkinglot = None
-        self.surf_text = None
-        self.clock = None
 
         return self.state, {}
 
@@ -587,9 +515,3 @@ class Parking(gym.Env):
         if xy2[0] <= obj[0] <= xy1[0] and xy2[1] <= obj[1] <= xy1[1]:
             return True
         return False
-
-    def close(self) -> None:
-        if self.window is not None:
-            pygame.display.quit()
-            pygame.quit()
-            self.window = None

@@ -128,6 +128,36 @@ class ParkingLotSize:
         self.offset_perpendicular = np.float32(4.0)
 
 
+class RenderConfig:
+    """
+    Stores configuration parameters for rendering.
+
+    Attributes:
+        fps (int): Frames per second for rendering.
+        window_width (int): Width of the simulation window in pixels.
+        window_height (int): Height of the simulation window in pixels.
+        grid_size (int): Grid size for rendering in pixels.
+        colors (dict): Dictionary containing RGB tuples for different UI elements.
+
+    """
+    def __init__(self, fps: int = 30, window_width: int = 800, window_height: int = 600, grid_size: int = 20) -> None:
+        self.fps = fps
+        self.window_width = window_width
+        self.window_height = window_height
+        self.grid_size = grid_size
+
+        self.colors = {
+            "RED": (255, 100, 100),
+            "GREEN": (0, 255, 0),
+            "BLUE": (100, 200, 255),
+            "YELLOW": (200, 200, 0),
+            "BLACK": (0, 0, 0),
+            "GREY": (100, 100, 100),
+            "WHITE": (255, 255, 255),
+            "GRID_COLOR": (200, 200, 200)
+        }
+
+
 class Config:
     """
     Stores all configuration parameters for the parking environment.
@@ -159,14 +189,8 @@ class Config:
         max_angle_error (np.float32): Maximum allowable angle error for guidance reward in radians.
         center_threshold (np.float32): Threshold for parking center alignment in meters.
 
-        fps (int): Frames per second for rendering.
-        window_width (int): Width of the simulation window in pixels.
-        window_height (int): Height of the simulation window in pixels.
-        grid_size (int): Grid size for rendering in pixels.
         window_width_offset (int): Offset to keep parking within the screen boundaries in pixels.
         window_height_offset (int): Offset to keep parking within the screen boundaries in pixels.
-
-        colors (dict): Dictionary containing RGB tuples for different UI elements.
 
         default_parking_locations (dict): Dictionary mapping parking lot sides (1-4) to their respective locations.
         side (Union[int, Tuple[int, ...]]): Defines which side of the environment the parking lot is placed.
@@ -214,23 +238,9 @@ class Config:
         self.center_threshold = np.float32(center_threshold)
 
         # Rendering settings
-        self.fps = 30
-        self.window_width = 800
-        self.window_height = 600
-        self.grid_size = 20
+        self.render_config = RenderConfig()
         self.window_width_offset = 100
         self.window_height_offset = 50
-
-        self.colors = {
-            "RED": (255, 100, 100),
-            "GREEN": (0, 255, 0),
-            "BLUE": (100, 200, 255),
-            "YELLOW": (200, 200, 0),
-            "BLACK": (0, 0, 0),
-            "GREY": (100, 100, 100),
-            "WHITE": (255, 255, 255),
-            "GRID_COLOR": (200, 200, 200)
-        }
 
         # Parking lot and Car location, and car's heading angle for training
         self.default_parking_locations = default_parking_locations or {1: np.array([15.0, 2.5]),
