@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 from gymnasium.spaces import Discrete
-
 from sim_env.parking_env import Parking
 from sim_env.parameters import Config
 from sim_env.car import Car
@@ -99,23 +98,53 @@ def test_discrete_action_env_step(parking_type):
 # --------------------------------------------- Environment reset ---------------------------------------------
 @pytest.mark.parametrize('parking_type', ['perpendicular', 'parallel'])
 @pytest.mark.parametrize('action_type', ['continuous', 'discrete'])
-def test_env_reset(parking_type, action_type):
+@pytest.mark.parametrize('training_mode', ['on', 'off'])
+@pytest.mark.parametrize('side', (1, 2, 3, 4))
+def test_env_reset(parking_type, action_type, training_mode, side):
     """Test reset functionality."""
+    """Test the reset functionality of the parking environment."""
+
+    # Initialize environment
     env = Parking({'render_mode': 'no_render',
                    'action_type': action_type,
                    'parking_type': parking_type,
-                   'training_mode': 'off',
-                   'config': Config(),
+                   'training_mode': training_mode,
+                   'config': Config(side=side),
                    })
-    # Reset the environment
-    env.reset()
 
+    # Reset the environment
     state, _ = env.reset()
-    assert state is not None, 'Reset shall return an initial state.'
+
+    # Check state properties
+    assert state is not None, 'Reset shall return a valid initial state.'
     assert isinstance(state, np.ndarray), 'State shall be a NumPy array.'
-    assert np.all(state >= -1.0) and np.all(state <= 1.0), 'State value shall be between -1.0 and 1.0'
-    assert not env.terminated, 'Environment shall not be terminated after reset.'
-    assert not env.truncated, 'Environment shall not be truncated after reset.'
+    assert state.shape[0] > 0, 'State shall not be an empty array.'
+    assert np.all(state >= -1.0) and np.all(state <= 1.0), 'State values shall be normalized between -1.0 and 1.0'
+
+    # Environment state flags
+    assert env.terminated is False, 'Environment shall not be terminated after reset.'
+    assert env.truncated is False, 'Environment shall not be truncated after reset.'
+
+    # Validate environment properties
+    assert env.side in [1, 2, 3, 4], 'Side shall be correctly set after reset.'
+    assert isinstance(env.parking_lot, np.ndarray), 'Parking lot shall be initialized as a NumPy array.'
+    assert isinstance(env.parking_lot_vertices,
+                      np.ndarray), 'Parking lot vertices shall be initialized as a NumPy array.'
+    assert hasattr(env, 'car') and env.car is not None, 'Car object shall be initialized after reset.'
+    assert hasattr(env.car, 'loc_old') and isinstance(env.car.loc_old,
+                                                      np.ndarray), 'Car shall have previous location (loc_old).'
+
+    assert isinstance(env.static_cars_vertices, list), 'Static cars shall be stored as a list.'
+    assert isinstance(env.static_parking_lot_vertices, list), 'Static parking lot vertices shall be stored as a list.'
+
+    # Ensure initial conditions are correctly set
+    assert env.run_steps == 0, 'Run steps shall be reset to 0 after environment reset.'
+
+    # Additional checks based on `training_mode`
+    if training_mode == 'on':
+        assert env.parking_lot in env.config.default_parking_locations[env.side]
+    else:
+        assert isinstance(env.parking_lot, np.ndarray), "Parking lot shall be set correctly in non-training mode."
 
 
 # --------------------------------------------- Reward ---------------------------------------------
