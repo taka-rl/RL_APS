@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from sim_env.parameters import CarSize, WheelSize, ParkingLotSize, Config, PI
+from sim_env.parameters import CarSize, WheelSize, ParkingLotSize, Config, PI, RenderConfig
 
 
 @pytest.mark.parametrize('length, width', [
@@ -41,6 +41,26 @@ def test_parking_lot_size(length, width):
     assert parking.perpendicular_vertical.shape == (4, 2)
 
 
+def test_render_config():
+    """Test default values in RenderConfig"""
+    config = Config().render_config
+    assert config.fps == 30
+    assert config.window_width == 800
+    assert config.window_height == 600
+    assert config.grid_size == 20
+
+    assert config.colors == {
+        'RED': (255, 100, 100),
+        'GREEN': (0, 255, 0),
+        'BLUE': (100, 200, 255),
+        'YELLOW': (200, 200, 0),
+        'BLACK': (0, 0, 0),
+        'GREY': (100, 100, 100),
+        'WHITE': (255, 255, 255),
+        'GRID_COLOR': (200, 200, 200)
+    }
+
+
 def test_config_defaults():
     """Test default values in Config."""
     config = Config()
@@ -65,23 +85,9 @@ def test_config_defaults():
     assert config.center_threshold == np.float32(1.0)
 
     # Rendering settings
-    assert config.fps == 30
-    assert config.window_width == 800
-    assert config.window_height == 600
-    assert config.grid_size == 20
+    assert isinstance(config.render_config, RenderConfig)
     assert config.window_width_offset == 100
     assert config.window_height_offset == 50
-
-    assert config.colors == {
-        'RED': (255, 100, 100),
-        'GREEN': (0, 255, 0),
-        'BLUE': (100, 200, 255),
-        'YELLOW': (200, 200, 0),
-        'BLACK': (0, 0, 0),
-        'GREY': (100, 100, 100),
-        'WHITE': (255, 255, 255),
-        'GRID_COLOR': (200, 200, 200)
-    }
 
     # Parking lot and Car location, and car's heading angle for training
     expected_parking_locations = {1: np.array([15.0, 2.5]),
@@ -96,7 +102,7 @@ def test_config_defaults():
     assert type(config.side) is int
     assert config.car_loc_randomize_range == (-5, 5)
     assert config.initial_distance_range == (7.5, 15.0)
-    assert config.heading_angle_range == {
+    expected_heading_angle_range = {
         'perpendicular': {
             1: (PI / 12 * 5, PI / 12 * 7),
             2: (-PI / 12 * 7, -PI / 12 * 5),
@@ -105,11 +111,12 @@ def test_config_defaults():
         },
         'parallel': {
             1: (PI / 6, PI / 3),
-            2: (-PI / 6, -PI / 3),
+            2: (-PI / 3, -PI / 6),
             3: (-PI / 12, PI / 12),
             4: (-PI / 12 * 11, PI / 12 * 11),
         }
     }
+    assert config.heading_angle_range == expected_heading_angle_range, "Heading angle range mismatch"
 
 
 def test_config_custom():
