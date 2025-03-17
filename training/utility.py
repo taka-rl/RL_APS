@@ -1,26 +1,25 @@
 import os
-import platform
 import tempfile
 from ray.tune.logger import UnifiedLogger
 from datetime import datetime
 
 
-def custom_log_creator(custom_str: str, env_config: dict):
+def custom_log_creator(folder_path: str, custom_str: str):
     """
     Set a folder for the training
 
     Parameter:
+        folder_path: folder path
         custom_str: parking_type such as parallel or perpendicular
     Return:
 
     """
-    tmp_path = create_folder_path(env_config=env_config, train_str="/training_result/")
-    custom_path = get_current_path() + tmp_path
+    custom_path = get_current_path() + folder_path
     timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
     logdir_prefix = "{}_{}".format(custom_str, timestr)
 
     # check the folder existence
-    create_training_folder(custom_path)
+    create_folder(custom_path)
 
     def logger_creator(config):
         logdir = tempfile.mkdtemp(prefix=logdir_prefix, dir=custom_path)
@@ -31,7 +30,7 @@ def custom_log_creator(custom_str: str, env_config: dict):
     return logger_creator
 
 
-def custom_log_checkpoint(custom_str: str, env_config: dict, algo):
+def custom_log_checkpoint(folder_path: str, custom_str: str, algo):
     """
     Set a folder for the training result
 
@@ -47,46 +46,18 @@ def custom_log_checkpoint(custom_str: str, env_config: dict, algo):
     logdir_prefix = "{}_{}_{}".format(algo, custom_str, timestr)
 
     # check the folder existence
-    tmp_path = create_folder_path(env_config=env_config, train_str="/trained_agent/")
-    create_training_folder(get_current_path() + tmp_path + logdir_prefix)
-    return get_current_path() + tmp_path + logdir_prefix
+    create_folder(get_current_path() + folder_path + logdir_prefix)
+    return get_current_path() + folder_path + logdir_prefix
 
 
-def set_path(env_config) -> str:
-    """
-    Set the folder path for the agent depending on the development environment(Win/Mac)
-
-    Return:
-        str: the folder/file path
-    """
-    # get the current folder path and OS info
-    current_path = get_current_path().replace("sim_env", "training")
-    os_name = get_os_info()
-
-    # depending on OS(Win/Mac)
-    # check the folder existence
-    tmp_path = create_folder_path(env_config=env_config, train_str="/trained_agent/")
-
-    if os_name == "Windows":
-        checkpoint_path = current_path + tmp_path
+def create_folder_path(env_config: dict, reward_type: str, state_type: str, is_training: bool) -> str:
+    """Return a folder path depending on is_training value."""
+    if is_training:
+        return (f'/training_results/{env_config["parking_type"]}/'
+                f'{env_config["action_type"]}/reward_{reward_type}/state_{state_type}/')
     else:
-        checkpoint_path = current_path + tmp_path
-    return checkpoint_path
-
-
-def create_folder_path(env_config: dict, train_str: str):
-    return "/" + env_config.get("parking_type") + "/" + env_config.get("action_type") + train_str
-
-
-def get_os_info() -> str:
-    """
-    Get OS information
-
-    Return:
-        str: OS (like Windows, Mac)
-    """
-    os_name = platform.system()
-    return os_name.replace("\\", "/")
+        return (f'/trained_agents/{env_config["parking_type"]}/'
+                f'{env_config["action_type"]}/reward_{reward_type}/state_{state_type}/')
 
 
 def get_current_path() -> str:
@@ -115,7 +86,7 @@ def is_folder(folder_path) -> bool:
     return False
 
 
-def create_training_folder(folder_path):
+def create_folder(folder_path) -> None:
     """
     Create a folder for the training.
 
