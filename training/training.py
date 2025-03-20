@@ -4,7 +4,7 @@ import time
 from ray.rllib.algorithms.ppo import PPOConfig
 from sim_env.parking_env import Parking
 from sim_env.parameters import Config, PI
-from utility import custom_log_creator, custom_log_checkpoint, create_folder_path
+from utility import custom_log_creator, custom_log_checkpoint, create_folder_path_name
 
 
 ray.init()
@@ -24,21 +24,14 @@ env_config = {"render_mode": "no_render",
               "training_mode": "on",
               'config': config}
 
-
 # for folder names
-num_train = "100"
-folder_path = create_folder_path(env_config, config.reward_type, config.state_type, is_training=True)
-if config.state_type == 'type1':
-    folder_name = env_config["parking_type"] + "_" + env_config["action_type"] + "_" + num_train
+num_train = 100
+side = config.side
+threshold = 0.5
+ratio = 0.15
 
-if config.state_type == 'type2':
-    guidance = "guidance_15"
-    folder_name = env_config["parking_type"] + "_" + env_config["action_type"] + "_" + num_train + "_" + guidance
-if config.state_type == 'type3':
-    ratio = "035_015"
-    guidance = "guidance_15"
-    folder_name = (env_config["parking_type"] + "_" + env_config["action_type"] + "_"
-                  + num_train + "_" + guidance + "_" + ratio)
+folder_path, folder_name = create_folder_path_name('PPO', env_config, config.reward_type, config.state_type,
+                                                   num_train, side, threshold, ratio, is_training=True)
 
 algo = (
     PPOConfig()
@@ -60,6 +53,6 @@ print(f"Total execution time of the script: {end_time - start_time} second")
 algo.evaluate()
 
 # save the checkpoint
-checkpoint_dir = custom_log_checkpoint(folder_path, folder_name, algo)
+checkpoint_dir = custom_log_checkpoint(folder_path, folder_name)
 checkpoint_dir = algo.save(checkpoint_dir)
 print(f"Checkpoint saved in directory {checkpoint_dir}")
