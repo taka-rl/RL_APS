@@ -2,38 +2,28 @@
 This file describes about folder structures, necessary steps and parameter settings for trainings.
 
 ## Folder structure for both trained agents and training results
-    
+
+Algorithm: organizable, when it comes to comparing training results with different algorithms...
+reward_type and state_type: are they necessary?
+
+
     RL_APS/training
     │── trained_agents
-    │   │── Algorithm such as PPO
-    │   │   │── perpendicular
-    │   │   │   │── discrete
-    │   │   │   │   │── reward_type1
-    │   │   │   │   │   │── state_type1
-    │   │   │   │   │   │   │── folder for trained agent
-    │   │   │   │   │   │── state_type2
-    │   │   │   │   │   │── state_type3
-    │   │   │   │   │── reward_type2
-    │   │   │   │   │── reward_type3
-    │   │   │   │── continuous
-    │   │   │   │   │── (same structure as discrete)
-    │   │   │── parallel
-    │   │   │   │── (same structure as perpendicular)
+    │   │── perpendicular
+    │   │   │── discrete
+    │   │   │   │── folders for trained agent
+    │   │   │── continuous
+    │   │   │   │── (same structure as discrete)
+    │   │── parallel
+    │   │   │── (same structure as perpendicular)
     │── training_results
-    │   │── Algorithm such as PPO
-    │   │   │── perpendicular
-    │   │   │   │── discrete
-    │   │   │   │   │── reward_type1
-    │   │   │   │   │   │── state_type1
-    │   │   │   │   │   │   │── folder for training results
-    │   │   │   │   │   │── state_type2
-    │   │   │   │   │   │── state_type3
-    │   │   │   │   │── reward_type2
-    │   │   │   │   │── reward_type3
-    │   │   │   │── continuous
-    │   │   │   │   │── (same structure as discrete)
-    │   │   │── parallel
-    │   │   │   │── (same structure as perpendicular)
+    │   │── perpendicular
+    │   │   │── discrete
+    │   │   │   │── folders for training results
+    │   │   │── continuous
+    │   │   │   │── (same structure as discrete)
+    │   │── parallel
+    │   │   │── (same structure as perpendicular)
 
 
 ## Folder naming rules

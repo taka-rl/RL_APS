@@ -92,23 +92,19 @@ def custom_log_checkpoint(folder_path: str, folder_name: str):
     return checkpoint_path
 
 
-def create_folder_path(algo: str, env_config: dict, reward_type: str, state_type: str, is_training: bool) -> str:
+def create_folder_path(env_config: dict, is_training: bool) -> str:
     """
     Return a structured folder path based on environment config.
 
     Parameters:
-        algo: Algorithms for training
         env_config: Dictionary containing environment configurations
-        reward_type: Reward function type (e.g., type1, type2)
-        state_type: State representation type (e.g., type1, type2)
         is_training: Boolean flag (True: Training, False: Evaluating)
     Returns:
         str: Structured folder path
     """
     base_folder = "/training_results" if is_training else "/trained_agents"
 
-    folder_path = get_current_path() + (f"{base_folder}/{algo}/{env_config['parking_type']}/"
-                                        f"{env_config['action_type']}/reward_{reward_type}/state_{state_type}/")
+    folder_path = get_current_path() + f"{base_folder}/{env_config['parking_type']}/{env_config['action_type']}"
 
     return folder_path
 
