@@ -23,9 +23,11 @@ env_config = {"render_mode": "human",
 env = Parking(env_config)
 
 folder_name = ''  # trained_agent folder
-checkpoint = create_folder_path(env_config, config.reward_type, config.state_type, is_training=False)
+folder_path = create_folder_path('PPO', env_config, config.reward_type, config.state_type, is_training=False)
 
-algo = PPO.from_checkpoint(checkpoint + folder_name)
+algo = PPO.from_checkpoint(folder_path + folder_name)
+
+print(algo)
 
 episode_reward = 0
 terminated = truncated = False
@@ -33,7 +35,8 @@ obs, info = env.reset()
 env.render()
 actions = []
 while not terminated and not truncated:
-    action = algo.compute_single_action(obs)  # Algorithm.compute_single_action() is to programmatically compute actions from a trained agent.
+    # Algorithm.compute_single_action() is to programmatically compute actions from a trained agent.
+    action = algo.compute_single_action(obs)
     # action = env.action_space.sample()  # env.action_space.sample() is to sample random actions.
     # action = int(input("Action: "))
     actions.append(action)
