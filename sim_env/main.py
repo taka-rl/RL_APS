@@ -23,12 +23,10 @@ env_config = {"render_mode": "human",
 env = Parking(env_config)
 
 folder_name = ''  # trained_agent folder
-folder_path = create_folder_path('PPO', env_config, is_training=False)
+folder_path = create_folder_path(env_config, is_training=False)
 folder_path = folder_path.replace('sim_env', 'training')
 
 algo = PPO.from_checkpoint(folder_path + folder_name)
-
-print(algo)
 
 episode_reward = 0
 terminated = truncated = False

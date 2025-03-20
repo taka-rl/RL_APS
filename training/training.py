@@ -25,12 +25,12 @@ env_config = {"render_mode": "no_render",
               'config': config}
 
 # for folder names
-num_train = 1
+num_train = 50
 side = config.side
 threshold = 0.5
 ratio = 0.15
 
-folder_path = create_folder_path('PPO', env_config, config.reward_type, config.state_type, is_training=True)
+folder_path = create_folder_path(env_config, is_training=True)
 folder_name = create_folder_name('PPO', env_config, config.reward_type, config.state_type,
                                  num_train, side, folder_path)
 

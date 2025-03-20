@@ -104,7 +104,7 @@ def create_folder_path(env_config: dict, is_training: bool) -> str:
     """
     base_folder = "/training_results" if is_training else "/trained_agents"
 
-    folder_path = get_current_path() + f"{base_folder}/{env_config['parking_type']}/{env_config['action_type']}"
+    folder_path = get_current_path() + f"{base_folder}/{env_config['parking_type']}/{env_config['action_type']}/"
 
     return folder_path
 
