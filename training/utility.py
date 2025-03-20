@@ -132,7 +132,7 @@ def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type
     """
     side_str = convert_side_to_abbr(side)
     folder_name = (f"{algo}_{env_config['parking_type']}_"
-                   f"{env_config['action_type']}_{num_train}_r{reward_type}_s{state_type}_side{side_str}")
+                   f"{env_config['action_type']}_{num_train}_r{reward_type}_s{state_type}_{side_str}")
 
     folder_name = folder_name.replace('type', '')
 
