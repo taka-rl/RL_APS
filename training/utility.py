@@ -1,7 +1,48 @@
 import os
 import tempfile
+import glob
 from ray.tune.logger import UnifiedLogger
-from datetime import datetime
+from typing import Union, Tuple
+
+
+def generate_unique_id(target_folder) -> int:
+    """
+    Generates a unique ID based on the exist folders.
+    Returns:
+        str: A unique identifier (e.g. 1, 2, 3 and so on).
+    """
+    # Check the target_folder if the same name exists
+    matching_folders = glob.glob(target_folder)
+
+    # Increment a count
+    if matching_folders:
+        count = len(matching_folders)
+        return count
+    else:
+        return
+
+
+def convert_side_to_abbr(side):
+    """
+    Convert side integer(s) to an abbreviation.
+
+    Parameters:
+        side: int (1-4) or tuple of ints.
+
+    Returns:
+        str: Abbreviated side name.
+    """
+    side_map = {1: 'b', 2: 't', 3: 'l', 4: 'r'}
+
+    if isinstance(side, int):
+        return side_map.get(side, "u")  # "u" for unknown cases
+    elif isinstance(side, tuple) or isinstance(side, list):
+        if side == (1, 2, 3, 4):
+            return 'all'
+        sorted_sides = sorted([side_map[s] for s in side if s in side_map])
+        return "".join(sorted_sides) if sorted_sides else "u"
+    else:
+        return "u"
 
 
 def custom_log_creator(folder_path: str, custom_str: str):
@@ -14,50 +55,87 @@ def custom_log_creator(folder_path: str, custom_str: str):
     Return:
 
     """
-    custom_path = get_current_path() + folder_path
-    timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
-    logdir_prefix = "{}_{}".format(custom_str, timestr)
+    custom_path = folder_path  # folder path
+    logdir_prefix = custom_str  # folder name
 
     # check the folder existence
     create_folder(custom_path)
 
     def logger_creator(config):
         logdir = tempfile.mkdtemp(prefix=logdir_prefix, dir=custom_path)
-        if not os.path.exists(custom_path):
-            os.makedirs(custom_path)
-        return UnifiedLogger(config, logdir, loggers=None)
+
+        # Rename the created folder as it contains unnecessary characters
+        os.rename(logdir, custom_path+logdir_prefix)
+        # if not os.path.exists(custom_path):
+            # os.makedirs(custom_path)
+        return UnifiedLogger(config, custom_path+logdir_prefix, loggers=None)
 
     return logger_creator
 
 
-def custom_log_checkpoint(folder_path: str, custom_str: str, algo):
+def custom_log_checkpoint(folder_path: str, folder_name: str):
     """
     Set a folder for the training result
 
     Parameter:
-        env_name: environment name
-        algo: type of the algorithm
+        folder_path: Path for training results
+        folder_name: Structured folder name
+        algo: RL algorithm instance
 
     Return:
-        str: folder path
-
+        str: Full folder path
     """
-    timestr = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
-    logdir_prefix = "{}_{}_{}".format(algo, custom_str, timestr)
+    logdir_prefix = folder_name
 
     # check the folder existence
-    create_folder(get_current_path() + folder_path + logdir_prefix)
-    return get_current_path() + folder_path + logdir_prefix
+    checkpoint_path = os.path.join(folder_path, logdir_prefix)
+    create_folder(checkpoint_path)
+    return checkpoint_path
 
 
-def create_folder_path(env_config: dict, reward_type: str, state_type: str, is_training: bool) -> str:
-    """Return a folder path depending on is_training value."""
-    if is_training:
-        return (f'/training_results/{env_config["parking_type"]}/'
-                f'{env_config["action_type"]}/reward_{reward_type}/state_{state_type}/')
-    else:
-        return (f'/trained_agents/{env_config["parking_type"]}/'
-                f'{env_config["action_type"]}/reward_{reward_type}/state_{state_type}/')
+def create_folder_path_name(algo: str, env_config: dict, reward_type: str, state_type: str, num_train: int,
+                            side: Union[int, Tuple[int]], threshold: float, ratio: float, is_training: bool)\
+        -> tuple[str, str]:
+    """
+    Return a structured folder path based on environment config.
+
+    Parameters:
+        algo: Algorithms for training
+        env_config: Dictionary containing environment configurations
+        reward_type: Reward function type (e.g., type1, type2)
+        state_type: State representation type (e.g., type1, type2)
+        num_train: Number of training
+        side: int or tuple representing the parking side(s)
+        threshold: Threshold value for guidance reward
+        ratio: Ratio for guidance reward
+        is_training: Boolean flag (True: Training, False: Evaluating)
+    Returns:
+        str: Structured folder path and name
+    """
+    base_folder = "/training_results" if is_training else "/trained_agents"
+
+    folder_path = get_current_path() + (f"{base_folder}/{algo}/{env_config['parking_type']}/"
+                                        f"{env_config['action_type']}/reward_{reward_type}/state_{state_type}/")
+
+    side_str = convert_side_to_abbr(side)
+    folder_name = (f"{algo}_{env_config['parking_type']}_"
+                   f"{env_config['action_type']}_{num_train}_r{reward_type}_s{state_type}_side{side_str}")
+
+    folder_name = folder_name.replace('type', '')
+
+    # for Guidance reward
+    # if ratio/threshold is None
+    if reward_type in ('type2', 'type3'):
+        threshold_str = f"t{threshold:.2f}".replace(".", "")
+        ratio_str = f"r{int(ratio * 100)}"  # Convert to percentage for clarity
+        folder_name = folder_name + f'_guidance_th{threshold_str}_gr{ratio_str}'
+
+    # Add id number
+    id_num = generate_unique_id(folder_path+folder_name)
+    if id_num:
+        folder_name = folder_name + f'_{id_num}'
+
+    return folder_path, folder_name
 
 
 def get_current_path() -> str:
@@ -67,8 +145,7 @@ def get_current_path() -> str:
     Return:
          str: the current folder path
     """
-    current_path = os.getcwd()
-    return current_path.replace("\\", "/")
+    return os.getcwd().replace("\\", "/")
 
 
 def is_folder(folder_path) -> bool:
@@ -79,11 +156,9 @@ def is_folder(folder_path) -> bool:
         folder_path (str): The path to the folder to be checked and potentially created.
 
     Return:
-        bool
+        bool: True if the folder exists, else False.
     """
-    if os.path.exists(folder_path):
-        return True
-    return False
+    return os.path.exists(folder_path)
 
 
 def create_folder(folder_path) -> None:
