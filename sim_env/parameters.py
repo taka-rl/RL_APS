@@ -170,6 +170,11 @@ class Config:
         reward_type (str): Reward type used in reinforcement learning (default: 'type1').
             - type1: Default reward, primarily based on parking success.
             - type2: Includes a guidance reward, encouraging the agent to park parallel to the parking lot.
+            - type3: Contains a velocity penalty, encouraging the agent to approach the parking lot gently.
+            - type4: Comprise both the guidance reward and velocity penalty, making the agent park more realistic.
+
+        penalty_ratio (dict): Penalty ratio for both guidance reward and velocity penalty.
+
         state_type (str): State representation type used in reinforcement learning (default: 'type1').
             - type1: The agent receives relative coordinate data for each (x, y) vertex between the parking lot and
                         the agent location. It has 8 elements.
@@ -178,6 +183,8 @@ class Config:
                         It has 10 elements.
             - type3: The agent receives relative coordinate data for each (x, y) vertex between the parking lot and
                         the agent location, along with its velocity. It has 9 elements.
+            - type4: The agent receives relative coordinate data for each (x, y) vertex between the parking lot and
+                        the agent location, along with the guidance distance and its velocity. It has 11 elements.
 
         acceleration_limit (np.float32): Maximum acceleration limit in m/s².
         steering_limit (np.float32): Maximum steering angle limit in radians.
@@ -212,7 +219,7 @@ class Config:
                  max_distance: float = 25.0, max_steps: int = 80,
                  acceleration_limit: float = 1.0, steering_limit: float = PI/4, velocity_limit: float = 10.0,
                  max_angle_error: float = PI/12, center_threshold: float = 1.0,
-                 reward_type: str = 'type1', state_type: str = 'type1',
+                 penalty_ratio: dict = None, reward_type: str = 'type1', state_type: str = 'type1',
                  side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None,
                  car_loc_randomize_range: tuple = (-5, 5), initial_distance_range: tuple = (7.5, 15.0),
                  heading_angle_range: dict = None
@@ -224,6 +231,10 @@ class Config:
         # Reward and State settings
         self.reward_type = reward_type
         self.state_type = state_type
+
+        if penalty_ratio is None:
+            self.penalty_ratio = {'angle': 0.25, 'velocity': 0.25}
+        self.penalty_ratio = penalty_ratio
 
         # Action limits
         self.acceleration_limit = np.float32(acceleration_limit)
