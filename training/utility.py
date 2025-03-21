@@ -111,7 +111,7 @@ def create_folder_path(env_config: dict, is_training: bool) -> str:
 
 def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type: str, num_train: int,
                        side: Union[int, Tuple[int]], folder_path: str, threshold: float = None,
-                       ratio: float = None) -> str:
+                       angle_ratio: float = None, v_ratio: float = None) -> str:
     """
     Return a structured folder path based on environment config.
 
@@ -123,7 +123,8 @@ def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type
         num_train: Number of training
         side: int or tuple representing the parking side(s)
         threshold: Threshold value for guidance reward
-        ratio: Ratio for guidance reward
+        angle_ratio: Ratio for guidance reward
+        v_ratio: Ratio for velocity
         folder_path: Structured folder path
 
     Returns:
@@ -136,12 +137,21 @@ def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type
 
     folder_name = folder_name.replace('type', '')
 
-    # for Guidance reward
-    # if ratio/threshold is None
-    if reward_type in ('type2', 'type3'):
-        threshold_str = f"t{threshold:.2f}".replace(".", "")
-        ratio_str = f"r{int(ratio * 100)}"  # Convert to percentage for clarity
-        folder_name = folder_name + f'_guidance_th{threshold_str}_gr{ratio_str}'
+    # for Guidance and velocity rewards
+    if reward_type == 'type2':
+        threshold = f"{threshold:.1f}".replace(".", "")
+        angle_ratio = f"{angle_ratio:.1f}".replace(".", "")
+        folder_name = folder_name + f'_th{threshold}_ar{angle_ratio}'
+
+    if reward_type == 'type3':
+        v_ratio = f"{v_ratio:.1f}".replace(".", "")
+        folder_name = folder_name + f'_vr{v_ratio}'
+
+    if reward_type == 'type4':
+        threshold = f"{threshold:.1f}".replace(".", "")
+        angle_ratio = f"{angle_ratio:.1f}".replace(".", "")
+        v_ratio = f"{v_ratio:.1f}".replace(".", "")
+        folder_name = folder_name + f'_th{threshold}_ar{angle_ratio}_vr{v_ratio}'
 
     # Add id number
     id_num = generate_unique_id(folder_path + folder_name)

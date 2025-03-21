@@ -14,8 +14,8 @@ config = Config(car_length=4.0, car_width=2.0,
                 parking_length=6.0, parking_width=4.0,
                 max_distance=25.0, max_steps=80,
                 acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
-                max_angle_error=PI/12, center_threshold=1.0, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
-                reward_type='type1', state_type='type1',
+                max_angle_error=PI/12, center_threshold=0.5, penalty_ratio={'angle': 0, 'velocity': 0.5},
+                reward_type='type3', state_type='type3',
                 side=(1, 2, 3, 4), car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
                 )
 env_config = {"render_mode": "no_render",
@@ -25,14 +25,14 @@ env_config = {"render_mode": "no_render",
               'config': config}
 
 # for folder names
-num_train = 50
+num_train = 100
 side = config.side
-threshold = 0.5
-ratio = 0.15
+threshold = config.center_threshold
+angle_ratio, v_ratio = config.penalty_ratio['angle'], config.penalty_ratio['velocity']
 
 folder_path = create_folder_path(env_config, is_training=True)
 folder_name = create_folder_name('PPO', env_config, config.reward_type, config.state_type,
-                                 num_train, side, folder_path)
+                                 num_train, side, folder_path, threshold, angle_ratio, v_ratio)
 
 algo = (
     PPOConfig()

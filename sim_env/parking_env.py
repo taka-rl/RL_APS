@@ -99,6 +99,8 @@ class Parking(gym.Env):
             self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
         elif self.config.state_type == 'type3':
             self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
+        elif self.config.state_type == 'type4':
+            self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(11,), dtype=np.float32)
         else:
             raise ValueError('State type shall be either type1, type2 or type3')
 
