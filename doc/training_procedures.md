@@ -3,15 +3,12 @@ This file describes about folder structures, necessary steps and parameter setti
 
 ## Folder structure for both trained agents and training results
 
-Algorithm: organizable, when it comes to comparing training results with different algorithms...
-reward_type and state_type: are they necessary?
-
 
     RL_APS/training
     │── trained_agents
     │   │── perpendicular
     │   │   │── discrete
-    │   │   │   │── folders for trained agent
+    │   │   │   │── folders for trained agent referred to the 'Naming order' below.
     │   │   │── continuous
     │   │   │   │── (same structure as discrete)
     │   │── parallel
@@ -19,7 +16,7 @@ reward_type and state_type: are they necessary?
     │── training_results
     │   │── perpendicular
     │   │   │── discrete
-    │   │   │   │── folders for training results
+    │   │   │   │── folders for training results folders referred to the 'Naming order' below.
     │   │   │── continuous
     │   │   │   │── (same structure as discrete)
     │   │── parallel
@@ -30,7 +27,7 @@ reward_type and state_type: are they necessary?
 The folder for both trained agents and training results is created based on the following rules. 
 
 ### Element	Description	Example
-| Elements      | Description                                  | Examples                | Abbreviation for folder names                      |
+| Elements      | Description                                  | Examples                | Abbreviation for folder nameing rules              |
 |---------------|----------------------------------------------|-------------------------|----------------------------------------------------|
 | algorithm     | The RL algorithm used in training            | PPO                     | -                                                  |
 | parkingType   | The type of parking environment              | perpendicular, parallel | -                                                  |
@@ -60,12 +57,26 @@ reward_type is either type2 or type3:
 
 ## About parameters for training
 ### Parameters:
-`parameters.py`
+The parameters for trainings are defined in `parameters.py`.
 
 ## Training setups
-`training.py`
+1. Import Config class from `parameters.py` into `training.py`.
+2. Make sure each parameter setting.  
+   ![image](https://github.com/user-attachments/assets/e88a2af1-1d96-4a92-9a04-6d1d30d91430)
 
-## Execute training
-`training.py`
+3. Also sets env_config.  
+   ![image](https://github.com/user-attachments/assets/a03c5891-d558-4cac-a3aa-b2e3ff308d61)
+
+4. Sets the number of training.  
+   ![image](https://github.com/user-attachments/assets/19aa8211-67ed-4b18-820c-c31bcecf050d)
+
+5. After settings, run `training.py` to execute a training.
+   
 ## Evaluate the training result
-`main.py`
+After the training, you can see the agent behaviour in `main.py`.  
+All you need to do is to follow the following steps.
+1. Set the folder name that you want to evaluate.  
+   ![image](https://github.com/user-attachments/assets/a998d659-0ce4-4948-878f-ec1ef9dd67f2)
+
+2. Run `main.py`.
+
