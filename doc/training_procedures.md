@@ -61,7 +61,7 @@ The parameters for trainings are defined in `parameters.py`.
 
 ## Training setups
 1. Import Config class from `parameters.py` into `training.py`.
-2. Make sure each parameter setting.  
+2. Make sure each parameter setting. Each parameter is explained in `parameters.py`.  
    ![image](https://github.com/user-attachments/assets/e88a2af1-1d96-4a92-9a04-6d1d30d91430)
 
 3. Also sets env_config.  
