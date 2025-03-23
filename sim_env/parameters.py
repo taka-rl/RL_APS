@@ -194,7 +194,7 @@ class Config:
         max_steps (int): Maximum number of steps per episode.
 
         max_angle_error (np.float32): Maximum allowable angle error for guidance reward in radians.
-        center_threshold (np.float32): Threshold for parking center alignment in meters.
+        center_threshold (np.float32): Threshold for parking center alignment for guidance reward in meters.
 
         window_width_offset (int): Offset to keep parking within the screen boundaries in pixels.
         window_height_offset (int): Offset to keep parking within the screen boundaries in pixels.
@@ -206,8 +206,12 @@ class Config:
                                                 2: Top side.
                                                 3: Left side.
                                                 4: Right side.
-        car_loc_randomize_range (tuple): Range for randomizing car initial position in meters.
-        initial_distance_range (tuple): Range for setting the initial distance between car and parking lot in meters.
+        car_loc_randomize_range (tuple): A tuple specifying the range (in meters) for randomizing
+                                            the car's initial position. The first and second elements represent
+                                            the minimum and maximum values, respectively.
+        initial_distance_range (tuple): A tuple specifying the range (in meters) for setting the initial distance
+                                            between the car and the parking lot. The first and second elements
+                                            represent the minimum and maximum values, respectively.
         heading_angle_range (dict): Dictionary defining possible initial heading angles for the car in radians.
 
     """
