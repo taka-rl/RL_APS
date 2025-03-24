@@ -78,7 +78,9 @@ All you need to do is to follow the following steps.
 1. Set the folder name that you want to evaluate.  
    ![image](https://github.com/user-attachments/assets/a998d659-0ce4-4948-878f-ec1ef9dd67f2)
 
-2. Run `main.py`.
+2. Make sure each parameter setting in `main.py`.
+
+3. Run `main.py`.
 
 ## Display the training results  
 Use the following command so that you can see data in the training_agent folder.  
