@@ -238,6 +238,9 @@ class Parking(gym.Env):
         self.truncated = False
         self.run_steps = 0
 
+        if self.render_mode == 'human':
+            self.renderer.reset_render()
+
         return self.state, {}
 
     def get_normalized_state(self):

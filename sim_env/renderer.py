@@ -161,6 +161,11 @@ class Renderer:
         self.window.blit(surf, (0, 0))
         pygame.display.flip()
 
+    def reset_render(self):
+        """Reset renderer class attributes"""
+        self.surf_parkinglot = None
+        self.surf_car = None
+
     @staticmethod
     def draw_object(screen: pygame.Surface, color: tuple, vertex) -> None:
         """Draw an object using a list of vertices."""
