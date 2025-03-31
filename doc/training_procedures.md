@@ -59,18 +59,76 @@ reward_type is either type2 or type3:
 ### Parameters:
 The parameters for trainings are defined in `parameters.py`.
 
+
 ## Training setups
 1. Import Config class from `parameters.py` into `training.py`.
-2. Make sure each parameter setting. Each parameter is explained in `parameters.py`.  
-   ![image](https://github.com/user-attachments/assets/e88a2af1-1d96-4a92-9a04-6d1d30d91430)
+2. Make sure each parameter settings (`config` and `env_config`) in `training.py`.
 
-3. Also sets env_config.  
-   ![image](https://github.com/user-attachments/assets/a03c5891-d558-4cac-a3aa-b2e3ff308d61)
+   ```
+   config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=0.25, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
+                reward_type='type1', state_type='type1',
+                side=(1,2,3,4), car_loc_randomize_range=(-5, 5), initial_distance_range=(10.0, 15.0)
+                )
 
-4. Sets the number of training.  
+   env_config = {"render_mode": "no_render",
+                 "action_type": "continuous",
+                 "parking_type": "perpendicular",
+                 "training_mode": "on",
+                 "config": config}
+   ```
+
+- Parameter descriptions for config.  
+   Although each parameter is explained in `parameters.py`, the following parameters are often used.
+
+   | Parameters              | Description                                                                                                                                                                                                     |
+   |-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | reward_type             | Reward type for trainings. There are 4 types and the fault is 'type1'.                                                                                                                                          |
+   | state_type              | State type for trainings. There are 4 types and the fault is 'type1'.                                                                                                                                           |
+   | penalty_ratio           | Reward weights for guidance and velocity. You need to pay attention to this if you set type2, 3, 4 in reward_type.                                                                                              |
+   | car_loc_randomize_range | Range (in meters) for randomizing the car's initial position. The first and second elements represent the minimum and maximum values, respectively. The default value is (-5, 5).                               |
+   | initial_distance_range  | Range (in meters) for setting the initial distance between the car and the parking lot. The first and second elements represent the minimum and maximum values, respectively. The default value is (7.5, 15.0). |
+   | side                    | Defines which side of the environment the parking lot is placed. It can be a single integer(fixed side) or a tuple(randomized side selection). The default value is 1 (Bottom side).                            |
+
+
+- Parameter descriptions for env_config
+
+   | Parameters    | Description                                                                                                                                                                                                 |
+   |---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   | render_mode   | Set either 'human' or 'no_render'. 'no_render' is recommended for training. 'human' is useful for evaluation.                                                                                               |
+   | action_type   | Set either 'continuous' or 'discrete'.                                                                                                                                                                      |
+   | parking_type  | Set either 'perpendicular' or 'parallel'.                                                                                                                                                                   |
+   | training_mode | Set either 'on' or 'off'. If the training_mode is 'on', the parking lot location is fixed during the training. If the training_mode is 'off', the parking lot location is randomly set during the training. |
+   | config        | Config class object                                                                                                                                                                                         |
+
+   **Tips of Parameter settings for Trainings**  
+   It is vital to encourage the agent to approach to the parking lot by setting both the agent and the parking lot closely.  
+   It is also essential to set the heading angle for the agent to move to the parking lot easily.
+
+   ```
+   - Example for Perpendicular Parking
+      config = Cofig(side=(1,2,3,4), car_loc_randomize_range=(-5, 5), 
+               initial_distance_range=(7.5, 15.0)
+               )  # Heading angles are defined in `parameters.py` and use it.
+               
+      env_config = {"render_mode": "no_render",
+                     "action_type": "continuous or discrete",
+                     "parking_type": "perpendicular or parallel",
+                     "training_mode": "on",
+                     "config": config}
+      
+   - Example for Parallel Parking
+      **Update later**
+   ```
+
+3. Sets the number of training.  
    ![image](https://github.com/user-attachments/assets/19aa8211-67ed-4b18-820c-c31bcecf050d)
 
-5. After settings, run `training.py` to execute a training.
+4. After settings, run `training.py` to execute a training.
    
 ## Evaluate the trained agent
 After the training, you can see the agent behaviour in `main.py`.  
@@ -78,7 +136,7 @@ All you need to do is to follow the following steps.
 1. Set the folder name that you want to evaluate.  
    ![image](https://github.com/user-attachments/assets/a998d659-0ce4-4948-878f-ec1ef9dd67f2)
 
-2. Make sure each parameter setting in `main.py`.
+2. Make sure each parameter setting in `main.py`, referring to the chapter 2 on `Training setups`. 
 
 3. Run `main.py`.
 
