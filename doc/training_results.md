@@ -31,13 +31,16 @@ num_train = 100
 
 https://github.com/user-attachments/assets/c788057a-c4f1-496e-ba9c-fbe45c5fc233
 
+- Training results  
+
+![image](https://github.com/user-attachments/assets/51bc1042-b0c6-41a8-bd4f-8afedf11e121)
+
+![image](https://github.com/user-attachments/assets/04d5966d-bfad-41b3-8302-a06ac9ebad9e)
+
+![image](https://github.com/user-attachments/assets/ea305173-b705-4831-94f2-a13433c856d4)
 
 
-- Tensorboard captures
-
-
-- Difference between Discrete and Continuous action spaces
-
+- Difference between Discrete and Continuous action spaces  
 
 ### Guidance Reward (Reward/State: type2)
 - Parameter settings for trainings
@@ -67,7 +70,14 @@ num_train = 300
 https://github.com/user-attachments/assets/fde361ce-a9a1-4d40-a517-730138c3c8d9
 
 
-- Tensorboard captures (only continuous action)
+- Training results  (only continuous action)
+
+![image](https://github.com/user-attachments/assets/2a7b9d43-1071-4591-8a45-5df34d2e75e9)
+
+![image](https://github.com/user-attachments/assets/296622de-8688-41ba-9cb3-b5657ccc9d4c)
+
+![image](https://github.com/user-attachments/assets/7b6b8095-fb9c-4ac5-88ef-3175bb92fa51)
+
 
 
 - How the agent behaviour improved with this reward
@@ -100,7 +110,9 @@ num_train = 100
 https://github.com/user-attachments/assets/6f751090-fd88-45b8-804a-fdcff530bf10
 
 
-- Tensorboard captures (only continuous action)
+- Training results   (only continuous action)
+
+
 
 
 - How the agent behaviour improved with this reward
@@ -134,12 +146,15 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 
 
-- Tensorboard captures (only continuous action)
+- Training results   (only continuous action)
 
+![image](https://github.com/user-attachments/assets/7231898d-9e96-4f02-b3fa-d8925ed3c680)
+
+![image](https://github.com/user-attachments/assets/4fc835e2-1818-4db8-998b-8a253b695d24)
+
+![image](https://github.com/user-attachments/assets/3918acae-05aa-457c-aa6c-6c0328c96d79)
 
 - How the agent behaviour improved with this reward
-
-
 
 
 ## Parallel Parking
