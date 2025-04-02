@@ -1,4 +1,4 @@
-# Training result
+# Training Results
 This document includes the training results.
 
 ## Perpendicular Parking
@@ -101,18 +101,25 @@ env_config = {"render_mode": "no_render",
               "training_mode": "on",
               'config': config}
 
-num_train = 100
+num_train = 200
 ```
 
 - Trained agent (Continuous action)
 
 
-https://github.com/user-attachments/assets/6f751090-fd88-45b8-804a-fdcff530bf10
+
+
+https://github.com/user-attachments/assets/5023f03c-1565-462c-8f3f-370c0904c578
+
 
 
 - Training results   (only continuous action)
 
+![image](https://github.com/user-attachments/assets/01ae2476-291e-47c5-a3ab-6f1e2fb75e4a)
 
+![image](https://github.com/user-attachments/assets/7148baee-f41c-495c-8bca-5f194152c265)
+
+![image](https://github.com/user-attachments/assets/761db4fc-8993-490e-b2a9-7431e82a1ae7)
 
 
 - How the agent behaviour improved with this reward
