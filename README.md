@@ -2,15 +2,15 @@
 This repository is a development environment for "Reinforcement Learning-Based Automated Parking Systems." It provides the training environment for the agent in both parallel and perpendicular parking scenarios.
 
 The following videos present the trained agent's behavior in the parking simulation.
-The environment is a continuous action space in the perpendicular parking.
-- without guidance
-  
-https://github.com/taka-rl/RL_APS/assets/157423802/d21c33ac-b5c0-4244-801e-7933abfa9792
 
-- with guidance
+- Perpendicular Parking
   
-https://github.com/taka-rl/RL_APS/assets/157423802/930700ff-9d21-4bcc-a0a7-bce26dfaa3a3
+https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
+- Parallel Parking  
+Uploaded later under development.
+
+For more results, Please refer to [doc/training_results.md.](https://github.com/taka-rl/RL_APS/blob/13-training-the-agent/doc/training_results.md)
 
 ## Folder structure
 
