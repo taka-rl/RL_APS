@@ -74,9 +74,3 @@ Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/b
 ## Training results
 Please refer to [doc/training_results.md](https://github.com/taka-rl/RL_APS/blob/13-training-the-agent/doc/training_results.md).
 
-For example:  
-![image](https://github.com/taka-rl/RL_APS/assets/157423802/3a254879-2176-43c9-8a95-a777b348c38c)  
-![image](https://github.com/taka-rl/RL_APS/assets/157423802/a51cb69d-472a-4370-942f-ccca2fecb4c4)  
-![image](https://github.com/taka-rl/RL_APS/assets/157423802/d4e2cec0-def9-483c-b44f-dc4cf9b52397)  
-
-
