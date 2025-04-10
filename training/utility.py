@@ -12,7 +12,7 @@ def generate_unique_id(target_folder) -> int:
         str: A unique identifier (e.g. 1, 2, 3 and so on).
     """
     # Check the target_folder if the same name exists
-    matching_folders = glob.glob(target_folder)
+    matching_folders = glob.glob(target_folder + '*')
 
     # Increment a count
     if matching_folders:
