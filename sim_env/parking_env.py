@@ -99,6 +99,8 @@ class Parking(gym.Env):
             self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(10,), dtype=np.float32)
         elif self.config.state_type == 'type3':
             self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(9,), dtype=np.float32)
+        elif self.config.state_type == 'type4':
+            self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(11,), dtype=np.float32)
         else:
             raise ValueError('State type shall be either type1, type2 or type3')
 
@@ -128,6 +130,8 @@ class Parking(gym.Env):
         self.car = None
         self.static_cars_vertices = None
         self.static_parking_lot_vertices = None
+        self.v_penalty = self.config.penalty_ratio['velocity']
+        self.angle_penalty = self.config.penalty_ratio['angle']
 
     def step(self, action):
         """
@@ -209,11 +213,7 @@ class Parking(gym.Env):
                                                                              self.config.window_width_offset,
                                                                              self.config.window_height_offset)
         else:  # 'on'
-            if isinstance(self.config.side, tuple):
-                self.side = self.parking_strategy.set_initial_loc(self.config.side)
-                self.parking_lot = self.config.default_parking_locations[self.side]
-            if isinstance(self.config.side, int):
-                self.parking_lot = self.config.default_parking_locations[self.config.side]
+            self.parking_lot = self.config.default_parking_locations[self.side]
 
         self.parking_lot_vertices = (self.parking_lot +
                                      self.parking_strategy.get_parking_struct(self.parking_type, self.side))
@@ -233,6 +233,9 @@ class Parking(gym.Env):
         self.terminated = False
         self.truncated = False
         self.run_steps = 0
+
+        if self.render_mode == 'human':
+            self.renderer.reset_render()
 
         return self.state, {}
 
@@ -271,7 +274,15 @@ class Parking(gym.Env):
         # type3 state (velocity)
         elif self.config.state_type == 'type3':
             normalized_velocity = np.array([self.car.v / self.config.velocity_limit])
-            state = np.concatenate((normalized_velocity, normalized_distances))  # 9 elements
+            state = np.concatenate((normalized_distances, normalized_velocity))  # 9 elements
+
+        # type4 state (both guidance and velocity)
+        elif self.config.state_type == 'type4':
+            normalized_velocity = np.array([self.car.v / self.config.velocity_limit])
+            guidance = self.transform_point(self.parking_lot[0], self.parking_lot[1],
+                                            self.car.car_loc[0], self.car.car_loc[1], self.car.psi)
+            normalized_guidance = guidance / self.config.max_distance
+            state = np.concatenate((normalized_distances, normalized_guidance, normalized_velocity))  # 11 elements
 
         else:
             raise ValueError('State type shall be either type1, type2 or type3')
@@ -349,11 +360,44 @@ class Parking(gym.Env):
                     print("successful parking")
 
                     parking_angle = self.get_parking_angle(self.parking_type, self.side)
-                    angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle, self.config.max_angle_error)
+                    angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle, self.config.max_angle_error, self.angle_penalty)
 
                     # Adjust reward
                     reward -= angle_penalty
                     return reward
+
+        # type3 (velocity)
+        if self.config.reward_type == 'type3':
+            if self.is_car_in_parking_lot():
+                reward += 1
+                self.terminated = True
+                print("successful parking")
+
+                # velocity check
+                velocity_penalty = min(abs(self.v_penalty * (self.car.v / self.config.velocity_limit)), self.v_penalty)
+                # Adjust reward
+                reward -= velocity_penalty
+                return reward
+
+        # type4 (velocity and guidance reward)
+        if self.config.reward_type == 'type4':
+            if self.is_car_in_parking_lot():
+                reward += 1
+                self.terminated = True
+                print("successful parking")
+
+                # velocity check
+                velocity_penalty = min(abs(self.v_penalty * (self.car.v / self.config.velocity_limit)), self.v_penalty)
+                # Adjust reward
+                reward -= velocity_penalty
+
+                # angle check
+                parking_angle = self.get_parking_angle(self.parking_type, self.side)
+                angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle, self.config.max_angle_error, self.angle_penalty)
+
+                # Adjust reward
+                reward -= angle_penalty
+                return reward
 
         return reward
 
@@ -407,7 +451,8 @@ class Parking(gym.Env):
                 return [PI / 2, -PI / 2]  # Car can face either pi/2 or -pi/2
 
     @staticmethod
-    def calc_angle_dif(psi: float, parking_angle: Union[float, List[float]], max_angle_error: np.float32) -> float:
+    def calc_angle_dif(psi: float, parking_angle: Union[float, List[float]], max_angle_error: np.float32,
+                       angle_penalty: float) -> float:
         """
         Calculates the angle difference penalty.
 
@@ -416,6 +461,7 @@ class Parking(gym.Env):
             parking_angle (Union[float, List[float]]): The target parking angle,
                 which can be a single float or a list of possible angles.
             max_angle_error (float): The maximum allowed angle error.
+            angle_penalty (float): The maximum angle penalty value
 
         Returns:
             float: The calculated angle penalty.
@@ -426,7 +472,7 @@ class Parking(gym.Env):
             angle_error = min(angle_errors)
         else:
             angle_error = np.abs((psi - parking_angle + PI) % (2 * PI) - PI)
-        angle_penalty = min(0.5 * (angle_error / max_angle_error), 0.5)
+        angle_penalty = min(angle_penalty * (angle_error / max_angle_error), angle_penalty)
         return angle_penalty
 
     @staticmethod
