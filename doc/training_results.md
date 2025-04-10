@@ -40,8 +40,6 @@ https://github.com/user-attachments/assets/c788057a-c4f1-496e-ba9c-fbe45c5fc233
 ![image](https://github.com/user-attachments/assets/ea305173-b705-4831-94f2-a13433c856d4)
 
 
-- Difference between Discrete and Continuous action spaces  
-
 ### Guidance Reward (Reward/State: type2)
 - Parameter settings for trainings
 
@@ -78,9 +76,6 @@ https://github.com/user-attachments/assets/fde361ce-a9a1-4d40-a517-730138c3c8d9
 
 ![image](https://github.com/user-attachments/assets/7b6b8095-fb9c-4ac5-88ef-3175bb92fa51)
 
-
-
-- How the agent behaviour improved with this reward
 
 ### Velocity Penalty (Reward/State: type3)
 - Parameter settings for trainings
@@ -122,9 +117,6 @@ https://github.com/user-attachments/assets/5023f03c-1565-462c-8f3f-370c0904c578
 ![image](https://github.com/user-attachments/assets/761db4fc-8993-490e-b2a9-7431e82a1ae7)
 
 
-- How the agent behaviour improved with this reward
-
-
 ### Both Guidance Reward and Velocity Penalty (Reward/State: type4)
 - Parameter settings for trainings
 
@@ -161,8 +153,6 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 ![image](https://github.com/user-attachments/assets/3918acae-05aa-457c-aa6c-6c0328c96d79)
 
-- How the agent behaviour improved with this reward
-
 
 ## Parallel Parking
 ### Default Setting
@@ -171,3 +161,5 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 ### Both Guidance Reward and Velocity Penalty
 
 
+## Result analysis
+This section describes the result plots in detail. 
