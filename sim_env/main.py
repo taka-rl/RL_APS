@@ -21,16 +21,7 @@ env_config = {"render_mode": "human",
 
 env = Parking(env_config)
 
-# PPO_perpendicular_continuous_100_r1_s1_all
-# PPO_perpendicular_continuous_300_r2_s2_all_th05_ar05
-# PPO_perpendicular_continuous_100_r3_s3_all_vr05
-# PPO_perpendicular_continuous_300_r4_s4_all_th05_ar02_vr02
-
-# PPO_parallel_continuous_100_r1_s1_b_1
-# PPO_parallel_continuous_100_r2_s2_b_th10_ar05_3
-# PPO_parallel_continuous_200_r2_s2_b_th10_ar05
-
-folder_name = 'PPO_parallel_continuous_200_r2_s2_b_th10_ar05'  # trained_agent folder
+folder_name = ''  # trained_agent folder
 folder_path = create_folder_path(env_config, is_training=False)
 folder_path = folder_path.replace('sim_env', 'training')
 
