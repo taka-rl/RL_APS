@@ -10,7 +10,7 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 - Parallel Parking  
 Uploaded later under development.
 
-For more results, Please refer to [doc/training_results.md.](https://github.com/taka-rl/RL_APS/blob/13-training-the-agent/doc/training_results.md)
+For more results, Please refer to [doc/training_results.md.](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md)
 
 ## Folder structure
 
@@ -43,7 +43,7 @@ For more results, Please refer to [doc/training_results.md.](https://github.com/
 
 
 ## Simulation Environment
-Please refer to the [doc/simulation_environment.md](https://github.com/taka-rl/RL_APS/blob/13-training-the-agent/doc/simulation_environment.md) for the following information.
+Please refer to the [doc/simulation_environment.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/simulation_environment.md) for the following information.
 - Simulation Environment
 - Environment Description
 - Kinematic Bicycle Model
@@ -69,8 +69,8 @@ Gymnasium: `pip install "gymnasium[all]"`
 
 
 ### Settings for training, Visualizing the agent and Evaluation
-Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/blob/13-training-the-agent/doc/training_procedures.md) for the training setting.  
+Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_procedures.md) for the training setting.  
 
 ## Training results
-Please refer to [doc/training_results.md](https://github.com/taka-rl/RL_APS/blob/13-training-the-agent/doc/training_results.md).
+Please refer to [doc/training_results.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md).
 
