@@ -179,17 +179,18 @@ env_config = {"render_mode": "no_render",
 num_train = 100
 
 ```
-どうしたら、左右どちらの位置に置かれても注射できるようになるのか？
-中に近づけるために、何をすればいいのか？
-1.0ではなく0.5 or 0.25 
-もしくは駐車場のサイズの横を6から8meterに変えるか
+- Trained agent (Continuous action)
 
-Distance reward based on the guidance reward
-angle:0.1
-velocity:0.2
-distance: 0.2
-中央近くに駐車してくれれば期待通り。
 
+
+https://github.com/user-attachments/assets/ff5b1ee3-9173-4959-b12e-5466beb40c07
+
+
+
+- Training results   (only continuous action)
+![image](https://github.com/user-attachments/assets/df1d85e3-6b20-4980-804f-27f796fceed4)
+<img width="1296" alt="image" src="https://github.com/user-attachments/assets/b4773ec4-0bf8-4bf7-8609-23038563de82" />
+<img width="1297" alt="image" src="https://github.com/user-attachments/assets/5994c669-c7af-4302-bf25-ffb661ebeaf8" />
 
 
 ### Guidance Reward
@@ -217,7 +218,16 @@ env_config = {"render_mode": "no_render",
 num_train = 100
 
 ```
+- Trained agent (Continuous action)
 
+
+https://github.com/user-attachments/assets/1e0da9e2-f4c6-4ec6-91be-acd11e22d492
+
+
+- Training results   (only continuous action)
+<img width="1279" alt="image" src="https://github.com/user-attachments/assets/42a1febc-3f4c-4aef-aa90-e9056cfc6b9f" />
+<img width="1284" alt="image" src="https://github.com/user-attachments/assets/e2279e64-ee55-440d-a044-b32b652bf743" />
+<img width="1284" alt="image" src="https://github.com/user-attachments/assets/d704b3a7-fd06-44b8-9fb9-2fd5f8fe8c0d" />
 
 
 ### Velocity Penalty
@@ -244,6 +254,20 @@ env_config = {"render_mode": "no_render",
 num_train = 100
 
 ```
+- Trained agent (Continuous action)  
+
+
+
+https://github.com/user-attachments/assets/9b11b7ea-dbe1-47ed-aade-f8b9aa061676
+
+
+
+
+- Training results   (only continuous action)
+<img width="1285" alt="image" src="https://github.com/user-attachments/assets/b029a70c-70f7-4e96-90b9-749dbf5a2bd2" />
+<img width="1285" alt="image" src="https://github.com/user-attachments/assets/ea9a392b-ecb8-4f28-9c0c-67878eb1347a" />
+<img width="1285" alt="image" src="https://github.com/user-attachments/assets/d1690544-87d2-4cc9-9fbf-1285c2178da6" />
+
 
 ### Both Guidance Reward and Velocity Penalty
 
