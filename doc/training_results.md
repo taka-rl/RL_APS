@@ -156,8 +156,119 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 ## Parallel Parking
 ### Default Setting
+
+- Parameter settings for trainings
+
+```
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=0.5, penalty_ratio={'angle': 0, 'velocity': 0.5},
+                reward_type='type1', state_type='type1',
+                side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                )
+env_config = {"render_mode": "no_render",
+              "action_type": "continuous",
+              "parking_type": "parallel",
+              "training_mode": "on",
+              'config': config}
+
+# for folder names
+num_train = 100
+
+```
+- Trained agent (Continuous action)
+
+
+
+https://github.com/user-attachments/assets/ff5b1ee3-9173-4959-b12e-5466beb40c07
+
+
+
+- Training results   (only continuous action)
+![image](https://github.com/user-attachments/assets/df1d85e3-6b20-4980-804f-27f796fceed4)
+<img width="1296" alt="image" src="https://github.com/user-attachments/assets/b4773ec4-0bf8-4bf7-8609-23038563de82" />
+<img width="1297" alt="image" src="https://github.com/user-attachments/assets/5994c669-c7af-4302-bf25-ffb661ebeaf8" />
+
+
 ### Guidance Reward
+
+- Parameter settings for trainings
+
+```
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=1.0, penalty_ratio={'angle': 0.5, 'velocity': 0.0},
+                reward_type='type2', state_type='type2',
+                side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                )
+
+env_config = {"render_mode": "no_render",
+              "action_type": "continuous",
+              "parking_type": "parallel",
+              "training_mode": "on",
+              'config': config}
+
+# for folder names
+num_train = 100
+
+```
+- Trained agent (Continuous action)
+
+
+https://github.com/user-attachments/assets/1e0da9e2-f4c6-4ec6-91be-acd11e22d492
+
+
+- Training results   (only continuous action)
+<img width="1279" alt="image" src="https://github.com/user-attachments/assets/42a1febc-3f4c-4aef-aa90-e9056cfc6b9f" />
+<img width="1284" alt="image" src="https://github.com/user-attachments/assets/e2279e64-ee55-440d-a044-b32b652bf743" />
+<img width="1284" alt="image" src="https://github.com/user-attachments/assets/d704b3a7-fd06-44b8-9fb9-2fd5f8fe8c0d" />
+
+
 ### Velocity Penalty
+- Parameter settings for trainings
+
+```
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=1.0, penalty_ratio={'angle': 0.0, 'velocity': 0.5},
+                reward_type='type3', state_type='type3',
+                side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                )
+
+env_config = {"render_mode": "no_render",
+              "action_type": "continuous",
+              "parking_type": "parallel",
+              "training_mode": "on",
+              'config': config}
+
+# for folder names
+num_train = 100
+
+```
+- Trained agent (Continuous action)  
+
+
+
+https://github.com/user-attachments/assets/9b11b7ea-dbe1-47ed-aade-f8b9aa061676
+
+
+
+
+- Training results   (only continuous action)
+<img width="1285" alt="image" src="https://github.com/user-attachments/assets/b029a70c-70f7-4e96-90b9-749dbf5a2bd2" />
+<img width="1285" alt="image" src="https://github.com/user-attachments/assets/ea9a392b-ecb8-4f28-9c0c-67878eb1347a" />
+<img width="1285" alt="image" src="https://github.com/user-attachments/assets/d1690544-87d2-4cc9-9fbf-1285c2178da6" />
+
+
 ### Both Guidance Reward and Velocity Penalty
 
 
