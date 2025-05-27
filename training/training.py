@@ -24,13 +24,6 @@ env_config = {"render_mode": "no_render",
               "training_mode": "on",
               'config': config}
 
-# offset size 6 meter doesn't work for type4
-# -> 8 meter:
-# penalty ratio 0.25, 0.25 -> 0.35, 0.15
-# center_threshold = 1.0
-# the number of trainings: 200
-# -> type4 works: PPO_parallel_continuous_200_r4_s4_b_th10_ar03_vr01
-
 # for folder names
 num_train = 200
 side = config.side
