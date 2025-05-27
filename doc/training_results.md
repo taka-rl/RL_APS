@@ -155,7 +155,7 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 
 ## Parallel Parking
-### Default Setting
+### Default Setting (Reward/State: type1)
 
 - Parameter settings for trainings
 
@@ -193,7 +193,7 @@ https://github.com/user-attachments/assets/ff5b1ee3-9173-4959-b12e-5466beb40c07
 <img width="1297" alt="image" src="https://github.com/user-attachments/assets/5994c669-c7af-4302-bf25-ffb661ebeaf8" />
 
 
-### Guidance Reward
+### Guidance Reward (Reward/State: type2)
 
 - Parameter settings for trainings
 
@@ -230,7 +230,7 @@ https://github.com/user-attachments/assets/1e0da9e2-f4c6-4ec6-91be-acd11e22d492
 <img width="1284" alt="image" src="https://github.com/user-attachments/assets/d704b3a7-fd06-44b8-9fb9-2fd5f8fe8c0d" />
 
 
-### Velocity Penalty
+### Velocity Penalty (Reward/State: type3)
 - Parameter settings for trainings
 
 ```
@@ -269,7 +269,7 @@ https://github.com/user-attachments/assets/9b11b7ea-dbe1-47ed-aade-f8b9aa061676
 <img width="1285" alt="image" src="https://github.com/user-attachments/assets/d1690544-87d2-4cc9-9fbf-1285c2178da6" />
 
 
-### Both Guidance Reward and Velocity Penalty
+### Both Guidance Reward and Velocity Penalty (Reward/State: type4)
 
 
 ## Result analysis
