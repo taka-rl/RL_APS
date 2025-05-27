@@ -156,7 +156,70 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 ## Parallel Parking
 ### Default Setting
+
+- Parameter settings for trainings
+
+```
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=0.5, penalty_ratio={'angle': 0, 'velocity': 0.5},
+                reward_type='type1', state_type='type1',
+                side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                )
+env_config = {"render_mode": "no_render",
+              "action_type": "continuous",
+              "parking_type": "parallel",
+              "training_mode": "on",
+              'config': config}
+
+# for folder names
+num_train = 100
+
+```
+どうしたら、左右どちらの位置に置かれても注射できるようになるのか？
+中に近づけるために、何をすればいいのか？
+1.0ではなく0.5 or 0.25 
+もしくは駐車場のサイズの横を6から8meterに変えるか
+
+Distance reward based on the guidance reward
+angle:0.1
+velocity:0.2
+distance: 0.2
+中央近くに駐車してくれれば期待通り。
+
+
+
 ### Guidance Reward
+
+- Parameter settings for trainings
+
+```
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=6.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=1.0, penalty_ratio={'angle': 0.5, 'velocity': 0.0},
+                reward_type='type2', state_type='type2',
+                side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                )
+
+env_config = {"render_mode": "no_render",
+              "action_type": "continuous",
+              "parking_type": "parallel",
+              "training_mode": "on",
+              'config': config}
+
+# for folder names
+num_train = 100
+
+```
+
+
+
 ### Velocity Penalty
 ### Both Guidance Reward and Velocity Penalty
 
