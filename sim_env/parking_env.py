@@ -401,38 +401,6 @@ class Parking(gym.Env):
                     reward -= angle_penalty
                 return reward
 
-        # type5 (velocity, guidance and distance reward)
-        if self.config.reward_type == 'type5':
-            if self.is_car_in_parking_lot():
-                if self.is_car_in_threshold(self.parking_lot, self.car.car_loc, self.config.center_threshold):
-
-                    reward += 1
-                    self.terminated = True
-                    print("successful parking")
-
-                    # velocity check
-                    velocity_penalty = min(abs(self.v_penalty * (self.car.v / self.config.velocity_limit)), self.v_penalty)
-                    # Adjust reward
-                    reward -= velocity_penalty
-
-                    # angle check
-                    parking_angle = self.get_parking_angle(self.parking_type, self.side)
-                    angle_penalty = self.calc_angle_dif(self.car.psi, parking_angle, self.config.max_angle_error,
-                                                        self.angle_penalty)
-
-                    # Adjust reward
-                    reward -= angle_penalty
-
-                    # distance check
-                    distance = self.parking_lot - self.car.car_loc
-                    distance_penalty_x = min(abs(0.1 * (distance[0] / self.config.center_threshold)), 0.1)
-                    distance_penatly_y = min(abs(0.1 * (distance[1] / self.config.center_threshold)), 0.1)
-
-                    # Adjust reward
-                    reward -= (distance_penalty_x + distance_penatly_y)
-
-                    return reward
-
         return reward
 
     @staticmethod
