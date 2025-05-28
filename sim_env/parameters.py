@@ -124,8 +124,8 @@ class ParkingLotSize:
             [-self.length / 2, +self.width / 2]],
             dtype=np.float32)
 
-        self.offset_parallel = np.float32(6.0)
-        self.offset_perpendicular = np.float32(4.0)
+        self.offset_parallel = np.float32(self.length)
+        self.offset_perpendicular = np.float32(self.width)
 
 
 class RenderConfig:
