@@ -31,7 +31,7 @@ num_train = 100
 
 https://github.com/user-attachments/assets/c788057a-c4f1-496e-ba9c-fbe45c5fc233
 
-- Training results  
+- Training results (Continuous/Discrete action)
 
 ![image](https://github.com/user-attachments/assets/51bc1042-b0c6-41a8-bd4f-8afedf11e121)
 
@@ -68,7 +68,7 @@ num_train = 300
 https://github.com/user-attachments/assets/fde361ce-a9a1-4d40-a517-730138c3c8d9
 
 
-- Training results  (only continuous action)
+- Training results (Continuous action)
 
 ![image](https://github.com/user-attachments/assets/2a7b9d43-1071-4591-8a45-5df34d2e75e9)
 
@@ -108,7 +108,7 @@ https://github.com/user-attachments/assets/5023f03c-1565-462c-8f3f-370c0904c578
 
 
 
-- Training results   (only continuous action)
+- Training results (Continuous action)
 
 ![image](https://github.com/user-attachments/assets/01ae2476-291e-47c5-a3ab-6f1e2fb75e4a)
 
@@ -145,7 +145,7 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 
 
-- Training results   (only continuous action)
+- Training results (Continuous action)
 
 ![image](https://github.com/user-attachments/assets/7231898d-9e96-4f02-b3fa-d8925ed3c680)
 
@@ -187,7 +187,7 @@ https://github.com/user-attachments/assets/ff5b1ee3-9173-4959-b12e-5466beb40c07
 
 
 
-- Training results   (only continuous action)
+- Training results (Continuous action)
 ![image](https://github.com/user-attachments/assets/df1d85e3-6b20-4980-804f-27f796fceed4)
 <img width="1296" alt="image" src="https://github.com/user-attachments/assets/b4773ec4-0bf8-4bf7-8609-23038563de82" />
 <img width="1297" alt="image" src="https://github.com/user-attachments/assets/5994c669-c7af-4302-bf25-ffb661ebeaf8" />
@@ -224,10 +224,11 @@ num_train = 100
 https://github.com/user-attachments/assets/1e0da9e2-f4c6-4ec6-91be-acd11e22d492
 
 
-- Training results   (only continuous action)
-<img width="1279" alt="image" src="https://github.com/user-attachments/assets/42a1febc-3f4c-4aef-aa90-e9056cfc6b9f" />
-<img width="1284" alt="image" src="https://github.com/user-attachments/assets/e2279e64-ee55-440d-a044-b32b652bf743" />
-<img width="1284" alt="image" src="https://github.com/user-attachments/assets/d704b3a7-fd06-44b8-9fb9-2fd5f8fe8c0d" />
+- Training results (Continuous action)
+<img width="1306" alt="image" src="https://github.com/user-attachments/assets/75f7be67-9df7-49d5-9a8b-8491473d4721" />
+<img width="1306" alt="image" src="https://github.com/user-attachments/assets/6f55760d-5382-49d4-ae2f-04710d7c7e13" />
+<img width="1304" alt="image" src="https://github.com/user-attachments/assets/f56e33fe-9540-4b74-97d0-c7f8c2b8d462" />
+
 
 
 ### Velocity Penalty (Reward/State: type3)
@@ -263,13 +264,48 @@ https://github.com/user-attachments/assets/9b11b7ea-dbe1-47ed-aade-f8b9aa061676
 
 
 
-- Training results   (only continuous action)
-<img width="1285" alt="image" src="https://github.com/user-attachments/assets/b029a70c-70f7-4e96-90b9-749dbf5a2bd2" />
-<img width="1285" alt="image" src="https://github.com/user-attachments/assets/ea9a392b-ecb8-4f28-9c0c-67878eb1347a" />
-<img width="1285" alt="image" src="https://github.com/user-attachments/assets/d1690544-87d2-4cc9-9fbf-1285c2178da6" />
+- Training results (Continuous action)
+<img width="1305" alt="image" src="https://github.com/user-attachments/assets/0a58bacf-d4ac-44b3-9ac3-b24128a0521b" />
+<img width="1306" alt="image" src="https://github.com/user-attachments/assets/e4092768-daa9-44af-b522-205110b056d0" />
+<img width="1307" alt="image" src="https://github.com/user-attachments/assets/df05033a-f3d0-4fcc-8077-98b0cbe017fa" />
 
 
 ### Both Guidance Reward and Velocity Penalty (Reward/State: type4)
+- Parameter settings for trainings
+
+```
+config = Config(car_length=4.0, car_width=2.0,
+                wheel_length=0.75, wheel_width=0.35,
+                parking_length=7.0, parking_width=4.0,
+                max_distance=25.0, max_steps=80,
+                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=10.0,
+                max_angle_error=PI/12, center_threshold=0.75, penalty_ratio={'angle': 0.4, 'velocity': 0.1},
+                reward_type='type4', state_type='type4',
+                side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                )
+
+env_config = {"render_mode": "no_render",
+              "action_type": "continuous",
+              "parking_type": "parallel",
+              "training_mode": "on",
+              'config': config}
+
+# for folder names
+num_train = 100
+
+```
+- Trained agent (Continuous action)
+
+
+https://github.com/user-attachments/assets/e72a0755-c4d1-44a9-8191-9f0f11d344bf
+
+
+
+- Training results (Continuous action)
+![image](https://github.com/user-attachments/assets/8d7650ad-a3d7-4375-9a5d-f8cbb0b6ba36)
+![image](https://github.com/user-attachments/assets/9e03729c-427d-4d35-a0b6-196e33507e5f)
+![image](https://github.com/user-attachments/assets/ea1a1c1f-93a5-420f-84f3-0ce0f3171e4d)
+
 
 
 ## Result analysis
