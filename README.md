@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
 
 - Parallel Parking
 
-https://github.com/user-attachments/assets/c0d303b9-0a58-4d36-9314-428a77f4ef1b
+[https://github.com/user-attachments/assets/c0d303b9-0a58-4d36-9314-428a77f4ef1b](https://github.com/user-attachments/assets/e72a0755-c4d1-44a9-8191-9f0f11d344bf)
 
 For more results, Please refer to [doc/training_results.md.](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md)
 
@@ -75,3 +75,7 @@ Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/b
 ## Training results
 Please refer to [doc/training_results.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md).
 
+## Future development ideas
+- Improving the parallel agent’s performance, by encouraging the agent to park near the center of the parking lot.
+- Doing the training with different RL algorithms and compare their performance. 
+- Updating used tools version to the latest ones.
