@@ -1,6 +1,11 @@
-# RL_APS
+# Reinforcement learning based automated parking systems
+## Overivew
 This repository is a development environment for "Reinforcement Learning-Based Automated Parking Systems." It provides the training environment for the agent in both parallel and perpendicular parking scenarios.
 
+After trainings, the agent successfully parks in both perpendicular and parallel scenarios, using only relative coordinate information. Performance was further improved through reward shaping techniques, including a guidance reward and a velocity penalty. The guidance reward encouraged the agent to reverse into the parking lot, considering the heading angle parallel to the parking lot thanks to the guidance reward. The velocity penalty led the agent to reduce speed as it approached the target, reaching near-zero velocity. Last but not least, when both rewards were applied, the agent demonstrated more stable and realistic parking behavior.
+
+
+## Trained agent videos
 The following videos present the trained agent's behavior in the parking simulation.
 
 - Perpendicular Parking
