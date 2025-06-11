@@ -39,6 +39,9 @@ This is useful for debugging to make sure the car’s movement.
       ψ = dt ∗ ψ_dot  
   
 ## Reinforcement Learning
+### Algorithm
+Proximal Policy Optimization (PPO) was used for training the reinforcement learning agent. Experiment tests for PPO conducted by OpenAI prove that PPO outperforms other online policy gradient methods while keeping a favorable balance between sample complexity, simplicity, and wall-time. PPO is an actor-critic algorithm which takes a hybrid approach combining a value-based and policy-based approach, where the actor decides actions to take, and the critic evaluates the actions taken by the actor.   
+
 ### Environment
 The overview of RL model for this project is illustrated in the following figure.  
 ![image](https://github.com/taka-rl/RL_APS/assets/157423802/192dc6cb-3ee7-4fec-8e92-db4cdd4a516c)
