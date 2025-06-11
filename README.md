@@ -2,7 +2,7 @@
 ## Overview
 This repository is a development environment for "Reinforcement Learning-Based Automated Parking Systems." It provides the training environment for the agent in both parallel and perpendicular parking scenarios.
 
-After trainings, the agent successfully parks in both perpendicular and parallel scenarios, using only relative coordinate information. Performance was further improved through reward shaping techniques, including a guidance reward and a velocity penalty. The guidance reward encouraged the agent to reverse into the parking lot, considering the heading angle parallel to the parking lot. The velocity penalty led the agent to reduce speed as it approached the target, reaching near-zero velocity. Last but not least, when both rewards were applied, the agent demonstrated more stable and realistic parking behavior.
+Proximal Policy Optimization (PPO) was used for training the reinforcement learning agent. After training, the agent was able to successfully park in both perpendicular and parallel scenarios, using only relative coordinate information. Performance was further improved through reward shaping techniques, including a guidance reward and a velocity penalty. The guidance reward encouraged the agent to reverse into the parking lot, considering the heading angle parallel to the parking lot. The velocity penalty led the agent to reduce speed as it approached the target, reaching near-zero velocity. Last but not least, when both rewards were applied, the agent demonstrated more stable and realistic parking behavior.
 
 
 ### Trained agent
