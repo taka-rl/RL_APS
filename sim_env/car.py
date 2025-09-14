@@ -38,7 +38,7 @@ class Car:
 
     def update_state(self, car_loc, v_dot, psi_dot, dt):
         self.car_loc += dt * car_loc
-        self.v = np.clip(self.v + dt * v_dot, -self.config.velocity_limit, self.config.velocity_limit)
+        self.v = np.clip(self.v + v_dot, -self.config.velocity_limit, self.config.velocity_limit)
         self.psi += dt * psi_dot
 
     @staticmethod
