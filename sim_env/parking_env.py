@@ -170,7 +170,8 @@ class Parking(gym.Env):
                         f"Invalid action value: {action}. "
                         f"Valid values are from 0 to 5")
 
-            self.car.loc_old = self.car.car_loc
+            # Store old location before update the current location
+            self.car.loc_old = self.car.car_loc.copy()
             self.car.kinematic_act(action)
 
             if self.render_mode == "human":
@@ -223,9 +224,8 @@ class Parking(gym.Env):
                                                                 self.config.car_loc_randomize_range)
             if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
                 break
-        self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.parking_type, self.side), self.config)
+        self.car = Car(car_loc, car_loc.copy(), self.parking_strategy.set_initial_heading(self.parking_type, self.side), self.config)
 
-        self.car.loc_old = self.car.car_loc
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
             self.parking_lot, self.side)
         self.state = self.get_normalized_state()
