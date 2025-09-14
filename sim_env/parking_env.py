@@ -258,7 +258,7 @@ class Parking(gym.Env):
         distances = np.array(distances).flatten()
 
         # normalization
-        normalized_distances = distances / self.config.max_distance
+        normalized_distances = distances / self.config.velocity_limit
 
         # type1 state (default state)
         if self.config.state_type == 'type1':
