@@ -133,6 +133,16 @@ class Parking(gym.Env):
         self.v_penalty = self.config.penalty_ratio['velocity']
         self.angle_penalty = self.config.penalty_ratio['angle']
 
+        # scale for calculating action
+        self.__scale = np.asarray(
+                    [self.config.acceleration_limit, self.config.steering_limit], 
+                    dtype=np.float32
+                    )
+        
+    @property
+    def scale(self):
+        return self.__scale
+
     def step(self, action):
         """
         Let the car(agent) take an action in the parking environment.
@@ -148,23 +158,21 @@ class Parking(gym.Env):
         """
         if action is not None:
             if self.action_type == "continuous":
-                action = np.clip(action, [-1, -1], [1, 1]) * [
-                    self.config.acceleration_limit,
-                    self.config.steering_limit,
-                ]
+                action = np.clip(action, -1.0, 1.0).astype(np.float32, copy=False) * self.__scale
+
             if self.action_type == "discrete":
                 if action == 0:  # move forward
-                    action = np.array([1, 0])
+                    action = np.array([1, 0], dtype=np.float32)
                 elif action == 1:  # move right forward
-                    action = np.array([1, -PI/6])
+                    action = np.array([1, -PI/6], dtype=np.float32)
                 elif action == 2:  # move left forward
-                    action = np.array([1, PI/6])
+                    action = np.array([1, PI/6], dtype=np.float32)
                 elif action == 3:  # move backward
-                    action = np.array([-1, 0])
+                    action = np.array([-1, 0], dtype=np.float32)
                 elif action == 4:  # move right backward
-                    action = np.array([-1, -PI/6])
+                    action = np.array([-1, -PI/6], dtype=np.float32)
                 elif action == 5:  # move left backward
-                    action = np.array([-1, PI/6])
+                    action = np.array([-1, PI/6], dtype=np.float32)
                 else:
                     raise ValueError(
                         f"Invalid action value: {action}. "
@@ -288,7 +296,7 @@ class Parking(gym.Env):
             raise ValueError('State type shall be either type1, type2 or type3')
 
         # clip the state value
-        state = np.clip(state, a_min=-1, a_max=1)
+        state = np.clip(state, a_min=-1, a_max=1).astype(np.float32, copy=False)
 
         return state
 
