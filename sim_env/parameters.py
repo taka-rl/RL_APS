@@ -235,10 +235,7 @@ class Config:
         # Reward and State settings
         self.reward_type = reward_type
         self.state_type = state_type
-
-        if penalty_ratio is None:
-            self.penalty_ratio = {'angle': 0.25, 'velocity': 0.25}
-        self.penalty_ratio = penalty_ratio
+        self.penalty_ratio = {'angle': 0.25, 'velocity': 0.25} if penalty_ratio is None else penalty_ratio
 
         # Action limits
         self.acceleration_limit = np.float32(acceleration_limit)

@@ -3,8 +3,9 @@ from sim_env.parameters import Config
 
 
 class Car:
-    def __init__(self, car_loc, psi, config: Config):
+    def __init__(self, car_loc, loc_old, psi, config: Config):
         self.car_loc = car_loc
+        self.loc_old = loc_old
         self.psi = psi
         self.v = 0.0
         self.delta = 0.0
@@ -38,7 +39,7 @@ class Car:
 
     def update_state(self, car_loc, v_dot, psi_dot, dt):
         self.car_loc += dt * car_loc
-        self.v = np.clip(self.v + v_dot, -self.config.velocity_limit, self.config.velocity_limit)
+        self.v = np.clip(self.v + dt * v_dot, -self.config.velocity_limit, self.config.velocity_limit)
         self.psi += dt * psi_dot
 
     @staticmethod
