@@ -2,66 +2,114 @@ import pytest
 import numpy as np
 from gymnasium.spaces import Discrete
 from sim_env.parking_env import Parking
-from sim_env.parameters import Config
+from sim_env.parameters import Config, PI
 from sim_env.car import Car
 
 
 # --------------------------------------------- Common functions for test ---------------------------------------------
-def parking_env(reward_type: str = 'type1', state_type: str = 'type1'):
+def parking_env(reward_type: str = 'type1', state_type: str = 'type1', render_mode: str = 'no_render',
+                action_type:str = 'continuous', parking_type: str = 'perpendicular', 
+                training_mode: str = 'off', *args, **kwargs) -> Parking:
     env_config = {
-        'render_mode': 'no_render',
-        'action_type': 'continuous',
-        'parking_type': 'perpendicular',
-        'training_mode': 'on',
-        'config': Config(reward_type=reward_type, state_type=state_type)
+        'render_mode': render_mode,
+        'action_type': action_type,
+        'parking_type': parking_type,
+        'training_mode': training_mode,
+        'config': Config(reward_type=reward_type, state_type=state_type, *args, **kwargs),
     }
     return Parking(env_config)
 
 
 # --------------------------------------------- Initialization ---------------------------------------------
-@pytest.mark.parametrize('parking_type', ['perpendicular', 'parallel'])
+@pytest.mark.parametrize('reward_type', ['type1', 'type2', 'type3', 'type4'])
+@pytest.mark.parametrize('state_type', ['type1', 'type2', 'type3', 'type4'])
+@pytest.mark.parametrize('render_mode', ['human', 'no_render'])
 @pytest.mark.parametrize('action_type', ['continuous', 'discrete'])
-def test_env_init(parking_type, action_type):
+@pytest.mark.parametrize('parking_type', ['perpendicular', 'parallel'])
+@pytest.mark.parametrize('training_mode', ['on', 'off'])
+def test_env_init(reward_type, state_type, render_mode, action_type, parking_type, training_mode):
     """Test if the environment is initialized properly."""
 
-    env = Parking({'render_mode': 'no_render',
-                   'action_type': action_type,
-                   'parking_type': parking_type,
-                   'training_mode': 'off',
-                   'config': Config(),
-                   })
+    # Initialization
+    env = parking_env(reward_type, state_type, render_mode, action_type, parking_type, training_mode)
+
+    # reward type
+    assert env.config.reward_type == reward_type
+
+    # state type
+    assert env.config.state_type == state_type
+    assert env.state is None
+
+    assert env.observation_space.dtype == np.float32, f"Expected dtype float32, got {env.observation_space.dtype}"
+
+    if state_type == 'type1':
+        assert env.observation_space.shape == (8,), 'observation_space shape shall be 8.'
+
+    elif state_type == 'type2':
+        assert env.observation_space.shape == (10, ), 'observation_space shape shall be 10.'
+
+    elif state_type == 'type3':
+        assert env.observation_space.shape == (9, ), 'observation_space shape shall be 9.'
+
+    elif state_type == 'type4':
+        assert env.observation_space.shape == (11, ), 'observation_space shape shall be 11.'
+
+    else:
+        # Invalid state type(expecting ValueError)
+        with pytest.raises(ValueError, match='State type shall be either type1, type2, type3, or type4.'):
+            parking_env(reward_type, 'invalid_state_type', render_mode, action_type, parking_type, training_mode)
+    
+    # action type
     assert env.action_type == action_type
+    if action_type == 'continuous':
+        assert env.action_space.dtype == np.float32, f"Expected dtype float32, got {env.action_space.dtype}"
+        assert env.action_space.shape == (2, ), f"Expected shape (2, ), got {env.action_space.shape}"
+    # else:
+        # Omit discrete action space test for now
+    
+    # ParkingEnv class attribute's initialization
+    assert env.terminated is None
+    assert env.truncated is None
+    assert env.run_steps is None
+    assert env.side is None
+    assert env.parking_lot is None
+    assert env.parking_lot_vertices is None
+    assert env.car is None
+    assert env.static_cars_vertices is None
+    assert env.static_parking_lot_vertices is None
+
     assert env.parking_type == parking_type
+    assert env.training_mode == training_mode
     assert env.config.max_steps == 80
+
+    assert env.scale.dtype == np.float32, f"Expected dtype float32, got {env.scale.dtype}"
+    assert env.scale.shape == (2, ), f"Expected shape (2, ), got {env.scale.shape}"
 
 
 # --------------------------------------------- Environment step ---------------------------------------------
 @pytest.mark.parametrize('parking_type', ['perpendicular', 'parallel'])
-@pytest.mark.parametrize('action_type', ['continuous', 'discrete'])
-def test_env_step(parking_type, action_type):
+def test_continuous_env_step(parking_type):
     """Test stepping in the parking environment."""
     env = Parking({'render_mode': 'no_render',
-                   'action_type': action_type,
+                   'action_type': 'continuous',
                    'parking_type': parking_type,
                    'training_mode': 'off',
                    'config': Config(),
                    })
     # Reset the environment
     env.reset()
-
-    # Move forward
-    if action_type == 'continuous':
-        action = [1.0, 0.0]
-    elif action_type == 'discrete':
-        action = int(0)
-    state, reward, terminated, truncated, info = env.step(action)
-
-    assert state is not None, 'State shall update after a step.'
-    assert isinstance(state, np.ndarray), 'State shall be a NumPy array.'
-    assert np.all(state >= -1.0) and np.all(state <= 1.0), 'State value shall be between -1.0 and 1.0'
-    assert isinstance(reward, (int, float)), 'Reward shall be a number.'
-    assert isinstance(terminated, bool), 'Terminated flag shall be a boolean.'
-    assert isinstance(truncated, bool), 'Truncated flag shall be a boolean.'
+    
+    # Valid actions (2D continuous actions within the range of [-1.0, 1.0])
+    action = [[1.0, 1.0], [-1.0, -1.0], [1.4, -1.3], [-1.9, 1.5], [0.4, 0.9], [0.4, 0.3]]
+    for a in action:
+        state, reward, terminated, truncated, info = env.step(a)
+        assert state is not None, 'State shall update after a step.'
+        assert isinstance(state, np.ndarray), 'State shall be a NumPy array.'
+        assert state.dtype == np.float32, f"Expected dtype float32, got {state.dtype}"
+        assert np.all(state >= -1.0) and np.all(state <= 1.0), 'State value shall be between -1.0 and 1.0'
+        assert isinstance(reward, (int, float)), 'Reward shall be a number.'
+        assert isinstance(terminated, bool), 'Terminated flag shall be a boolean.'
+        assert isinstance(truncated, bool), 'Truncated flag shall be a boolean.'
 
 
 @pytest.mark.parametrize('parking_type', ['perpendicular', 'parallel'])
@@ -85,6 +133,7 @@ def test_discrete_action_env_step(parking_type):
         state, reward, terminated, truncated, info = env.step(action)
         assert state is not None, 'State shall update after a step.'
         assert isinstance(state, np.ndarray), 'State shall be a NumPy array.'
+        assert state.dtype == np.float32, f"Expected dtype float32, got {state.dtype}"
         assert np.all(state >= -1.0) and np.all(state <= 1.0), 'State value shall be between -1.0 and 1.0'
         assert isinstance(reward, (int, float)), 'Reward shall be a number.'
         assert isinstance(terminated, bool), 'Terminated flag shall be a boolean.'
@@ -94,23 +143,63 @@ def test_discrete_action_env_step(parking_type):
     with pytest.raises(ValueError, match='Invalid action value: 7'):
         env.step(7)
 
+# --------------------------------------------- Environment action ---------------------------------------------
+@pytest.mark.parametrize('action_type', ['continuous', 'discrete'])
+def test_action_float32_type(action_type):
+
+    # Initialization
+    env = parking_env(action_type=action_type)
+    
+    # Reset the environment
+    env.reset()
+
+    # Define test actions
+    action_continuous = [[1.0, 1.0], [-1.0, -1.0], [1.4, -1.3], [-1.9, 1.5], [0.4, 0.9], [0.4, 0.3]]
+    action_discrete = [0, 1, 2, 3, 4, 5]
+
+    for action in (action_continuous if action_type == "continuous" else action_discrete):
+        if env.action_type == "continuous":
+            action = np.clip(action, -1.0, 1.0).astype(np.float32, copy=False) * env.scale
+        
+        elif env.action_type == "discrete":
+            if action == 0:  # move forward
+                action = np.array([1, 0], dtype=np.float32)
+            elif action == 1:  # move right forward
+                action = np.array([1, -PI/6], dtype=np.float32)
+            elif action == 2:  # move left forward
+                action = np.array([1, PI/6], dtype=np.float32)
+            elif action == 3:  # move backward
+                action = np.array([-1, 0], dtype=np.float32)
+            elif action == 4:  # move right backward
+                action = np.array([-1, -PI/6], dtype=np.float32)
+            elif action == 5:  # move left backward
+                action = np.array([-1, PI/6], dtype=np.float32)
+            else:
+                # omit a test case for invalid action
+                pass
+
+        else:
+            raise ValueError(f"Invalid action type: {env.action_type}. "
+                             f"Valid types are 'continuous' and 'discrete'.")
+        
+        # Evaluate action
+        assert action.dtype == np.float32, f"Expected action dtype float32, got {action.dtype}"
+        assert action.shape == (2,), f"Expected action shape (2,), got {action.shape}"
+
 
 # --------------------------------------------- Environment reset ---------------------------------------------
+@pytest.mark.parametrize('reward_type', ['type1', 'type2', 'type3', 'type4'])
+@pytest.mark.parametrize('state_type', ['type1', 'type2', 'type3', 'type4'])
 @pytest.mark.parametrize('parking_type', ['perpendicular', 'parallel'])
 @pytest.mark.parametrize('action_type', ['continuous', 'discrete'])
 @pytest.mark.parametrize('training_mode', ['on', 'off'])
 @pytest.mark.parametrize('side', (1, 2, 3, 4))
-def test_env_reset(parking_type, action_type, training_mode, side):
-    """Test reset functionality."""
+def test_env_reset(reward_type, state_type,parking_type, action_type, training_mode, side):
     """Test the reset functionality of the parking environment."""
 
     # Initialize environment
-    env = Parking({'render_mode': 'no_render',
-                   'action_type': action_type,
-                   'parking_type': parking_type,
-                   'training_mode': training_mode,
-                   'config': Config(side=side),
-                   })
+    env = parking_env(reward_type=reward_type, state_type=state_type, action_type=action_type,
+                      parking_type=parking_type, training_mode=training_mode, side=side)
 
     # Reset the environment
     state, _ = env.reset()
@@ -118,6 +207,7 @@ def test_env_reset(parking_type, action_type, training_mode, side):
     # Check state properties
     assert state is not None, 'Reset shall return a valid initial state.'
     assert isinstance(state, np.ndarray), 'State shall be a NumPy array.'
+    assert state.dtype == np.float32, f"Expected dtype float32, got {state.dtype}"
     assert state.shape[0] > 0, 'State shall not be an empty array.'
     assert np.all(state >= -1.0) and np.all(state <= 1.0), 'State values shall be normalized between -1.0 and 1.0'
 
