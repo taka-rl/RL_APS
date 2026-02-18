@@ -135,10 +135,10 @@ class Parking(gym.Env):
 
         # scale for calculating action
         self.__scale = np.asarray(
-                    [self.config.acceleration_limit, self.config.steering_limit], 
+                    [self.config.acceleration_limit, self.config.steering_limit],
                     dtype=np.float32
                     )
-        
+
     @property
     def scale(self):
         return self.__scale
@@ -571,3 +571,7 @@ class Parking(gym.Env):
         if xy2[0] <= obj[0] <= xy1[0] and xy2[1] <= obj[1] <= xy1[1]:
             return True
         return False
+
+    def close(self) -> None:
+        """ Close the environment. """
+        self.renderer.close()

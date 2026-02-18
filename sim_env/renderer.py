@@ -166,6 +166,12 @@ class Renderer:
         self.surf_parkinglot = None
         self.surf_car = None
 
+    def close(self) -> None:
+        """ Close the Pygame window and clean up resources. """
+        if self.window is not None:
+            pygame.display.quit()
+            pygame.quit()
+
     @staticmethod
     def draw_object(screen: pygame.Surface, color: tuple, vertex) -> None:
         """Draw an object using a list of vertices."""
