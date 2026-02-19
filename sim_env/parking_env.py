@@ -120,7 +120,7 @@ class Parking(gym.Env):
             self.parking_strategy = PerpendicularParking(self.config)
 
         # training
-        self.state = None
+        self.observation = None
         self.terminated = None
         self.truncated = None
         self.run_steps = None
@@ -134,60 +134,90 @@ class Parking(gym.Env):
         self.angle_penalty = self.config.penalty_ratio['angle']
 
         # scale for calculating action
-        self.__scale = np.asarray(
+        self.__action_scale = np.asarray(
                     [self.config.acceleration_limit, self.config.steering_limit],
                     dtype=np.float32
                     )
 
     @property
-    def scale(self):
-        return self.__scale
+    def action_scale(self):
+        return self.__action_scale
 
-    def step(self, action):
+    def __convert_action(self, action: int | np.ndarray) -> np.ndarray:
         """
-        Let the car(agent) take an action in the parking environment.
+        Convert an action into a 2-element vector [acceleration, steering angle].
 
         Parameters:
-            action(list): [a, δ]: a is acceleration, δ(delta) is steering angle.
+            action (int | np.ndarray):
+                - continuous action: 2-element vector [a_cmd, δ_cmd] of shape (2, ) with normalized commands in [-1, 1],
+                     representing acceleration (a), steering angle (δ), and _cmd (command).
+                - discrete action: int in [0..5]
 
         Returns:
-            state (list): velocity, the 4 corner points of the parking area
-            reward:
-            terminated:
-            truncated:
+            np.ndarray: float32 array of shape (2, ), representing [a, δ], scaled by the action scale.
         """
-        if action is not None:
-            if self.action_type == "continuous":
-                action = np.clip(action, -1.0, 1.0).astype(np.float32, copy=False) * self.__scale
 
-            if self.action_type == "discrete":
-                if action == 0:  # move forward
-                    action = np.array([1, 0], dtype=np.float32)
-                elif action == 1:  # move right forward
-                    action = np.array([1, -PI/6], dtype=np.float32)
-                elif action == 2:  # move left forward
-                    action = np.array([1, PI/6], dtype=np.float32)
-                elif action == 3:  # move backward
-                    action = np.array([-1, 0], dtype=np.float32)
-                elif action == 4:  # move right backward
-                    action = np.array([-1, -PI/6], dtype=np.float32)
-                elif action == 5:  # move left backward
-                    action = np.array([-1, PI/6], dtype=np.float32)
-                else:
-                    raise ValueError(
-                        f"Invalid action value: {action}. "
-                        f"Valid values are from 0 to 5")
+        if self.action_type == 'continuous':
+            action = np.clip(action, -1.0, 1.0).astype(np.float32, copy=False) * self.__action_scale
+            return action
 
-            # Store old location before update the current location
-            self.car.loc_old = self.car.car_loc.copy()
-            self.car.kinematic_act(action)
+        elif self.action_type == 'discrete':
+            if action == 0:  # move forward
+                action = np.array([1, 0], dtype=np.float32)
+            elif action == 1:  # move right forward
+                action = np.array([1, -PI/6], dtype=np.float32)
+            elif action == 2:  # move left forward
+                action = np.array([1, PI/6], dtype=np.float32)
+            elif action == 3:  # move backward
+                action = np.array([-1, 0], dtype=np.float32)
+            elif action == 4:  # move right backward
+                action = np.array([-1, -PI/6], dtype=np.float32)
+            elif action == 5:  # move left backward
+                action = np.array([-1, PI/6], dtype=np.float32)
+            else:
+                raise ValueError(
+                    f"Invalid action value: {action}. "
+                    f"Valid values are from 0 to 5")
 
-            if self.render_mode == "human":
-                self.render()
-            reward = self._reward()
-            self.state = self.get_normalized_state()
+            return action
 
-        return self.state, reward, self.terminated, self.truncated, {"step": self.run_steps}
+        # Invalid action type case
+        assert False, f"Unexpected action_type: {self.action_type}"
+
+    def step(self, action: int | np.ndarray):
+        """
+        Advance the environment by one step based on the given action
+
+        The input action is converted to a float32 2-element vector [acceleration, steering_angle]
+        and applied to the kinematic model.
+
+        Parameters:
+            action (int | np.ndarray):
+                - continuous action: 2-element vector [a_cmd, δ_cmd] shape (2, ) with normalized commands in [-1, 1]
+                - discrete action: int in [0..5]
+
+        Returns:
+            observation (np.ndarray): normalized observation (float32). Shape depends on config.state_type.
+            reward (float): step reward
+            terminated (bool): whether the episode ended due to success/failure.
+            truncated (bool): whether the episode ended due to the maximum number of steps.
+            info (dict): additional diagnostics (e.g., {"step": self.run_steps}).
+        """
+        # Convert the input action to the appropriate format
+        action = self.__convert_action(action)
+
+        # Store old location before update the current location
+        self.car.loc_old = self.car.car_loc.copy()
+
+        # Update the car's state based on the action taken
+        self.car.kinematic_act(action)
+
+        if self.render_mode == "human":
+            self.render()
+        reward = self._reward()
+        self.observation = self.get_normalized_state()
+
+        return self.observation, reward, self.terminated, self.truncated, {"step": self.run_steps}
 
     def render(self):
         """
@@ -236,7 +266,7 @@ class Parking(gym.Env):
 
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
             self.parking_lot, self.side)
-        self.state = self.get_normalized_state()
+        self.observation = self.get_normalized_state()
 
         self.terminated = False
         self.truncated = False
@@ -245,7 +275,7 @@ class Parking(gym.Env):
         if self.render_mode == 'human':
             self.renderer.reset_render()
 
-        return self.state, {}
+        return self.observation, {}
 
     def get_normalized_state(self):
         """
