@@ -120,7 +120,7 @@ class Parking(gym.Env):
             self.parking_strategy = PerpendicularParking(self.config)
 
         # training
-        self.state = None
+        self.observation = None
         self.terminated = None
         self.truncated = None
         self.run_steps = None
@@ -191,15 +191,13 @@ class Parking(gym.Env):
         The input action is converted to a float32 2-element vector [acceleration, steering_angle]
         and applied to the kinematic model.
 
-        TODO: "state" should be renamed to "observation" as "observation" describes itself better
-
         Parameters:
             action (int | np.ndarray):
                 - continuous action: 2-element vector [a_cmd, δ_cmd] shape (2, ) with normalized commands in [-1, 1]
                 - discrete action: int in [0..5]
 
         Returns:
-            state (np.ndarray): normalized observation (float32). Shape depends on config.state_type.
+            observation (np.ndarray): normalized observation (float32). Shape depends on config.state_type.
             reward (float): step reward
             terminated (bool): whether the episode ended due to success/failure.
             truncated (bool): whether the episode ended due to the maximum number of steps.
@@ -217,9 +215,9 @@ class Parking(gym.Env):
         if self.render_mode == "human":
             self.render()
         reward = self._reward()
-        self.state = self.get_normalized_state()
+        self.observation = self.get_normalized_state()
 
-        return self.state, reward, self.terminated, self.truncated, {"step": self.run_steps}
+        return self.observation, reward, self.terminated, self.truncated, {"step": self.run_steps}
 
     def render(self):
         """
@@ -268,7 +266,7 @@ class Parking(gym.Env):
 
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
             self.parking_lot, self.side)
-        self.state = self.get_normalized_state()
+        self.observation = self.get_normalized_state()
 
         self.terminated = False
         self.truncated = False
@@ -277,7 +275,7 @@ class Parking(gym.Env):
         if self.render_mode == 'human':
             self.renderer.reset_render()
 
-        return self.state, {}
+        return self.observation, {}
 
     def get_normalized_state(self):
         """
