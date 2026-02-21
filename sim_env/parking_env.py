@@ -215,7 +215,7 @@ class Parking(gym.Env):
         if self.render_mode == "human":
             self.render()
         reward = self._reward()
-        self.observation = self.get_normalized_state()
+        self.observation = self.normalized_obs()
 
         return self.observation, reward, self.terminated, self.truncated, {"step": self.run_steps}
 
@@ -266,7 +266,7 @@ class Parking(gym.Env):
 
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
             self.parking_lot, self.side)
-        self.observation = self.get_normalized_state()
+        self.observation = self.normalized_obs()
 
         self.terminated = False
         self.truncated = False
@@ -277,7 +277,7 @@ class Parking(gym.Env):
 
         return self.observation, {}
 
-    def get_normalized_state(self):
+    def normalized_obs(self):
         """
         Prepare and normalize the state vector for the environment by flattening and combining
         the car's velocity with the distances from parking lot vertices to the car's current location.
