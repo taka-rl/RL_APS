@@ -279,13 +279,25 @@ class Parking(gym.Env):
 
     def normalized_obs(self):
         """
-        Prepare and normalize the state vector for the environment by flattening and combining
-        the car's velocity with the distances from parking lot vertices to the car's current location.
+        Build the normalized observation vector for the current step.
+
+        The observation is constructed from the parking-lot vertex positions expressed in the
+        car's local coordinate frame (via `transform_point`). These 2D relative vectors are
+        flattened and normalized by `config.max_distance`. Depending on `config.state_type`,
+        the observation may also include a guidance vector (target point in the car frame)
+        and/or the car's normalized velocity.
+
+        Observation contents by state_type:
+            - type1: vertex relative coordinates only (shape: (8,))
+            - type2: vertex coords + guidance vector (shape: (10,))
+            - type3: vertex coords + velocity (shape: (9,))
+            - type4: vertex coords + guidance + velocity (shape: (11,))
+
+        All values are clipped to [-1, 1] and returned as float32.
 
         Returns:
-            np.ndarray: The normalized and flattened state vector consisting of the car's velocity
-                        and the distances to each parking lot vertex, clipped in between -1 and 1.
-        """
+            np.ndarray: 1D float32 observation vector. Shape depends on `config.state_type`.
+         """
 
         # calculate the distance between the car and the parking lot vertices for the coordinate of the car
         distances = []
