@@ -184,7 +184,7 @@ class Parking(gym.Env):
         # Invalid action type case
         assert False, f"Unexpected action_type: {self.action_type}"
 
-    def step(self, action: int | np.ndarray):
+    def step(self, action: int | np.ndarray) -> tuple[np.ndarray, float, bool, bool, dict]:
         """
         Advance the environment by one step based on the given action
 
@@ -219,7 +219,7 @@ class Parking(gym.Env):
 
         return self.observation, reward, self.terminated, self.truncated, {"step": self.run_steps}
 
-    def render(self):
+    def render(self) -> None:
         """
         Draw the parking environment.
 
@@ -235,13 +235,13 @@ class Parking(gym.Env):
         else:
             return self._render(self.render_mode)
 
-    def _render(self, mode: str):
+    def _render(self, mode: str) -> None:
         if mode == "human":
             self.renderer.initialize_window()
             self.renderer.draw_static_elements(self.parking_lot_vertices, self.static_parking_lot_vertices, self.static_cars_vertices)
             self.renderer.render(self.car, self.car.loc_old)
 
-    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
+    def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> tuple[np.ndarray, dict]:
         super().reset(seed=seed)
 
         # set the side and initial positions
@@ -277,7 +277,7 @@ class Parking(gym.Env):
 
         return self.observation, {}
 
-    def normalized_obs(self):
+    def normalized_obs(self) -> np.ndarray:
         """
         Build the normalized observation vector for the current step.
 
@@ -343,7 +343,7 @@ class Parking(gym.Env):
         return state
 
     @staticmethod
-    def transform_point(x: float, y: float, car_x: float, car_y: float, heading: float) -> np.array(['x', 'y']):
+    def transform_point(x: float, y: float, car_x: float, car_y: float, heading: float) -> np.ndarray:
         """
         Transform the global coordinate system to the local(car) coordinate system
 
@@ -361,7 +361,7 @@ class Parking(gym.Env):
 
         return np.array([new_x, new_y])
 
-    def _reward(self) -> int:
+    def _reward(self) -> float:
         self.run_steps += 1
         reward = 0
 
@@ -474,7 +474,7 @@ class Parking(gym.Env):
         return False
 
     @staticmethod
-    def get_parking_angle(parking_type: str, side: int) -> Union[float, List[float]]:
+    def get_parking_angle(parking_type: str, side: int) -> float | list[float]:
         """
         Determines the expected parking angle based on parking type and side.
 
