@@ -335,7 +335,7 @@ class Parking(gym.Env):
             state = np.concatenate((normalized_distances, normalized_guidance, normalized_velocity))  # 11 elements
 
         else:
-            raise ValueError('State type shall be either type1, type2 or type3')
+            raise ValueError('State type shall be either type1, type2, type3 or type4')
 
         # clip the state value
         state = np.clip(state, a_min=-1, a_max=1).astype(np.float32, copy=False)
