@@ -46,3 +46,5 @@ for i in range(10):
         episode_reward += reward
         # print("Episode reward:", episode_reward)
     print(f'{i}: {episode_reward}')
+
+env.close()
