@@ -31,7 +31,6 @@ for i in range(10):
     episode_reward = 0
     terminated = truncated = False
     obs, info = env.reset()
-    env.render()
     actions = []
     while not terminated and not truncated:
         # Algorithm.compute_single_action() is to programmatically compute actions from a trained agent.
@@ -40,7 +39,6 @@ for i in range(10):
         # action = int(input("Action: "))
         actions.append(action)
         obs, reward, terminated, truncated, info = env.step(action)
-        env.render()
         # print("obs: ", obs, "reward: ", reward, "info: ", info)
         time.sleep(0.1)
         episode_reward += reward

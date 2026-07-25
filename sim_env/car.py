@@ -3,9 +3,8 @@ from sim_env.parameters import Config
 
 
 class Car:
-    def __init__(self, car_loc, loc_old, psi, config: Config):
+    def __init__(self, car_loc, psi, config: Config):
         self.car_loc = car_loc
-        self.loc_old = loc_old
         self.psi = psi
         self.v = 0.0
         self.delta = 0.0
