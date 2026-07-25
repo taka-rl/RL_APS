@@ -206,40 +206,39 @@ class Parking(gym.Env):
         # Convert the input action to the appropriate format
         action = self.__convert_action(action)
 
-        # Store old location before update the current location
-        self.car.loc_old = self.car.car_loc.copy()
+        # Store the previous location for rendering the movement path
+        if self.render_mode == "human":
+            previous_location = self.car.car_loc.copy()
 
         # Update the car's state based on the action taken
         self.car.kinematic_act(action)
 
-        if self.render_mode == "human":
-            self.render()
         reward = self._reward()
         self.observation = self.normalized_obs()
+
+        if self.render_mode == "human":
+            self._render(previous_location)
 
         return self.observation, reward, self.terminated, self.truncated, {"step": self.run_steps}
 
     def render(self) -> None:
+        """Render the current environment state in human mode."""
+        if self.render_mode == "human":
+            self._render(self.car.car_loc)
+
+    def _render(self, previous_location: np.ndarray) -> None:
         """
-        Draw the parking environment.
+        Render one frame of the environment.
+
+        Parameters:
+            previous_location (np.ndarray): Previous location
+                                            Car location before the most recent state update. It is used with
+                                            the current car location to render the vehicle's movement path.
 
         """
-        if self.render_mode is None:
-            assert self.spec is not None
-            gym.logger.warn(
-                "You are calling render method without specifying any render mode. "
-                "You can specify the render_mode at initialization, "
-                f'e.g. gym.make("{self.spec.id}", render_mode="rgb_array")'
-            )
-            return
-        else:
-            return self._render(self.render_mode)
-
-    def _render(self, mode: str) -> None:
-        if mode == "human":
-            self.renderer.initialize_window()
-            self.renderer.draw_static_elements(self.parking_lot_vertices, self.static_parking_lot_vertices, self.static_cars_vertices)
-            self.renderer.render(self.car, self.car.loc_old)
+        self.renderer.initialize_window()
+        self.renderer.draw_static_elements(self.parking_lot_vertices, self.static_parking_lot_vertices, self.static_cars_vertices)
+        self.renderer.render(self.car, previous_location)
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> tuple[np.ndarray, dict]:
         super().reset(seed=seed)
@@ -262,7 +261,7 @@ class Parking(gym.Env):
                                                                 self.config.car_loc_randomize_range)
             if not self.check_max_distance(self.parking_lot_vertices, car_loc, self.config.max_distance):
                 break
-        self.car = Car(car_loc, car_loc.copy(), self.parking_strategy.set_initial_heading(self.parking_type, self.side), self.config)
+        self.car = Car(car_loc, self.parking_strategy.set_initial_heading(self.parking_type, self.side), self.config)
 
         self.static_cars_vertices, self.static_parking_lot_vertices = self.parking_strategy.generate_static_obstacles(
             self.parking_lot, self.side)
@@ -274,6 +273,7 @@ class Parking(gym.Env):
 
         if self.render_mode == 'human':
             self.renderer.reset_render()
+            self._render(self.car.car_loc)
 
         return self.observation, {}
 
