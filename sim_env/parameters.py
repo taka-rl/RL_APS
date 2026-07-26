@@ -221,7 +221,7 @@ class Config:
                  wheel_length: float = 0.75, wheel_width: float = 0.35,
                  parking_length: float = 6.0, parking_width: float = 4.0,
                  max_distance: float = 25.0, max_steps: int = 80,
-                 acceleration_limit: float = 1.0, steering_limit: float = PI/4, velocity_limit: float = 10.0,
+                 acceleration_limit: float = 1.0, steering_limit: float = PI/4, velocity_limit: float = 2.77778,
                  max_angle_error: float = PI/12, center_threshold: float = 1.0,
                  penalty_ratio: dict = None, reward_type: str = 'type1', state_type: str = 'type1',
                  side: Union[int, Tuple[int, ...]] = 1, default_parking_locations: dict = None,
