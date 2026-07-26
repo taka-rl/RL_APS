@@ -99,8 +99,10 @@ class Renderer:
         self.surf_text.fill((0, 0, 0, 0))
 
         # Display car status text
-        text_str = (f'Car location: {car_loc}\nVelocity: {v}\n'
-                    f'Heading angle: {psi}\nDegree: {psi * (180 / PI)}')
+        text_str = (f'Car location: X: {car_loc[0]:.4f}, Y: {car_loc[1]:.4f}\n'
+                    f'Velocity: {v:.4f}m/s\n'
+                    f'Heading angle: {psi:.4f}rad\n'
+                    f'Degree: {psi * (180 / PI):.4f}degree')
 
         # Define the rectangle area for the text display
         text_rect = pygame.Rect(400, 500, 100, 100)
