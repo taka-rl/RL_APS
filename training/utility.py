@@ -1,8 +1,10 @@
-import os
-import tempfile
 import glob
-from ray.tune.logger import UnifiedLogger
+from pathlib import Path
 from typing import Union, Tuple
+
+
+# utility.py is expected to be: RL_APS/training/utility.py
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 
 def generate_unique_id(target_folder) -> int:
@@ -43,70 +45,6 @@ def convert_side_to_abbr(side):
         return "".join(sorted_sides) if sorted_sides else "u"
     else:
         return "u"
-
-
-def custom_log_creator(folder_path: str, custom_str: str):
-    """
-    Set a folder for the training
-
-    Parameter:
-        folder_path: folder path
-        custom_str: parking_type such as parallel or perpendicular
-    Return:
-
-    """
-    custom_path = folder_path  # folder path
-    logdir_prefix = custom_str  # folder name
-
-    # check the folder existence
-    create_folder(custom_path)
-
-    def logger_creator(config):
-        logdir = tempfile.mkdtemp(prefix=logdir_prefix, dir=custom_path)
-
-        # Rename the created folder as it contains unnecessary characters
-        os.rename(logdir, custom_path+logdir_prefix)
-        # if not os.path.exists(custom_path):
-            # os.makedirs(custom_path)
-        return UnifiedLogger(config, custom_path+logdir_prefix, loggers=None)
-
-    return logger_creator
-
-
-def custom_log_checkpoint(folder_path: str, folder_name: str):
-    """
-    Set a folder for the training result
-
-    Parameter:
-        folder_path: Path for training results
-        folder_name: Structured folder name
-
-    Return:
-        str: Full folder path
-    """
-    logdir_prefix = folder_name
-
-    # check the folder existence
-    checkpoint_path = os.path.join(folder_path, logdir_prefix)
-    create_folder(checkpoint_path)
-    return checkpoint_path
-
-
-def create_folder_path(env_config: dict, is_training: bool) -> str:
-    """
-    Return a structured folder path based on environment config.
-
-    Parameters:
-        env_config: Dictionary containing environment configurations
-        is_training: Boolean flag (True: Training, False: Evaluating)
-    Returns:
-        str: Structured folder path
-    """
-    base_folder = "/training_results" if is_training else "/trained_agents"
-
-    folder_path = get_current_path() + f"{base_folder}/{env_config['parking_type']}/{env_config['action_type']}/"
-
-    return folder_path
 
 
 def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type: str, num_train: int,
@@ -161,38 +99,57 @@ def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type
     return folder_name
 
 
-def get_current_path() -> str:
+def create_folder(folder_path: str | Path) -> None:
     """
-    Get the current folder path
-
-    Return:
-         str: the current folder path
+    Create a folder, including missing parent folders.
     """
-    return os.getcwd().replace("\\", "/")
+    path = Path(folder_path)
+    path.mkdir(parents=True, exist_ok=True)
 
 
-def is_folder(folder_path) -> bool:
+def create_folder_path(env_config: dict, is_training: bool) -> str:
     """
-    check if folder_path folder exists or not
-
-     Parameters:
-        folder_path (str): The path to the folder to be checked and potentially created.
-
-    Return:
-        bool: True if the folder exists, else False.
-    """
-    return os.path.exists(folder_path)
-
-
-def create_folder(folder_path) -> None:
-    """
-    Create a folder for the training.
+    Return the base output directory.
 
     Parameters:
-        folder_path (str): The path to the folder to be checked and potentially created.
+        env_config: Dictionary containing environment configurations
+        is_training: Boolean indicating whether or not to create the folder
+                    True: training results
+                    False: trained checkpoints
+
+    Training results:
+        training/training_results/<parking_type>/<action_type>
+
+    Trained checkpoints:
+        training/trained_agents/<parking_type>/<action_type>
     """
-    if not is_folder(folder_path):
-        os.makedirs(folder_path)
-        print(f"Folder '{folder_path}' created.")
-    else:
-        print(f"Folder '{folder_path}' already exists.")
+    base_folder = "training_results" if is_training else "trained_agents"
+
+    folder_path = (
+        PROJECT_ROOT
+        / base_folder
+        / env_config["parking_type"]
+        / env_config["action_type"]
+    )
+
+    return str(folder_path)
+
+
+def create_training_result_dir(folder_path: str, folder_name: str) -> str:
+    """
+    Create and return a directory for TensorBoard and other training logs.
+    """
+    result_dir = Path(folder_path) / folder_name
+    create_folder(result_dir)
+
+    return str(result_dir)
+
+
+def create_checkpoint_dir(folder_path: str, folder_name: str) -> str:
+    """
+    Create and return a directory for an RLlib checkpoint.
+    """
+    checkpoint_dir = Path(folder_path) / folder_name
+    create_folder(checkpoint_dir)
+
+    return str(checkpoint_dir)
