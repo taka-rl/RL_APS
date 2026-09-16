@@ -397,12 +397,15 @@ num_train = 100
 - Trained agent (Continuous action)
 
 
+
 **This is a test code for video** 
 
 <video width="720" height="360" controls>
-  <source src="../training/assets/parallel_parking/parallel_type4.mov" type="video/mp4">
+  <source src="../training/assets/parallel_parking/parallel_type4.mov" type="video/quicktime">
   Your browser does not support the video tag.
 </video>
+
+https://github.com/taka-rl/RL_APS/blob/feature/train_evaluate_agent/training/assets/parallel_parking/parallel_type4.mov
 
 - Training results (Continuous action)
 
