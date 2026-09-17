@@ -1,16 +1,3 @@
-<style>
-    /* initialise the counter */
-    body { counter-reset: figureCounter; }
-    /* increment the counter for every instance of a figure even if it doesn't have a caption */
-    figure { counter-increment: figureCounter; }
-    /* prepend the counter to the figcaption content */
-    figure figcaption:before {
-        content: "Figure " counter(figureCounter) ": "
-    }
-</style>
-
-
-
 # Training Results
 This document shows the training results of both perpendicular parking and parallel parking.
 
@@ -44,21 +31,13 @@ num_train = 100
 
 
 - Training results (Continuous action)
+![Figure 1: The mean length plot for the type1 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type1_len_mean.png)
+*Figure 1: The mean episode length of the continuous action space in the type1 of the perpendicular parking for the 100-iteration training*
+![Figure 2: The max reward plot for the type1 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type1_reward_max.png)
+*Figure 2: The maximum reward in each iteration of the continuous action space in the type1 of the perpendicular parking for the 100-iteration training*
+![Figure 3: The mean reward plot for the type1 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type1_reward_mean.png)
+*Figure 3: The mean reward in each episode of the continuous action space in the type1 of the perpendicular parking for the 100-iteration training*
 
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type1_len_mean.png" alt="The mean length plot for the type1 of the perpendicular parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type1 of the perpendicular parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type1_reward_max.png" alt="The max reward plot for the type1 of the perpendicular parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type1 of the perpendicular parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type1_reward_mean.png" alt="The mean reward plot for the type1 of the perpendicular parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type1 of the perpendicular parking for the 100-iteration training</figcaption>
-</figure>
 
 - Result analysis  
 Figure 2 shows that the agent achieved the maximum reward early in training, indicating that it was able to successfully complete the parking task at an early stage. Moreover, as shown in Figure 1, the mean episode length gradually decreased as training progressed. 
@@ -95,21 +74,13 @@ num_train = 100
 
 
 - Training results (Continuous action)
+![Figure 4: The mean length plot for the type2 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type2_len_mean.png)
+*Figure 4: The mean episode length of the continuous action space in the type2 of the perpendicular parking for the 100-iteration training*
+![Figure 5: The max reward plot for the type2 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type2_reward_max.png)
+*Figure 5: The maximum reward in each iteration of the continuous action space in the type2 of the perpendicular parking for the 100-iteration training*
+![Figure 6: The mean reward plot for the type2 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type2_reward_mean.png)
+*Figure 6: The mean reward in each episode of the continuous action space in the type2 of the perpendicular parking for the 100-iteration training*
 
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type2_len_mean.png" alt="The mean length plot for the type2 of the perpendicular parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type2 of the perpendicular parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type2_reward_max.png" alt="The max reward plot for the type2 of the perpendicular parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type2 of the perpendicular parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type2_reward_mean.png" alt="The mean reward plot for the type2 of the perpendicular parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type2 of the perpendicular parking for the 100-iteration training</figcaption>
-</figure>
 
 - Result analysis  
 Figure 5 shows that the agent successfully completed the parking task, reaching more than 0.98 reward at 50K episodes. 
@@ -152,21 +123,13 @@ num_train = 200
 
 
 - Training results (Continuous action)
+![Figure 7: The mean length plot for the type3 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type3_len_mean.png)
+*Figure 7: The mean episode length of the continuous action space in the type3 of the perpendicular parking for the 200-iteration training*
+![Figure 8: The max reward plot for the type3 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type3_reward_max.png)
+*Figure 8: The maximum reward in each iteration of the continuous action space in the type3 of the perpendicular parking for the 200-iteration training*
+![Figure 9: The mean reward plot for the type3 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type3_reward_mean.png)
+*Figure 9: The mean reward in each episode of the continuous action space in the type3 of the perpendicular parking for the 200-iteration training*
 
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type3_len_mean.png" alt="The mean length plot for the type3 of the perpendicular parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type3 of the perpendicular parking for the 200-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type3_reward_max.png" alt="The max reward plot for the type3 of the perpendicular parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type3 of the perpendicular parking for the 200-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type3_reward_mean.png" alt="The mean reward plot for the type3 of the perpendicular parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type3 of the perpendicular parking for the 200-iteration training</figcaption>
-</figure>
 
 - Training analysis  
 Figure 8 illustrates that the agent was able to complete the parking task early in training. 
@@ -200,22 +163,14 @@ num_train = 200
 - Trained agent (Continuous action)
 
 
-- Training results (Continuous action)
+- Training results (Continuous action)  
+![Figure 10: The mean length plot for the type4 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type4_len_mean.png)
+*Figure 10: The mean episode length of the continuous action space in the type4 of the perpendicular parking for the 200-iteration training*
+![Figure 11: The max reward plot for the type4 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type4_reward_max.png)
+*Figure 11: The maximum reward in each iteration of the continuous action space in the type4 of the perpendicular parking for the 200-iteration training*
+![Figure 12: The mean reward plot for the type4 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type4_reward_mean.png)
+*Figure 12: The mean reward in each episode of the continuous action space in the type4 of the perpendicular parking for the 200-iteration training*
 
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type4_len_mean.png" alt="The mean length plot for the type4 of the perpendicular parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type4 of the perpendicular parking for the 200-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type4_reward_max.png" alt="The max reward plot for the type4 of the perpendicular parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type4 of the perpendicular parking for the 200-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/perpendicular_parking/perpendicular_type4_reward_mean.png" alt="The mean reward plot for the type4 of the perpendicular parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type4 of the perpendicular parking for the 200-iteration training</figcaption>
-</figure>
 
 - Training analysis  
 Figure 11 illustrates that the agent was able to complete the parking task early in training, with the maximum reward eventually exceeding 0.95. The mean episode length shown in Figure 10 plunged to approximately 48 at 100K episodes, stabilizing around 45 by the end of training. Moreover, Figure 12 shows that the agent achieved a mean reward of more than 0.5 at 100K, and the mean reward gradually increased to 0.89 by the end of training. These results indicate that the agent learned a more effective policy under a reward function incorporating both the angle and velocity penalties. 
@@ -252,21 +207,13 @@ num_train = 100
 
 
 - Training results (Continuous action)
+![Figure 13: The mean length plot for the type1 of the parallel parking](../training/assets/parallel_parking/parallel_type1_len_mean.png)
+*Figure 13: The mean episode length of the continuous action space in the type1 of the parallel parking for the 100-iteration training*
+![Figure 14: The max reward plot for the type1 of the parallel parking](../training/assets/parallel_parking/parallel_type1_reward_max.png)
+*Figure 14: The maximum reward in each iteration of the continuous action space in the type1 of the parallel parking for the 100-iteration training*
+![Figure 15: The mean reward plot for the type1 of the parallel parking](../training/assets/parallel_parking/parallel_type1_reward_mean.png)
+*Figure 15: The mean reward in each episode of the continuous action space in the type1 of the parallel parking for the 100-iteration training*
 
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type1_len_mean.png" alt="The mean length plot for the type1 of the parallel parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type1 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type1_reward_max.png" alt="The max reward plot for the type1 of the parallel parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type1 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type1_reward_mean.png" alt="The mean reward plot for the type1 of the parallel parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type1 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
 
 - Training analysis  
 
@@ -301,21 +248,13 @@ num_train = 100
 
 
 - Training results (Continuous action)
+![Figure 16: The mean length plot for the type2 of the parallel parking](../training/assets/parallel_parking/parallel_type2_len_mean.png)
+*Figure 16: The mean episode length of the continuous action space in the type2 of the parallel parking for the 100-iteration training*
+![Figure 17: The max reward plot for the type2 of the parallel parking](../training/assets/parallel_parking/parallel_type2_reward_max.png)
+*Figure 17: The maximum reward in each iteration of the continuous action space in the type2 of the parallel parking for the 100-iteration training*
+![Figure 18: The mean reward plot for the type2 of the parallel parking](../training/assets/parallel_parking/parallel_type2_reward_mean.png)
+*Figure 18: The mean reward in each episode of the continuous action space in the type2 of the parallel parking for the 100-iteration training*
 
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type2_len_mean.png" alt="The mean length plot for the type2 of the parallel parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type2 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type2_reward_max.png" alt="The max reward plot for the type2 of the parallel parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type2 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type2_reward_mean.png" alt="The mean reward plot for the type2 of the parallel parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type2 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
 
 - Training analysis  
 
@@ -350,21 +289,13 @@ num_train = 100
 
 
 - Training results (Continuous action)
+![Figure 19: The mean length plot for the type3 of the parallel parking](../training/assets/parallel_parking/parallel_type3_len_mean.png)
+*Figure 19: The mean episode length of the continuous action space in the type3 of the parallel parking for the 100-iteration training*
+![Figure 20: The max reward plot for the type3 of the parallel parking](../training/assets/parallel_parking/parallel_type3_reward_max.png)
+*Figure 20: The maximum reward in each iteration of the continuous action space in the type3 of the parallel parking for the 100-iteration training*
+![Figure 21: The mean reward plot for the type3 of the parallel parking](../training/assets/parallel_parking/parallel_type3_reward_mean.png)
+*Figure 21: The mean reward in each episode of the continuous action space in the type3 of the parallel parking for the 100-iteration training*
 
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type3_len_mean.png" alt="The mean length plot for the type3 of the parallel parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type1 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type3_reward_max.png" alt="The max reward plot for the type3 of the parallel parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type3 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type3_reward_mean.png" alt="The mean reward plot for the type3 of the parallel parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type3 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
 
 - Training analysis  
 
@@ -397,32 +328,14 @@ num_train = 100
 - Trained agent (Continuous action)
 
 
-
-**This is a test code for video** 
-
-<video width="720" height="360" controls>
-  <source src="../training/assets/parallel_parking/parallel_type4.mov" type="video/quicktime">
-  Your browser does not support the video tag.
-</video>
-
-https://github.com/taka-rl/RL_APS/blob/feature/train_evaluate_agent/training/assets/parallel_parking/parallel_type4.mov
-
 - Training results (Continuous action)
+![Figure 22: The mean length plot for the type4 of the parallel parking](../training/assets/parallel_parking/parallel_type4_len_mean.png)
+*Figure 22: The mean episode length of the continuous action space in the type4 of the parallel parking for the 100-iteration training*
+![Figure 23: The max reward plot for the type4 of the parallel parking](../training/assets/parallel_parking/parallel_type4_reward_max.png)
+*Figure 23: The maximum reward in each iteration of the continuous action space in the type4 of the parallel parking for the 100-iteration training*
+![Figure 24: The mean reward plot for the type4 of the parallel parking](../training/assets/parallel_parking/parallel_type4_reward_mean.png)
+*Figure 24: The mean reward in each episode of the continuous action space in the type4 of the parallel parking for the 100-iteration training*
 
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type4_len_mean.png" alt="The mean length plot for the type4 of the parallel parking" width="1000">
-    <figcaption>The mean episode length of the continuous action space in the type4 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type4_reward_max.png" alt="The max reward plot for the type4 of the parallel parking" width="1000">
-    <figcaption>The maximum reward in each iteration of the continuous action space in the type4 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
-
-<figure>
-    <img src="../training/assets/parallel_parking/parallel_type4_reward_mean.png" alt="The mean reward plot for the type4 of the parallel parking" width="1000">
-    <figcaption>The mean reward in each episode of the continuous action space in the type4 of the parallel parking for the 100-iteration training</figcaption>
-</figure>
 
 - Training analysis  
 
