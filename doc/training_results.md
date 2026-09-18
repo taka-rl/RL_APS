@@ -216,6 +216,9 @@ num_train = 100
 
 
 - Training analysis  
+Figure 14 depicts the maximum reward trend, showing that the agent successfully completed the parking task early in training, reaching the maximum reward at 60K episodes. 
+In addition, the mean reward shown in Figure 15 surged from approximately -0.75 to nearly 1.0 between 50K and 100K episodes, indicating that the agent learned a more effective parking policy.
+Moreover, the mean episode length in Figure 13 decreased significantly to around 45 by 100K episodes and eventually stabilized around 38.
 
 
 ### Guidance Reward (Reward/State: type2)
@@ -257,7 +260,17 @@ num_train = 100
 
 
 - Training analysis  
+Although the mean episode length shown in Figure 16 remained nearly unchanged until 100K episodes, it decreased sharply to around 52 at 150K episodes, and continued to decline gradually, reaching approximately 41 by the end of training.
+Similarly, the mean reward illustrated in Figure 18 was 0.0 until 75K episodes, then exceeded 0.5 at 150K episodes, eventually reached approximately 0.8.
+Figure 17 shows that the maximum reward was around 0 at 30K episodes before decreasing to approximately -1.0 by 75K episodes. Then, it increased dramatically from -1.0 to nearly 0.6 between 75K and 100K and continued to increase gradually, eventually reaching approximately 0.92 by the end of training. These results suggest that the angle penalty successfully encouraged the agent to reduce its heading error, as observed in perpendicular parking type2.
 
+
+- Training history  
+Although the agent successfully completed the parking task, the agent failed to sufficiently reduce its heading error. The reason was similar to the issue observed in perpendicular parking type2.  
+When training was executed with `max_angle_error` set to PI/12, which was exactly the same phenomenon in perpendicular parking type2, the mean reward was around 0.5.  
+Increasing `max_angle_error` to PI/6 (30 degrees) enabled the agent to align its heading parallel to the parking space during training. However, the agent did not approach the center of the parking slot because `center_threshold` was set to 1.0 (meter). Even though the mean reward increased from 0.5 to nearly 1.0 with the configuration, it was not a typical parking scenario, in which a vehicle is usually positioned closer to the center of the parking space.  
+Therefore, training was conducted with `center_threshold` set to 0.5 and `max_angle_error`  kept at PI/6. Under these conditions, the agent appropriately reversed into the center of the parking space, considering its heading parallel to the parking slot.
+However, a possible next step would be to revise the termination logic so that the agent is allowed several additional steps to further refine its position and heading after entering the parking space.
 
 
 ### Velocity Penalty (Reward/State: type3)
@@ -298,6 +311,9 @@ num_train = 100
 
 
 - Training analysis  
+The mean reward shown in Figure 21 increased significantly to approximately 0.5 by 80K while Figure 19 depicts the mean episode length, illustrating it decreased dramatically to around 52 during the same period. 
+Although the mean episode length bounced back to nearly 60 at around 110K episodes, it continued to decline, eventually reaching approximately 50 by the end of training. Meanwhile, the mean reward continued to increase and eventually exceeded 0.9.
+Figure 20 shows that the max reward reached nearly 0.7 at 50K episodes. After the dramatic rise from approximately 0.7 to 0.9 between 50K and 100K episodes, the maximum reward remained relatively stable and eventually approached closely 1.0.
 
 
 ### Both Guidance Reward and Velocity Penalty (Reward/State: type4)
@@ -336,12 +352,22 @@ num_train = 100
 ![Figure 24: The mean reward plot for the type4 of the parallel parking](../training/assets/parallel_parking/parallel_type4_reward_mean.png)
 *Figure 24: The mean reward in each episode of the continuous action space in the type4 of the parallel parking for the 100-iteration training*
 
-
 - Training analysis  
+Figure 22 shows that the mean episode length dropped from approximately 80 to around 53 between 40K and 100K episodes, with the mean reward surging to nearly 0.5 over the same period as shown in Figure 24.
+After 100K episodes, the mean episode length continued to fall to approximately 47, while the mean reward rose gradually to around 0.8.
+Additionally, as shown in Figure 23, the agent achieved the max reward of 0.5 at 50K episodes. The maximum reward then continued to increase throughout training, reaching approximately 0.9. These results indicate that the agent learned a more effective policy under a reward function incorporating both the angle and velocity penalties as observed in perpendicular parking type4. 
+
+
+- Training history
+Under the current parameter setting, the agent successfully reversed toward the center of the parking space and completed the parking task. However, implementing the adjustment logic in the Parallel Parking Type2 would allow the agent to adjust its position and heading alongside the parking space, potentially enhancing both its performance and reward.  
+The agent was also able to approach the center of the parking space when `parking_length` was set to 7.0. With this setting, roughly 0.5 meters of additional space was available in front of the vehicle compared with `parking_length` set to 6.0, making it easier for the agent to reverse towards the parking slot from the front.  
+However, this configuration is not a real parallel parking scenario. Therefore, setting `parking_length` to 6.0 is more appropriate for training.
 
 
 ## Conclusion
+These training results above describes that the agent successfully learned more effective parking policies across all reward and state configurations. Through exploration during training, the agent was able to improve its action while reducing the penalties. 
 
 
 ### Future developments
-
+The next challenge will be to implement one additional feature.
+The new logic should allow the agent several additional steps to adjust its position, velocity and heading within the parking space as such adjustments are common especially in parallel parking. 
