@@ -29,6 +29,7 @@ num_train = 100
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/3037c1a2-86c6-4039-9258-bbe9ae767bd4
 
 - Training results (Continuous action)
 ![Figure 1: The mean length plot for the type1 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type1_len_mean.png)
@@ -71,6 +72,7 @@ num_train = 100
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/7ef0b4ae-326c-462b-8ce0-f7ffcbbf6a26
 
 
 - Training results (Continuous action)
@@ -121,6 +123,7 @@ num_train = 200
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/95bb08ec-4963-47ad-ae02-76217edc01cf
 
 - Training results (Continuous action)
 ![Figure 7: The mean length plot for the type3 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type3_len_mean.png)
@@ -162,6 +165,7 @@ num_train = 200
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/aef287df-88b4-4672-b855-cbd782413d07
 
 - Training results (Continuous action)  
 ![Figure 10: The mean length plot for the type4 of the perpendicular parking](../training/assets/perpendicular_parking/perpendicular_type4_len_mean.png)
@@ -205,6 +209,7 @@ num_train = 100
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/42b0bc5d-c2a8-4428-bd06-a62967ce3cf1
 
 - Training results (Continuous action)
 ![Figure 13: The mean length plot for the type1 of the parallel parking](../training/assets/parallel_parking/parallel_type1_len_mean.png)
@@ -249,6 +254,7 @@ num_train = 100
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/890e23aa-7657-4e0b-ac80-7550117164ab
 
 - Training results (Continuous action)
 ![Figure 16: The mean length plot for the type2 of the parallel parking](../training/assets/parallel_parking/parallel_type2_len_mean.png)
@@ -300,6 +306,7 @@ num_train = 100
 
 - Trained agent (Continuous action)  
 
+https://github.com/user-attachments/assets/4f534256-7ab9-4c98-ad53-5f2ef09b3f31
 
 - Training results (Continuous action)
 ![Figure 19: The mean length plot for the type3 of the parallel parking](../training/assets/parallel_parking/parallel_type3_len_mean.png)
@@ -343,6 +350,7 @@ num_train = 100
 
 - Trained agent (Continuous action)
 
+https://github.com/user-attachments/assets/95793e46-3394-4f5d-9e24-232f20a247fb
 
 - Training results (Continuous action)
 ![Figure 22: The mean length plot for the type4 of the parallel parking](../training/assets/parallel_parking/parallel_type4_len_mean.png)
