@@ -141,10 +141,14 @@ All you need to do is to follow the following steps.
 3. Run `main.py`.
 
 ## Display the training results  
-Use the following command so that you can see data in the training_agent folder.  
+Use the following command so that you can see training result data in the training_results folder.  
+Relative path can be used in Mac, while absolute path is needed in Windows.
 ```
-tensorboard --logdir=folder path  
-tensorboard --logdir=C:\Users\-------\----
+tensorboard --logdir=folder path
+tensorboard --logdir=./training/training_results/perpendicular/
+tensorboard --logdir=./training/training_results/parallel/
+tensorboard --logdir=C:/Users/AAA/XXX/RL_APS/training/training_results/perpendicular
+tensorboard --logdir=C:/Users/AAA/XXX/RL_APS/training/training_results/parallel
 ```
 
 
