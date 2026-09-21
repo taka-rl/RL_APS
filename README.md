@@ -10,11 +10,12 @@ The following videos present the trained agent's behavior in the parking simulat
 
 - Perpendicular Parking
   
-https://github.com/user-attachments/assets/9fbfc305-6577-42bf-bd06-6ae67add61e9
+https://github.com/user-attachments/assets/66a1f548-2b31-4929-b26f-8bc567c5d32e
 
 - Parallel Parking
 
-[https://github.com/user-attachments/assets/c0d303b9-0a58-4d36-9314-428a77f4ef1b](https://github.com/user-attachments/assets/e72a0755-c4d1-44a9-8191-9f0f11d344bf)
+https://github.com/user-attachments/assets/12c4cbaa-406c-437b-8b9d-b947801adcc7
+
 
 For more results, Please refer to [doc/training_results.md.](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md)
 
@@ -67,12 +68,8 @@ The libraries and their versions are as follows.
 | Numpy     | 1.26.3  |
 | Pygame    | 2.1.3   |
 
-### install tools
-The first is to install necessary libraries.  
-
-ray rllib: `pip install "ray[rllib]" tensorflow`  
-Gymnasium: `pip install "gymnasium[all]"`
-
+### Install tools
+The first is to install necessary libraries.: `pip install -r requirements.txt`
 
 ### Settings for training, Visualizing the agent and Evaluation
 Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_procedures.md) for the training setting.  
@@ -81,6 +78,6 @@ Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/b
 Please refer to [doc/training_results.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md).
 
 ## Future development ideas
-- Improving the parallel agent’s performance, by encouraging the agent to park near the center of the parking lot.
-- Doing the training with different RL algorithms and compare their performance. 
-- Updating used tools version to the latest ones.
+- Updating Python and all dependent tools** to their latest versions.
+- Implementing multi-step adjustments to allow the agent to adjust its position, velocity and heading within the parking slot to improve agent performance in parallel parking scenarios. 
+- Doing the training with different RL algorithms and compare their performance.
