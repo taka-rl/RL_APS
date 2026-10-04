@@ -1,4 +1,3 @@
-import glob
 from pathlib import Path
 from typing import Union, Tuple
 
@@ -9,19 +8,30 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 
 def generate_unique_id(target_folder) -> int:
     """
-    Generates a unique ID based on the exist folders.
-    Returns:
-        str: A unique identifier (e.g. 1, 2, 3 and so on).
-    """
-    # Check the target_folder if the same name exists
-    matching_folders = glob.glob(target_folder + '*')
+    Generate a unique numeric ID for a folder name.
 
-    # Increment a count
-    if matching_folders:
-        count = len(matching_folders)
-        return count
-    else:
+    Examples:
+        PPO_xxx does not exist
+            -> 0
+
+        PPO_xxx exists
+            -> 1
+
+        PPO_xxx and PPO_xxx_1 exist
+            -> 2
+    """
+    target = Path(target_folder)
+
+    # Base folder does not exist.
+    if not target.exists():
         return 0
+
+    id_num = 1
+
+    while target.with_name(f"{target.name}_{id_num}").exists():
+        id_num += 1
+
+    return id_num
 
 
 def convert_side_to_abbr(side):
@@ -45,6 +55,25 @@ def convert_side_to_abbr(side):
         return "".join(sorted_sides) if sorted_sides else "u"
     else:
         return "u"
+
+
+def format_raio_str(value: float) -> str:
+    """
+    Convert a float to a 2-decimal string, remove the decimal point, and remove a single trailing zero if present.
+    Parameters:
+        value: The input float value
+
+    Returns:
+        str: The formatted compact string
+
+    Examples:
+        0.5  -> "0.50" -> "050" -> "05"
+        0.55 -> "0.55" -> "055" -> "055"
+    """
+    s = f"{value:.2f}".replace(".", "")
+    if s.endswith("0"):
+        s = s[:-1]
+    return s
 
 
 def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type: str, num_train: int,
@@ -77,24 +106,24 @@ def create_folder_name(algo: str, env_config: dict, reward_type: str, state_type
 
     # for Guidance and velocity rewards
     if reward_type == 'type2':
-        threshold = f"{threshold:.1f}".replace(".", "")
-        angle_ratio = f"{angle_ratio:.1f}".replace(".", "")
+        threshold = format_raio_str(threshold)
+        angle_ratio = format_raio_str(angle_ratio)
         folder_name = folder_name + f'_th{threshold}_ar{angle_ratio}'
 
     if reward_type == 'type3':
-        v_ratio = f"{v_ratio:.1f}".replace(".", "")
+        v_ratio = format_raio_str(v_ratio)
         folder_name = folder_name + f'_vr{v_ratio}'
 
     if reward_type == 'type4':
-        threshold = f"{threshold:.1f}".replace(".", "")
-        angle_ratio = f"{angle_ratio:.1f}".replace(".", "")
-        v_ratio = f"{v_ratio:.1f}".replace(".", "")
+        threshold = format_raio_str(threshold)
+        angle_ratio = format_raio_str(angle_ratio)
+        v_ratio = format_raio_str(v_ratio)
         folder_name = folder_name + f'_th{threshold}_ar{angle_ratio}_vr{v_ratio}'
 
     # Add id number
-    id_num = generate_unique_id(folder_path + folder_name)
+    id_num = generate_unique_id(Path(folder_path) / folder_name)
     if id_num:
-        folder_name = folder_name + f'_{id_num}'
+        folder_name = f'{folder_name}_{id_num}'
 
     return folder_name
 
