@@ -33,9 +33,11 @@ For more results, Please refer to [doc/training_results.md.](https://github.com/
     │   ├── test_car.py                 # test for Car class
     │   ├── test_parameters.py          # test for parameters
     │   ├── test_parking.py             # test for BaseParking, PerpendicularParking and ParallelParking class 
-    │   ├── test_parking_env.py         # test for the parking environment 
-    │   └── test_renderer.py            # test for Renderer class
+    │   ├── test_parking_env.py         # test for the parking environment
+    │   ├── test_renderer.py            # test for Renderer class
+    │   └── test_system_env.py          # smoke test
     ├── training                        # training
+    │   ├── assets                      # training result figures
     │   ├── traning_results             # training results
     │   ├── trained_agents              # trained agents
     │   ├── training.py                 # for training
@@ -62,11 +64,11 @@ The libraries and their versions are as follows.
 
 | tool      | version |
 |-----------|---------|
-| Python    | 3.10.11 |
-| Gymnasium | 0.28.1  | 
-| Ray RLlib | 2.9.0   |
-| Numpy     | 1.26.3  |
-| Pygame    | 2.1.3   |
+| Python    | 3.12.14 |
+| Gymnasium | 1.3.0   | 
+| Ray       | 2.58.0  |
+| Numpy     | 2.5.3   |
+| Pygame    | 2.6.1   |
 
 ### Install tools
 The first is to install necessary libraries.: `pip install -r requirements.txt`
@@ -78,6 +80,5 @@ Please refer to [doc/training_procedures.md](https://github.com/taka-rl/RL_APS/b
 Please refer to [doc/training_results.md](https://github.com/taka-rl/RL_APS/blob/8-update-the-repository/doc/training_results.md).
 
 ## Future development ideas
-- Updating Python and all dependent tools** to their latest versions.
 - Implementing multi-step adjustments to allow the agent to adjust its position, velocity and heading within the parking slot to improve agent performance in parallel parking scenarios. 
 - Doing the training with different RL algorithms and compare their performance.
