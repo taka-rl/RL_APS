@@ -14,91 +14,42 @@ from sim_env.parameters import Config, PI
 from utility import create_folder_path, create_folder_name, create_training_result_dir, create_checkpoint_dir
 
 
-SCENARIOS_PERPENDICULAR = [
-    # parking type1
-    {
-        'config':
-            Config(car_length=4.0, car_width=2.0,
-                wheel_length=0.75, wheel_width=0.35,
-                parking_length=6.0, parking_width=4.0,
-                max_distance=25.0, max_steps=80,
-                acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=2.77778,
-                max_angle_error=PI/12, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
-                reward_type='type1', state_type='type1',
-                side=(1, 2, 3, 4), car_loc_randomize_range=(-2, 2), initial_distance_range=(5.0, 7.5)
-                ),
-        'num_train': 10,
-        "parking_type": "perpendicular",
-    },
-    """
-    # parking type2
+SCENARIOS = [
+    # perpendicular parking type4
     {
         'config':
             Config(car_length=4.0, car_width=2.0,
                    wheel_length=0.75, wheel_width=0.35,
                    parking_length=6.0, parking_width=4.0,
                    max_distance=25.0, max_steps=80,
-                   acceleration_limit=1.0, steering_limit=PI / 4, velocity_limit=10.0,
-                   max_angle_error=PI / 12, center_threshold=0.5, penalty_ratio={'angle': 0.5, 'velocity': 0.0},
-                   reward_type='type2', state_type='type2',
-                   side=(1, 2, 3, 4), car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
-                   ),
-        'num_train': 100,
-        "parking_type": "perpendicular",
-    },
-    # parking type3
-    {
-        'config':
-            Config(car_length=4.0, car_width=2.0,
-                   wheel_length=0.75, wheel_width=0.35,
-                   parking_length=6.0, parking_width=4.0,
-                   max_distance=25.0, max_steps=80,
-                   acceleration_limit=1.0, steering_limit=PI / 4, velocity_limit=10.0,
-                   max_angle_error=PI / 12, center_threshold=0.5, penalty_ratio={'angle': 0.0, 'velocity': 0.5},
-                   reward_type='type3', state_type='type3',
-                   side=(1, 2, 3, 4), car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
-                   ),
-        'num_train': 100,
-    "parking_type": "perpendicular",
-    },
-
-    # parking type4
-    {
-        'config':
-            Config(car_length=4.0, car_width=2.0,
-                   wheel_length=0.75, wheel_width=0.35,
-                   parking_length=6.0, parking_width=4.0,
-                   max_distance=25.0, max_steps=80,
-                   acceleration_limit=1.0, steering_limit=PI / 4, velocity_limit=10.0,
-                   max_angle_error=PI / 12, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
+                   acceleration_limit=1.0, steering_limit=PI / 4, velocity_limit=2.77778,
+                   max_angle_error=PI / 4.5, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
                    reward_type='type4', state_type='type4',
-                   side=(1, 2, 3, 4), car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
+                   side=1, car_loc_randomize_range=(-2.5, 2.5), initial_distance_range=(5.5, 7.5)
                    ),
         'num_train': 100,
         "parking_type": "perpendicular",
-    }
-    """
-]
-
-SCENARIOS_PARALLEL = [
-    # parking type1
+    },
+    # parallel parking type4
     {
         'config':
             Config(car_length=4.0, car_width=2.0,
                    wheel_length=0.75, wheel_width=0.35,
                    parking_length=6.0, parking_width=4.0,
                    max_distance=25.0, max_steps=80,
-                   acceleration_limit=1.0, steering_limit=PI / 4, velocity_limit=10.0,
-                   max_angle_error=PI / 12, center_threshold=0.5, penalty_ratio={'angle': 0, 'velocity': 0.5},
-                   reward_type='type1', state_type='type1',
-                   side=1, car_loc_randomize_range=(6.0, 7.0), initial_distance_range=(5.0, 7.0)
+                   acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=2.77778,
+                   max_angle_error=PI/6, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
+                   reward_type='type4', state_type='type4',
+                   side=1, car_loc_randomize_range=(5.5, 6.0), initial_distance_range=(4.0, 5.0),
+                   heading_angle_range={"parallel": {1: (PI/6, PI/4)}}
                    ),
         'num_train': 100,
         "parking_type": "parallel",
     }
 ]
 
-def train_and_evaluate(config: Config, num_train: int,  parking_type: str,):
+
+def train_and_evaluate(config: Config, num_train: int,  parking_type: str) -> tuple[str, str]:
 
     env_config = {"render_mode": "no_render",
                   "action_type": "continuous",
@@ -187,12 +138,14 @@ def train_and_evaluate(config: Config, num_train: int,  parking_type: str,):
     # release the resources
     algo.stop()
 
+    return training_result_dir, saved_checkpoint_path
+
 
 if __name__ == '__main__':
     ray.init()
 
     try:
-        for scenario in SCENARIOS_PERPENDICULAR:
+        for scenario in SCENARIOS:
             train_and_evaluate(**scenario)
     finally:
         ray.shutdown()

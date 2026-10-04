@@ -9,20 +9,20 @@ from parking_env import Parking
 from training.utility import create_folder_path
 
 
-def compute_action(rl_module: RLModule, action_dist_class, obs: np.ndarray) -> np.ndarray:
+def compute_action(module: RLModule, action_dist_class, observation: np.ndarray) -> np.ndarray:
     """
     Computes a deterministic action given observation.
 
     Parameters:
-        rl_module: Restored trained RLModule.
+        module: Restored trained RLModule.
         action_dist_class: Distribution class used during inference.
-        obs: One unbatched observation.
+        observation: One unbatched observation.
 
     Returns:
         action (np.ndarray): Deterministic action
     """
-    fwd_ins = {"obs": torch.Tensor([obs])}
-    fwd_outputs = rl_module.forward_inference(fwd_ins)
+    fwd_ins = {"obs": torch.Tensor([observation])}
+    fwd_outputs = module.forward_inference(fwd_ins)
     action_dist = action_dist_class.from_logits(fwd_outputs["action_dist_inputs"]).to_deterministic().sample()
     return action_dist[0].detach().cpu().numpy()
 
@@ -33,14 +33,15 @@ if __name__ == '__main__':
                     wheel_length=0.75, wheel_width=0.35,
                     parking_length=6.0, parking_width=4.0,
                     max_distance=25.0, max_steps=80,
-                    acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=2.77778,
-                    max_angle_error=PI/12, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
-                    reward_type='type1', state_type='type1',
-                    side=(1, 2, 3, 4), car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
+                    acceleration_limit=1.0, steering_limit=PI / 4, velocity_limit=2.77778,
+                    max_angle_error=PI / 4.5, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
+                    reward_type='type4', state_type='type4',
+                    side=1, car_loc_randomize_range=(-5, 5), initial_distance_range=(7.5, 15.0)
                     )
+
     env_config = {"render_mode": "human",
                   "action_type": "continuous",
-                  "parking_type": "perpendicular",
+                  "parking_type": "parallel",
                   "training_mode": "off",
                   'config': config}
 
@@ -58,17 +59,15 @@ if __name__ == '__main__':
         checkpoint_path / "learner_group" / "learner" / "rl_module" / "default_policy"
     )
 
-    action_dist_class = rl_module.get_inference_action_dist_cls()
+    action_dist_cls = rl_module.get_inference_action_dist_cls()
 
-    episode_reward = 0
     for i in range(10):
         episode_reward = 0
         terminated = truncated = False
         obs, info = env.reset()
-        actions = []
 
         while not terminated and not truncated:
-            action = compute_action(rl_module, action_dist_class, obs)
+            action = compute_action(rl_module, action_dist_cls, obs)
             obs, reward, terminated, truncated, info = env.step(action)
             time.sleep(0.1)
             episode_reward += reward
