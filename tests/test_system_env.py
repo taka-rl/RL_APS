@@ -81,18 +81,15 @@ def test_training_and_evaluation():
                 rl_module = RLModule.from_checkpoint(
                     checkpoint_path / "learner_group" / "learner" / "rl_module" / "default_policy")
 
-                action_dist_cls = rl_module.get_inference_action_dist_cls()
-
                 for i in range(3):
                     episode_reward = 0
                     terminated = truncated = False
                     obs, info = env.reset()
 
                     while not terminated and not truncated:
-                        action = compute_action(rl_module, action_dist_cls, obs)
+                        action = compute_action(rl_module, obs, env_config['action_type'])
                         obs, reward, terminated, truncated, info = env.step(action)
                         episode_reward += reward
-                        print(f'{i}: {episode_reward}')
 
             finally:
                 env.close()

@@ -11,7 +11,7 @@ from tensorboardX import SummaryWriter
 
 from sim_env.parking_env import Parking
 from sim_env.parameters import Config, PI
-from utility import create_folder_path, create_folder_name, create_training_result_dir, create_checkpoint_dir
+from training.utility import create_folder_path, create_folder_name, create_training_result_dir, create_checkpoint_dir
 
 
 SCENARIOS = [
