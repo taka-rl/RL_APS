@@ -22,6 +22,7 @@ For more results, Please refer to [doc/training_results.md.](https://github.com/
 ## Folder structure
 
     ├── sim_env                         # simulation environment
+    │   ├── __init__.py                 # 
     │   ├── car.py                      # car class
     │   ├── main.py                     # visualize the trained agent
     │   ├── parameters.py               # parameter class
@@ -40,6 +41,7 @@ For more results, Please refer to [doc/training_results.md.](https://github.com/
     │   ├── assets                      # training result figures
     │   ├── traning_results             # training results
     │   ├── trained_agents              # trained agents
+    │   ├── __init__.py                 #
     │   ├── training.py                 # for training
     │   └── utility.py                  # utility functions
     ├── doc                             # documents for this repository
