@@ -71,26 +71,44 @@ def compute_action(module: RLModule, observation: np.ndarray, action_type: str) 
 
 if __name__ == '__main__':
 
-    config = Config(car_length=4.0, car_width=2.0,
-                    wheel_length=0.75, wheel_width=0.35,
-                    parking_length=6.0, parking_width=4.0,
-                    max_distance=25.0, max_steps=80,
-                    acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=2.77778,
-                    max_angle_error=PI/6, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
-                    reward_type='type4', state_type='type4',
-                    side=1, car_loc_randomize_range=(5.5, 6.0), initial_distance_range=(4.0, 5.0),
-                    heading_angle_range={"parallel": {1: (PI/6, PI/4)}}
-                   )
+    parking_type_str = 'perpendicular'  # parallel or perpendicular
+    action_type_str = 'continuous'  # continuous or discrete
+
+    if parking_type_str == 'parallel':
+        config = Config(car_length=4.0, car_width=2.0,
+                        wheel_length=0.75, wheel_width=0.35,
+                        parking_length=6.0, parking_width=4.0,
+                        max_distance=25.0, max_steps=80,
+                        acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=2.77778,
+                        max_angle_error=PI/6, center_threshold=0.5, penalty_ratio={'angle': 0.25, 'velocity': 0.25},
+                        reward_type='type4', state_type='type4',
+                        side=1, car_loc_randomize_range=(5.5, 6.0), initial_distance_range=(4.0, 5.0),
+                        heading_angle_range={"parallel": {1: (PI/6, PI/4)}}
+                       )
+
+    elif parking_type_str == 'perpendicular':
+        config = Config(car_length=4.0, car_width=2.0,
+                        wheel_length=0.75, wheel_width=0.35,
+                        parking_length=6.0, parking_width=4.0,
+                        max_distance=25.0, max_steps=80,
+                        acceleration_limit=1.0, steering_limit=PI/4, velocity_limit=2.77778,
+                        max_angle_error=PI/4.5, center_threshold=0.5,
+                        penalty_ratio={'angle': 0.25, 'velocity': 0.25},
+                        reward_type='type4', state_type='type4',
+                        side=1, car_loc_randomize_range=(-2.5, 2.5), initial_distance_range=(5.5, 7.5)
+                        )
+    else:
+        raise ValueError(f"Invalid value: {parking_type_str}. ")
 
     env_config = {"render_mode": "human",
-                  "action_type": "continuous",
-                  "parking_type": "parallel",
+                  "action_type": action_type_str,
+                  "parking_type": parking_type_str,
                   "training_mode": "off",
                   'config': config}
 
     env = Parking(env_config)
 
-    folder_name = 'PPO_parallel_continuous_100_r4_s4_b_th05_ar025_vr025'  # trained_agent folder
+    folder_name = f'PPO_{parking_type_str}_{action_type_str}_100_r4_s4_b_th05_ar025_vr025'  # trained_agent folder
     folder_path = create_folder_path(env_config, is_training=False)
     checkpoint_path = Path(folder_path) / folder_name
 
