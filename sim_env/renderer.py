@@ -1,4 +1,6 @@
 import pygame
+import numpy as np
+
 from sim_env.parameters import PIXEL_TO_METER_SCALE, PI, RenderConfig, WheelSize
 from sim_env.car import Car
 
@@ -14,6 +16,45 @@ def meters_to_pixels(meters):
         float: The equivalent value in pixels.
     """
     return meters / PIXEL_TO_METER_SCALE
+
+
+def to_pygame_point(point) -> tuple[float, float]:
+    """
+    Convert one coordinate pair into a Pygame-compatible point.
+    """
+    array = np.asarray(point)
+
+    if array.shape != (2,):
+        raise ValueError(f"A point must have shape (2,), but got {array.shape}")
+
+    if not np.isfinite(array).all():
+        raise ValueError(f"Point contains NaN or infinite values: {array}")
+
+    return float(array[0]), float(array[1])
+
+
+def to_pygame_points(points) -> list[tuple[float, float]]:
+    """
+    Convert polygon vertices into Pygame-compatible coordinate pairs.
+    """
+    array = np.asarray(points)
+
+    if array.ndim != 2 or array.shape[1] != 2:
+        raise ValueError(
+            "Polygon points must have shape (N, 2), " 
+            f"but got {array.shape}"
+        )
+
+    if len(array) < 3:
+        raise ValueError(
+            "A polygon requires at least three points, "
+            f"but got {len(array)}"
+        )
+
+    if not np.isfinite(array).all():
+        raise ValueError(f"Polygon contains NaN or infinite values: {array}")
+
+    return [(float(x), float(y)) for x, y in array]
 
 
 class Renderer:
@@ -109,11 +150,11 @@ class Renderer:
         self.draw_multiline_text(self.surf_text, text_str, self.colors['BLACK'], text_rect, self.font)
 
     def draw_car_path(self, car_loc_old, car_loc) -> None:
-        """Draw the car path"""
+        """Draw the car path line between the previous and current car position"""
         # Draw path (line between previous and current position)
-        car_loc_old_pixels = meters_to_pixels(car_loc_old)
-        car_loc_pixels = meters_to_pixels(car_loc)
-        pygame.draw.line(self.surf_parkinglot, self.colors['BLACK'], car_loc_old_pixels, car_loc_pixels)
+        start_point = to_pygame_point(meters_to_pixels(car_loc_old))
+        end_point = to_pygame_point(meters_to_pixels(car_loc))
+        pygame.draw.line(self.surf_parkinglot, self.colors['BLACK'], start_point, end_point)
 
     def draw_car(self, car: Car, car_loc) -> None:
         """Draw the car(agent)"""
@@ -177,8 +218,9 @@ class Renderer:
     @staticmethod
     def draw_object(screen: pygame.Surface, color: tuple, vertex) -> None:
         """Draw an object using a list of vertices."""
-        pixel_vertex = meters_to_pixels(vertex)
-        pygame.draw.polygon(screen, color, pixel_vertex)
+        pixel_vertices = meters_to_pixels(vertex)
+        pygame_points = to_pygame_points(pixel_vertices)
+        pygame.draw.polygon(screen, color, pygame_points)
 
     @staticmethod
     def draw_multiline_text(screen: pygame.Surface, text: str, color: tuple,
